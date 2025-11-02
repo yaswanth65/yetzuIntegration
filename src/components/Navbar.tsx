@@ -39,9 +39,8 @@ const Navbar = () => {
               Courses
               <ChevronDown
                 size={16}
-                className={`transition-transform duration-300 ${
-                  isCoursesOpen ? "rotate-180" : ""
-                }`}
+                className={`transition-transform duration-300 ${isCoursesOpen ? "rotate-180" : ""
+                  }`}
               />
             </button>
 
@@ -72,7 +71,7 @@ const Navbar = () => {
         </div>
       </div>
     </nav>
-    
+
   );
 };
 
