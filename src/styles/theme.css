@@ -1,0 +1,50 @@
+:root {
+  /* === Main === */
+  --color-primary-600: #024dff;
+  --color-secondary-200: #a5b4ff;
+
+  /* === Text === */
+  --color-text-body-1000: #0a0a0a;
+  --color-text-alt-1000: #01115e;
+  --color-text-inactive-700: #5c5c5c;
+  --color-text-disabled-500: #929292;
+  --color-text-white-100: #ffffff;
+  --color-text-error-600: #e60004;
+  --color-text-success-600: #04ca84;
+
+  /* === Background === */
+  --color-bg-card-100: #ffffff;
+  --color-bg-card-alt-100: #e5e8ff;
+  --color-bg-disabled-200: #e4e4e4;
+
+  /* === Error === */
+  --color-error-200: #f6afaf;
+  --color-error-700: #b50007;
+
+  /* === Warning === */
+  --color-warning-300: #f3e58f;
+  --color-warning-700: #b99207;
+
+  /* === Success === */
+  --color-success-400: #85e6be;
+  --color-success-700: #03a763;
+
+  /* === SPACING SYSTEM === */
+  --space-0: 4px;
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 40px;
+  --space-6: 48px;
+  --space-7: 64px;
+  --space-8: 80px;
+  --space-9: 96px;
+  --space-10: 112px;
+
+  /* === RADIUS SYSTEM === */
+  --radius-1: 12px;
+  --radius-2: 16px;
+  --radius-3: 18px;
+  --radius-4: 20px;
+}
