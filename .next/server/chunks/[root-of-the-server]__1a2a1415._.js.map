@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"","debugId":null}},
+    {"offset": {"line": 55, "column": 0}, "map": {"version":3,"sources":["file:///D:/new/yetzu-Frontend-repo/src/app/api/courses/route.ts"],"sourcesContent":["import { NextResponse } from \"next/server\";\r\n\r\nexport async function GET() {\r\n  try {\r\n    const res = await fetch(\"https://productionyetzuapi.yetzu.com/api/course/v1/courselist\", {\r\n      cache: \"no-store\", // prevents stale data\r\n    });\r\n\r\n    if (!res.ok) {\r\n      return NextResponse.json({ error: \"Failed to fetch data\" }, { status: res.status });\r\n    }\r\n\r\n    const data = await res.json();\r\n    return NextResponse.json(data);\r\n  } catch (error) {\r\n    console.error(\"Error fetching from API:\", error);\r\n    return NextResponse.json({ error: \"Internal server error\" }, { status: 500 });\r\n  }\r\n}\r\n"],"names":[],"mappings":";;;;AAAA;;AAEO,eAAe;IACpB,IAAI;QACF,MAAM,MAAM,MAAM,MAAM,iEAAiE;YACvF,OAAO;QACT;QAEA,IAAI,CAAC,IAAI,EAAE,EAAE;YACX,OAAO,gJAAY,CAAC,IAAI,CAAC;gBAAE,OAAO;YAAuB,GAAG;gBAAE,QAAQ,IAAI,MAAM;YAAC;QACnF;QAEA,MAAM,OAAO,MAAM,IAAI,IAAI;QAC3B,OAAO,gJAAY,CAAC,IAAI,CAAC;IAC3B,EAAE,OAAO,OAAO;QACd,QAAQ,KAAK,CAAC,4BAA4B;QAC1C,OAAO,gJAAY,CAAC,IAAI,CAAC;YAAE,OAAO;QAAwB,GAAG;YAAE,QAAQ;QAAI;IAC7E;AACF","debugId":null}}]
+}

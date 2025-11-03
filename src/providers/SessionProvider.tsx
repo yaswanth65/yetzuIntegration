@@ -1,81 +1,84 @@
 "use client";
 
 import { api, authApi } from "@/lib/axios";
-import { useGetUserProfile, useLoginMutation, useLogoutMutation } from "@/lib/queries/identityService/useIdentityService";
-import React, {
-    createContext,
-    useEffect,
-    useState,
-    ReactNode,
-} from "react";
+import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import toast from "react-hot-toast";
-import Cookies from "js-cookie";
 
 export type UserType = {
-    id: string;
+    created_at: string;
+    email: string;
+    email_verified: boolean;
+    identities: {
+        user_id: string;
+        provider: string;
+        connection: string;
+        isSocial: boolean;
+    };
     name: string;
-    email: string
-    role: string
-    createdAt: string
-    updatedAt: string
-    lastLogin: string
-    lastIp: string
-}
+    role: string;
+    updated_at: string;
+    user_id: string;
+    last_ip: string;
+    last_login: string;
+    last_password_reset: string;
+    logins_count: number;
+};
 
 const DEFAULT_USER: UserType = {
-    id: "",
-    name: "",
-    email: "",
-    role: "",
-    createdAt: "",
-    updatedAt: "",
-    lastLogin: "",
-    lastIp: ""
+    created_at: '',
+    email: '',
+    email_verified: false,
+    identities: {
+        user_id: '',
+        provider: '',
+        connection: '',
+        isSocial: false,
+    },
+    name: 'User',
+    role: '',
+    updated_at: '',
+    user_id: '',
+    last_ip: '',
+    last_login: '',
+    last_password_reset: '',
+    logins_count: 0
 };
+
 
 type UserContextType = {
     user: UserType;
     setUser: React.Dispatch<React.SetStateAction<UserType>>;
-    setIsUserLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
     logout: () => Promise<void>;
     refershSession: boolean;
     accessToken: string;
     refreshToken: string;
-    isUserLoggedIn: boolean;
 };
 
-export const SessionContext = createContext<UserContextType | undefined>(
-    undefined
-);
+export const SessionContext = createContext<UserContextType | undefined>(undefined);
 
 export const SessionProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<UserType>(DEFAULT_USER);
-    const [isUserLoggedIn, setIsUserLoggedIn] = useState<boolean>(false);
-    const { mutateAsync: logoutUser } = useLogoutMutation();
-
-    const accessToken = Cookies.get("jwtToken") || "";
-    const refreshToken = Cookies.get("refreshToken") || "";
-
-    const { data, isSuccess } = useGetUserProfile();
+    const accessToken = typeof window !== "undefined" ? localStorage.getItem("accessToken") || '' : '';
+    const refreshToken = typeof window !== "undefined" ? localStorage.getItem("refreshToken") || '' : '';
 
     useEffect(() => {
-        if (isSuccess && data) {
-            setUser(data?.user);
-            setIsUserLoggedIn(true);
-        }
-    }, [data, isSuccess]);
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) setUser(JSON.parse(storedUser));
+    }, []);
 
     const logout = async () => {
         if (!user) return;
         try {
-            const data = await logoutUser({ userId: user.id });
-            if (data.success) {
+            const res = await authApi.post("/identityapi/v1/auth/signout", { userId: user.user_id });
+            if (res.status === 200) {
                 toast.success("Logged out successfully!");
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("refreshToken");
+                localStorage.removeItem("user");
                 setUser(DEFAULT_USER);
-                setIsUserLoggedIn(false);
             } else {
-                toast.error(`Logout failed: ${data.message || data?.success}`);
-                console.error("Logout failed:", data.message);
+                toast.error(`Logout failed: ${res.statusText || res.status}`);
+                console.error("Logout failed:", res.data);
             }
         } catch (error: any) {
             toast.error(`Logout error: ${error?.message || "Something went wrong"}`);
@@ -84,18 +87,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <SessionContext.Provider
-            value={{
-                user,
-                setUser,
-                logout,
-                accessToken,
-                refreshToken,
-                refershSession: false,
-                isUserLoggedIn,
-                setIsUserLoggedIn,
-            }}
-        >
+        <SessionContext.Provider value={{ user, setUser, logout, accessToken, refreshToken, refershSession: false }}>
             {children}
         </SessionContext.Provider>
     );
