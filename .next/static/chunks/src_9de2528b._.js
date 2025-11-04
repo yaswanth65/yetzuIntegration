@@ -1220,7 +1220,7 @@ function Home() {
                                             className: "bg-white rounded-2xl shadow-md hover:shadow-xl transition-all w-[602px] h-[377px] flex flex-col justify-between p-6 relative",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                                    src: "/Images/Assignment Submission Card.png",
+                                                    src: "/images/Assignment Submission Card.png",
                                                     alt: "Assignment Submission",
                                                     width: 244,
                                                     height: 231,
@@ -1273,7 +1273,7 @@ function Home() {
                                             className: "bg-white rounded-2xl shadow-md hover:shadow-xl transition-all w-[396px] h-[377px] flex flex-col justify-between p-6 relative",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                                    src: "/Images/assignment.png",
+                                                    src: "/images/assignment.png",
                                                     alt: "Structured Feedback",
                                                     width: 169,
                                                     height: 131,
@@ -1335,7 +1335,7 @@ function Home() {
                                             className: "bg-white rounded-2xl shadow-md hover:shadow-xl transition-all w-[396px] h-[377px] flex flex-col justify-between p-6 relative",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                                    src: "/Images/Progress Tracking Image.png",
+                                                    src: "/images/Progress Tracking Image.png",
                                                     alt: "Progress Tracking",
                                                     width: 169,
                                                     height: 131,
@@ -1388,7 +1388,7 @@ function Home() {
                                             className: "bg-white rounded-2xl shadow-md hover:shadow-xl transition-all w-[602px] h-[377px] flex flex-col justify-between p-6 relative",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                                    src: "/Images/Certificates Visual.png",
+                                                    src: "/images/Certificates Visual.png",
                                                     alt: "Certificates",
                                                     width: 244,
                                                     height: 231,
@@ -1532,7 +1532,7 @@ function Home() {
                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "rounded-xl overflow-hidden shadow-lg",
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                        src: "/Images/Success.png",
+                                        src: "/images/Success.png",
                                         alt: "Join Our Community",
                                         width: 384,
                                         height: 395,
@@ -1662,7 +1662,7 @@ function Home() {
                                             className: "flex items-end gap-3 mt-8",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                                    src: "/Images/Avatar (1).png",
+                                                    src: "/images/Avatar (1).png",
                                                     alt: "Author",
                                                     width: 32,
                                                     height: 32,
@@ -1711,7 +1711,7 @@ function Home() {
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "md:w-1/2",
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                        src: "/Images/blog.png",
+                                        src: "/images/blog.png",
                                         alt: "Featured Resource",
                                         width: 600,
                                         height: 400,
@@ -1738,24 +1738,24 @@ function Home() {
                                 {
                                     title: "Lorem ipsum, can be used for free any where",
                                     excerpt: "Lorem ipsum, can be used for free any where for anything. It is an effective tool to solve our text-related problems...",
-                                    image: "/Images/blog2.png",
-                                    avatar: "/Images/Avatar (1).png",
+                                    image: "/images/blog2.png",
+                                    avatar: "/images/Avatar (1).png",
                                     author: "John Doe",
                                     date: "Saturday 9:00PM"
                                 },
                                 {
                                     title: "Lorem ipsum, can be used for free any where",
                                     excerpt: "Lorem ipsum, can be used for free any where for anything. It is an effective tool to solve our text-related problems...",
-                                    image: "/Images/blog2.png",
-                                    avatar: "/Images/Avatar (1).png",
+                                    image: "/images/blog2.png",
+                                    avatar: "/images/Avatar (1).png",
                                     author: "John Doe",
                                     date: "Saturday 9:00PM"
                                 },
                                 {
                                     title: "Lorem ipsum, can be used for free any where",
                                     excerpt: "Lorem ipsum, can be used for free any where for anything. It is an effective tool to solve our text-related problems...",
-                                    image: "/Images/blog2.png",
-                                    avatar: "/Images/Avatar (1).png",
+                                    image: "/images/blog2.png",
+                                    avatar: "/images/Avatar (1).png",
                                     author: "John Doe",
                                     date: "Saturday 9:00PM"
                                 }
@@ -1985,7 +1985,7 @@ function Home() {
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "relative",
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                src: "/Images/testimonals.png",
+                                src: "/images/testimonals.png",
                                 alt: "Trusted by Leaders from Diverse Educational Institutions and Industries",
                                 width: 1200,
                                 height: 600,

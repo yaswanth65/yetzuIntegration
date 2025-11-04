@@ -272,7 +272,7 @@ export default function Home() {
             <div className="flex  gap-4">
               <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all w-[602px] h-[377px] flex flex-col justify-between p-6 relative">
                 <Image
-                  src="/Images/Assignment Submission Card.png"
+                  src="/images/Assignment Submission Card.png"
                   alt="Assignment Submission"
                   width={244}
                   height={231}
@@ -290,7 +290,7 @@ export default function Home() {
 
               <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all w-[396px] h-[377px] flex flex-col justify-between p-6 relative">
                 <Image
-                  src="/Images/assignment.png"
+                  src="/images/assignment.png"
                   alt="Structured Feedback"
                   width={169}
                   height={131}
@@ -310,7 +310,7 @@ export default function Home() {
             <div className="flex gap-4">
               <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all w-[396px] h-[377px] flex flex-col justify-between p-6 relative">
                 <Image
-                  src="/Images/Progress Tracking Image.png"
+                  src="/images/Progress Tracking Image.png"
                   alt="Progress Tracking"
                   width={169}
                   height={131}
@@ -328,7 +328,7 @@ export default function Home() {
 
               <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all w-[602px] h-[377px] flex flex-col justify-between p-6 relative">
                 <Image
-                  src="/Images/Certificates Visual.png"
+                  src="/images/Certificates Visual.png"
                   alt="Certificates"
                   width={244}
                   height={231}
@@ -412,7 +412,7 @@ export default function Home() {
             <div className="md:w-1/2 flex justify-end">
               <div className="rounded-xl overflow-hidden shadow-lg">
                 <Image
-                  src="/Images/Success.png"
+                  src="/images/Success.png"
                   alt="Join Our Community"
                   width={384}
                   height={395}
@@ -462,7 +462,7 @@ export default function Home() {
 
               <div className="flex items-end gap-3 mt-8">
                 <Image
-                  src="/Images/Avatar (1).png"
+                  src="/images/Avatar (1).png"
                   alt="Author"
                   width={32}
                   height={32}
@@ -477,7 +477,7 @@ export default function Home() {
 
             <div className="md:w-1/2">
               <Image
-                src="/Images/blog.png"
+                src="/images/blog.png"
                 alt="Featured Resource"
                 width={600}
                 height={400}
@@ -493,8 +493,8 @@ export default function Home() {
                 title: "Lorem ipsum, can be used for free any where",
                 excerpt:
                   "Lorem ipsum, can be used for free any where for anything. It is an effective tool to solve our text-related problems...",
-                image: "/Images/blog2.png",
-                avatar: "/Images/Avatar (1).png",
+                image: "/images/blog2.png",
+                avatar: "/images/Avatar (1).png",
                 author: "John Doe",
                 date: "Saturday 9:00PM",
               },
@@ -502,8 +502,8 @@ export default function Home() {
                 title: "Lorem ipsum, can be used for free any where",
                 excerpt:
                   "Lorem ipsum, can be used for free any where for anything. It is an effective tool to solve our text-related problems...",
-                image: "/Images/blog2.png",
-                avatar: "/Images/Avatar (1).png",
+                image: "/images/blog2.png",
+                avatar: "/images/Avatar (1).png",
                 author: "John Doe",
                 date: "Saturday 9:00PM",
               },
@@ -511,8 +511,8 @@ export default function Home() {
                 title: "Lorem ipsum, can be used for free any where",
                 excerpt:
                   "Lorem ipsum, can be used for free any where for anything. It is an effective tool to solve our text-related problems...",
-                image: "/Images/blog2.png",
-                avatar: "/Images/Avatar (1).png",
+                image: "/images/blog2.png",
+                avatar: "/images/Avatar (1).png",
                 author: "John Doe",
                 date: "Saturday 9:00PM",
               },
@@ -613,7 +613,7 @@ export default function Home() {
           {/* Main Combined Image */}
           <div className="relative">
             <Image
-              src="/Images/testimonals.png"
+              src="/images/testimonals.png"
               alt="Trusted by Leaders from Diverse Educational Institutions and Industries"
               width={1200}
               height={600}
