@@ -83,7 +83,9 @@ export default function OTPVerification() {
                         maxLength={1}
                         disabled={isPending}
                         value={digit}
-                        ref={(el) => (inputRefs.current[index] = el)}
+                        ref={(el) => {
+                            inputRefs.current[index] = el;
+                        }}
                         onChange={(e) => handleChange(e.target.value, index)}
                         onKeyDown={(e) => handleKeyDown(e, index)}
                         className={`w-12 h-12 text-center text-lg rounded-lg border 
