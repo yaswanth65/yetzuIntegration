@@ -1,7 +1,6 @@
 "use client";
 
-import { api, authApi } from "@/lib/axios";
-import { useGetUserProfile, useLoginMutation, useLogoutMutation } from "@/lib/queries/identityService/useIdentityService";
+import { useGetUserProfile, useLogoutMutation } from "@/lib/queries/identityService/useIdentityService";
 import React, {
     createContext,
     useEffect,

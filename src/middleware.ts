@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import Cookie from "js-cookie";
 
 const protectedRoutes = [
   "/dashboard",
