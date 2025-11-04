@@ -3,11 +3,9 @@ import { FaInstagram, FaFacebookF, FaYoutube } from "react-icons/fa";
 
 export default function Footer() {
   return (
-    <div className="relative w-full bg-[#F9F9F9] py-12 flex flex-col items-center">
-      {/* Footer Box */}
-      <footer className="relative rounded-[28px] shadow-sm w-full max-w-7xl px-12 py-12 bg-gradient-to-r from-[#E6EAFF] to-[#FFFFFF] mx-auto">
+    <div className="relative w-full   flex flex-col items-center">
+      <footer className="relative rounded-[28px] shadow-sm w-full max-w-7xl px-12 py-12 bg-gradient-to-l from-[#E6EAFF] to-[#FFFFFF] mx-auto">
         <div className="flex flex-col lg:flex-row justify-between gap-10">
-          {/* Left Section */}
           <div className="flex-1">
             <img src="Images/Logo.png" alt="YETZU Logo" className="h-8 mb-4" />
             <p className="text-[#252525] text-[18px] font-[400] leading-[100%] tracking-[-0.03em] font-[SF Pro] max-w-sm">
@@ -15,7 +13,6 @@ export default function Footer() {
               effective tool so solve our text relate problems. can be
             </p>
 
-            {/* Newsletter */}
             <div className="mt-8">
               <p className="text-[#404040] text-[26px] font-[Inter] font-[600] leading-[100%] tracking-[-0.05em] mb-3">
                 Subscribe to Newsletter
@@ -33,7 +30,6 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Right Menu Columns */}
           <div className="flex flex-wrap justify-between flex-1">
             {[1, 2, 3].map((col) => (
               <div key={col} className="min-w-[120px] text-right">
@@ -57,7 +53,6 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Social Icons */}
         <div className="flex justify-end gap-6 pt-6">
           <FaInstagram className="text-[#252525] hover:text-pink-600 text-lg cursor-pointer" />
           <FaFacebookF className="text-[#252525] hover:text-blue-600 text-lg cursor-pointer" />
@@ -65,8 +60,7 @@ export default function Footer() {
         </div>
       </footer>
 
-      {/* Watermark Image */}
-      <div className="w-full flex justify-center items-center bg-transparent mt-8">
+      <div className="w-full flex justify-center items-center bg-transparent mt-[100px]">
         <img
           src="Images/Footer Last Logo.png"
           alt="YETZU Watermark"

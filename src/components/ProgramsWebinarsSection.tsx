@@ -29,7 +29,7 @@ export default function ProgramsWebinarsSection() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white px-[108px] py-[120px] flex flex-col">
+    <div className="min-h-screen bg-white px-[108px]  flex flex-col">
       {/* Heading */}
       <div className="text-center mb-[48px]">
         <h3 className="font-inter font-medium text-[46px] leading-[100%] tracking-[-0.06em] text-[#021165]">

@@ -37,7 +37,7 @@ export default function Testimonials() {
   ];
 
   return (
-    <section className="relative bg-white px-[108px] py-[120px] flex flex-col items-center gap-[52px] overflow-hidden">
+    <section className="relative bg-white px-[108px] py-[120px] flex flex-col items-center gap-[52px] overflow-hidden h-[900px]">
       {/* Background Gradient Overlay */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -57,7 +57,7 @@ export default function Testimonials() {
           Trusted by Students and Educators Worldwide
         </h2>
         <p className="text-[#252525] text-[16px] font-[SF Pro] font-[400] tracking-[-0.03em] text-center max-w-4xl mx-auto">
-          Explore stories from learners around the world — how Yetzu mentorship helped them reach their academic and career goals.
+          Explore stories from learners around the world  how Yetzu mentorship helped them reach their academic and career goals.
         </p>
       </div>
 
