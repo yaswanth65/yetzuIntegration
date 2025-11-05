@@ -17,30 +17,44 @@ module.exports = mod;
 __turbopack_context__.s([
     "config",
     ()=>config,
-    "default",
-    ()=>__TURBOPACK__default__export__
+    "middleware",
+    ()=>middleware
 ]);
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2d$auth$2f$middleware$2e$js__$5b$middleware$2d$edge$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next-auth/middleware.js [middleware-edge] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$esm$2f$api$2f$server$2e$js__$5b$middleware$2d$edge$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/next/dist/esm/api/server.js [middleware-edge] (ecmascript) <locals>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$esm$2f$server$2f$web$2f$exports$2f$index$2e$js__$5b$middleware$2d$edge$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/esm/server/web/exports/index.js [middleware-edge] (ecmascript)");
 ;
-;
-const __TURBOPACK__default__export__ = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2d$auth$2f$middleware$2e$js__$5b$middleware$2d$edge$5d$__$28$ecmascript$29$__["withAuth"])(function middleware(req) {
-    return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$esm$2f$server$2f$web$2f$exports$2f$index$2e$js__$5b$middleware$2d$edge$5d$__$28$ecmascript$29$__["NextResponse"].next();
-}, {
-    callbacks: {
-        authorized: ({ token })=>!!token
-    },
-    pages: {
-        signIn: "/login"
+const protectedRoutes = [
+    "/dashboard",
+    "/profile",
+    "/settings",
+    "/account",
+    "/home"
+];
+const authRoutes = [
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/otp-verification"
+];
+function middleware(request) {
+    const isUserLoggedIn = request.cookies.get("isUserLoggedIn")?.value;
+    const { pathname } = request.nextUrl;
+    const isProtected = protectedRoutes.some((route)=>pathname.startsWith(route));
+    const isAuthRoute = authRoutes.some((route)=>pathname.startsWith(route));
+    if (!isUserLoggedIn && isProtected) {
+        const loginUrl = new URL("/login", request.url);
+        return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$esm$2f$server$2f$web$2f$exports$2f$index$2e$js__$5b$middleware$2d$edge$5d$__$28$ecmascript$29$__["NextResponse"].redirect(loginUrl);
     }
-});
+    if (isUserLoggedIn && isAuthRoute) {
+        const dashboardUrl = new URL("/", request.url);
+        return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$esm$2f$server$2f$web$2f$exports$2f$index$2e$js__$5b$middleware$2d$edge$5d$__$28$ecmascript$29$__["NextResponse"].redirect(dashboardUrl);
+    }
+    return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$esm$2f$server$2f$web$2f$exports$2f$index$2e$js__$5b$middleware$2d$edge$5d$__$28$ecmascript$29$__["NextResponse"].next();
+}
 const config = {
     matcher: [
-        "/dashboard/:path*",
-        "/profile/:path*",
-        "/settings/:path*",
-        "/account/:path*"
+        "/((?!_next/static|_next/image|favicon.ico|images|api/public).*)"
     ]
 };
 }),

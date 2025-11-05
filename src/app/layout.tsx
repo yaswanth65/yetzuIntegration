@@ -3,8 +3,6 @@ import "@/styles/globals.css";
 import ToastProvider from "@/providers/ToastProvider";
 import { SessionProvider } from "@/providers/SessionProvider";
 import { QueryClientWrapper } from "@/providers/QueryClientProvider";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -17,17 +15,25 @@ export const metadata = {
   icons: {
     icon: "/logo.svg",
   },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+  },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" className={inter.variable}>
       <body>
         <QueryClientWrapper>
           <SessionProvider>
-            <Navbar />
             {children}
-            <Footer />
             <ToastProvider />
           </SessionProvider>
         </QueryClientWrapper>

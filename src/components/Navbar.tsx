@@ -1,18 +1,17 @@
-"use client"
+"use client";
 
 import Link from "next/link";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
 import useSession from "@/hooks/useSession";
 
 const Navbar = () => {
-  const { user: { name } } = useSession();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user: { name } = {} } = useSession();
   const [isCoursesOpen, setIsCoursesOpen] = useState(false);
 
   return (
-    <nav className="w-full bg-white shadow-md sticky top-0 z-50">
+    <nav className="w-full bg-white shadow-md fixed top-0 left-0 z-50">
       <div className="max-w-[1920px] mx-auto flex justify-between items-center px-6 md:px-10 lg:px-16 py-4">
         <div className="flex items-center space-x-2">
           <Link href="/">
@@ -35,7 +34,7 @@ const Navbar = () => {
             About Us
           </Link>
 
-          <div className="relative group">
+          <div className="relative">
             <button
               onClick={() => setIsCoursesOpen(!isCoursesOpen)}
               className="flex items-center gap-1 hover:text-blue-600 font-medium"
@@ -43,8 +42,7 @@ const Navbar = () => {
               Courses
               <ChevronDown
                 size={16}
-                className={`transition-transform duration-300 ${isCoursesOpen ? "rotate-180" : ""
-                  }`}
+                className={`transition-transform duration-300 ${isCoursesOpen ? "rotate-180" : ""}`}
               />
             </button>
 
@@ -69,16 +67,19 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:block">
-          {!name &&
-            <Link href="/login" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition font-medium">
+          {!name ? (
+            <Link
+              href="/login"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition font-medium"
+            >
               Log In
             </Link>
-          }
-          <p>{name}</p>
+          ) : (
+            <p>{name}</p>
+          )}
         </div>
       </div>
     </nav>
-
   );
 };
 
