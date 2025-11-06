@@ -24,13 +24,26 @@ const useGetUserProfile = (): UseQueryResult<
   GetUserProfileResponse,
   unknown
 > => {
-  const accessToken = Cookies.get("jwtToken") || "";
-
+  const jwtToken = Cookies.get("jwtToken") || "";
   return useQuery<GetUserProfileResponse>({
     queryKey: ["getUserProfile"],
     queryFn: identityService.getUserProfile,
-    enabled: !!accessToken,
+    enabled: !!jwtToken,
     refetchInterval: false,
+  });
+};
+
+const useRenewAccessTokenMutation = (): UseMutationResult<
+  LoginResponse,
+  unknown,
+  void
+> => {
+  return useMutation<LoginResponse, unknown, void>({
+    mutationFn: identityService.getAccessToken,
+    onSuccess: (data) => {
+      Cookies.set("jwtToken", data.userData.jwtToken, { expires: 1 });
+      Cookies.set("refreshToken", data.userData.refresh_token, { expires: 7 });
+    },
   });
 };
 
@@ -154,4 +167,5 @@ export {
   useForgotPasswordMutation,
   useOtpVerificationMutation,
   useResetPasswordMutation,
+  useRenewAccessTokenMutation,
 };

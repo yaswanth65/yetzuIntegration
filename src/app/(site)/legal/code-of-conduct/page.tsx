@@ -1,4 +1,4 @@
-import LegalPages from "@/components/ui/LegalPages";
+import LegalPages from "@/components/LegalPages";
 import { codeOfConductPageData } from "../utils";
 
 export default function TermsPage() {

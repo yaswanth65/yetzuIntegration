@@ -8,21 +8,24 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
     return (
         <div className="h-screen w-full bg-white flex items-center justify-center py-3.5">
             <div className="flex w-full h-full rounded-sm px-4">
-                <div className="hidden md:flex w-[55%] bg-[#f8f9ff] items-center justify-center">
+                <div className="hidden lg:flex w-[55%] bg-[#f8f9ff] items-center justify-center">
                     <AuthBackground />
                 </div>
-                <div className="w-full md:w-[45%] flex flex-col h-full justify-between px-6 sm:px-10 md:px-16 lg:px-20 xl:px-28 mx-auto">
-                    <div className="pt-6 md:pt-10">
+                <div className="w-full lg:w-[45%] flex flex-col h-full justify-between px-6 sm:px-10 md:px-16 lg:px-20 xl:px-28 mx-auto">
+                    <div className="hidden lg:block pt-6 lg:pt-10">
                         <Image
                             src={Logo}
                             alt="logo"
                             width={100}
                             height={22}
-                            className="md:w-[126px] md:h-[26px] w-[90px] h-auto"
+                            className="lg:w-[126px] lg:h-[26px] w-[90px] h-auto"
                         />
                     </div>
                     <div className="flex flex-col justify-center h-full">
-                        <div>{children}</div>
+                        <div className="block lg:hidden w-full">
+                            {children}
+                        </div>
+                        <div className="hidden lg:block">{children}</div>
                     </div>
                 </div>
             </div>

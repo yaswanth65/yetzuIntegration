@@ -6,6 +6,7 @@ import ProgramsWebinarsSection from "../../components/ProgramsWebinarsSection";
 import WebinarsSection from "../../components/WebinarsSection";
 import TestimonalsSection from "../../components/TestimonialsSection";
 import AccordionItem from "@/components/AccordionItem";
+import { useRenewAccessTokenMutation } from "@/lib/queries/identityService/useIdentityService";
 // Accordion Item Component (with black answer text)
 
 export default function Home() {
@@ -158,40 +159,40 @@ export default function Home() {
 
       {/* Video Section */}
       <section
-  className="w-full mx-auto px-4 sm:px-6 md:px-12 lg:px-20 xl:px-[108px] 
+        className="w-full mx-auto px-4 sm:px-6 md:px-12 lg:px-20 xl:px-[108px] 
              flex flex-col items-center justify-center gap-8 md:gap-12 
              bg-white py-8 md:py-12"
-  style={{
-    // Navbar takes ~75px; make the rest full height dynamically
-    minHeight: "calc(100vh - 75px)",
-  }}
->
-  {/* Heading */}
-  <h2 className="font-inter text-[22px] sm:text-[28px] md:text-[34px] lg:text-[40px] font-semibold text-[#021165] text-center leading-tight">
-    Lorem Ipsum Dolor Self Amet
-  </h2>
+        style={{
+          // Navbar takes ~75px; make the rest full height dynamically
+          minHeight: "calc(100vh - 75px)",
+        }}
+      >
+        {/* Heading */}
+        <h2 className="font-inter text-[22px] sm:text-[28px] md:text-[34px] lg:text-[40px] font-semibold text-[#021165] text-center leading-tight">
+          Lorem Ipsum Dolor Self Amet
+        </h2>
 
-  {/* Video Wrapper */}
-  <div
-    className="w-full max-w-[1224px] rounded-2xl overflow-hidden shadow-lg relative"
-    style={{
-      // Responsive 16:9 aspect ratio — fallback-friendly
-      aspectRatio: "16/9",
-      borderRadius: "20px",
-      maxHeight: "calc(100vh - 200px)", // avoid overflow on small screens
-    }}
-  >
-    <iframe
-      src="https://www.youtube.com/embed/VCPGMjCW0is?rel=0&modestbranding=1"
-      title="Educational Video"
-      frameBorder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowFullScreen
-      loading="lazy"
-      className="absolute inset-0 w-full h-full"
-    ></iframe>
-  </div>
-</section>
+        {/* Video Wrapper */}
+        <div
+          className="w-full max-w-[1224px] rounded-2xl overflow-hidden shadow-lg relative"
+          style={{
+            // Responsive 16:9 aspect ratio — fallback-friendly
+            aspectRatio: "16/9",
+            borderRadius: "20px",
+            maxHeight: "calc(100vh - 200px)", // avoid overflow on small screens
+          }}
+        >
+          <iframe
+            src="https://www.youtube.com/embed/VCPGMjCW0is?rel=0&modestbranding=1"
+            title="Educational Video"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            loading="lazy"
+            className="absolute inset-0 w-full h-full"
+          ></iframe>
+        </div>
+      </section>
 
 
       <WebinarsSection />

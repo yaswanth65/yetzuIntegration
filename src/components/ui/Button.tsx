@@ -34,6 +34,7 @@ const Button: React.FC<ButtonProps> = ({
     trailingIcon,
     loading,
     disabled,
+    className,
     ...props
 }) => {
     const isDisabled = disabled || loading;
@@ -58,7 +59,7 @@ const Button: React.FC<ButtonProps> = ({
 
     return (
         <button
-            className={`${base} ${variantClass}`}
+            className={`${base} ${variantClass} ${className} cursor-pointer`}
             disabled={isDisabled}
             {...props}
         >

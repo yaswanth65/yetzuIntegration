@@ -1,6 +1,40 @@
 "use client";
 
+import Link from "next/link";
 import { FaInstagram, FaFacebookF, FaYoutube } from "react-icons/fa";
+
+const footerLinks = [
+  {
+    title: "Menu",
+    links: [
+      { label: "Home", route: "/" },
+      { label: "About", route: "/about" },
+      { label: "Programs", route: "/programs" },
+      { label: "Resources", route: "/resources" },
+      { label: "Assignments", route: "/assignments" },
+      { label: "Contact", route: "/contact" },
+    ],
+  },
+  {
+    title: "Compliance",
+    links: [
+      { label: "Privacy Policy", route: "/legal/privacy-policy" },
+      { label: "Terms and Conditions", route: "/legal/terms" },
+      { label: "Refund Policy", route: "/legal/refund-policy" },
+      { label: "Mentorship Policy", route: "/legal/mentorship-policy" },
+      { label: "Code of Conduct", route: "/legal/code-of-conduct" },
+    ],
+  },
+  {
+    title: "Title",
+    links: [
+      { label: "Menu", route: "/" },
+      { label: "Menu", route: "/" },
+      { label: "Menu", route: "/" },
+      { label: "Menu", route: "/" }
+    ],
+  },
+];
 
 export default function Footer() {
   return (
@@ -32,28 +66,21 @@ export default function Footer() {
           </div>
 
           <div className="flex flex-wrap justify-between flex-1">
-            {[1, 2, 3].map((col) => (
-              <div key={col} className="min-w-[120px]">
-                <h4 className="font-semibold text-gray-800 mb-3">Title</h4>
-                {Array(7)
-                  .fill("Menu")
-                  .map((menu, i) => (
-                    <p
-                      key={i}
-                      className="text-gray-600 hover:text-gray-800 cursor-pointer mb-1"
-                    >
-                      {menu}
-                    </p>
-                  ))}
+            {footerLinks.map((section, index) => (
+              <div key={index} className="min-w-[120px]">
+                <h4 className="font-semibold text-gray-800 mb-3">{section.title}</h4>
+                {section.links.map((link, i) => (
+                  <Link
+                    key={i}
+                    href={link.route}
+                    className="block text-gray-600 hover:text-gray-900 cursor-pointer mb-1 transition"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
               </div>
             ))}
           </div>
-        </div>
-
-        <div className="flex justify-end gap-6 pt-6">
-          <FaInstagram className="text-[#252525] hover:text-pink-600 text-lg cursor-pointer" />
-          <FaFacebookF className="text-[#252525] hover:text-blue-600 text-lg cursor-pointer" />
-          <FaYoutube className="text-[#252525] hover:text-red-600 text-lg cursor-pointer" />
         </div>
       </footer>
 

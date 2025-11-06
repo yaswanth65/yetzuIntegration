@@ -1,5 +1,5 @@
-import { api, authApi } from "@/lib/axios";
-import { Course, CoursesResponse } from "./types";
+import { api } from "@/lib/axios";
+import { Course } from "./types";
 
 export const coursesService = {
   getCourses: async () => {

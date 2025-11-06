@@ -1,7 +1,15 @@
 import { api, authApi } from "@/lib/axios";
 import { LoginPayload, SignupPayload } from "./types";
+import Cookies from "js-cookie";
 
 export const identityService = {
+  getAccessToken: async () => {
+    const refreshToken = Cookies.get("refreshToken") || "";
+    const res = await authApi.post("/identityapi/v1/auth/refresh", {
+      refreshToken,
+    });
+    return res?.data;
+  },
   getUserProfile: async () => {
     const res = await authApi.get("/identityapi/v1/auth/me");
     return res?.data;

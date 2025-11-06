@@ -1,4 +1,4 @@
-import { LegalPageType } from "@/app/(site)/(legal)/utils";
+import { LegalPageType } from "@/app/(site)/legal/utils";
 import React from "react";
 
 const LegalPages = ({ data }: { data: LegalPageType }) => (

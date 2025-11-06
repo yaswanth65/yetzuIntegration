@@ -49,20 +49,20 @@ const Navbar = () => {
             {isCoursesOpen && (
               <div className="absolute left-0 mt-2 w-48 bg-white shadow-lg border rounded-lg py-2">
                 <Link href="/courses/medical" className="block px-4 py-2 hover:bg-blue-50 text-gray-700">
-               Course 1
+                  Course 1
                 </Link>
-              
+
                 <Link href="/courses/engineering" className="block px-4 py-2 hover:bg-blue-50 text-gray-700">
-               Course 2
+                  Course 2
                 </Link>
                 <Link href="/courses/commerce" className="block px-4 py-2 hover:bg-blue-50 text-gray-700">
-               Course 3   
+                  Course 3
                 </Link>
               </div>
             )}
           </div>
 
-          <Link href="/contact" className="hover:text-blue-600 font-medium">
+          <Link href="/contact-us" className="hover:text-blue-600 font-medium">
             Contact Us
           </Link>
         </div>
