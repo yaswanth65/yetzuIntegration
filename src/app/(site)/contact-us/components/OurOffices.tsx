@@ -1,5 +1,8 @@
 "use client";
 
+import MainHeading from "@/components/Typography/MainHeading";
+import Paragraph from "@/components/Typography/Paragraph";
+import SubHeading from "@/components/Typography/SubHeading";
 import { Mail, Phone, MapPin, MessageCircle, Youtube, Instagram } from "lucide-react";
 
 const contactInfo = [
@@ -39,13 +42,9 @@ export default function OurOffices() {
     return (
         <section className="w-full bg-gradient-to-b from-white to-blue-50 py-10 px-4 sm:px-6 lg:px-10 flex flex-col items-center">
             <div className="text-center mb-12">
-                <h2 className="text-4xl sm:text-5xl font-bold text-blue-900 mb-3">
-                    Our Offices
-                </h2>
-                <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
-                    Join a Thriving Community Dedicated to Academic Excellence Supported by
-                    Cutting-Edge Technology and Expert Mentorship.
-                </p>
+                <SubHeading text="Our Offices" />
+                <Paragraph text="Join a Thriving Community Dedicated to Academic Excellence Supported by
+                    Cutting-Edge Technology and Expert Mentorship."/>
             </div>
 
             <div className="flex flex-col-reverse lg:flex-row bg-white rounded-2xl shadow-md overflow-hidden w-full max-w-7xl">

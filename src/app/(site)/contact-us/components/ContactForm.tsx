@@ -9,6 +9,8 @@ import { usePostContactInfo } from "@/lib/queries/formService/useFormService";
 import Button from "@/components/ui/Button";
 import { ContactFormPayload } from "@/lib/queries/formService/types";
 import toast from "react-hot-toast";
+import MainHeading from "@/components/Typography/MainHeading";
+import Paragraph from "@/components/Typography/Paragraph";
 
 const ContactForm = () => {
     const { mutateAsync: postContactInfo, isPending } = usePostContactInfo();
@@ -41,9 +43,7 @@ const ContactForm = () => {
                         </button>
 
                         <div className="space-y-3 sm:space-y-4">
-                            <h1 className="text-4xl sm:text-5xl font-bold leading-snug">
-                                Get in touch with us
-                            </h1>
+                            <MainHeading text="Get in touch with us" className="text-white" />
                             <p className="text-base sm:text-lg text-white/90">
                                 Or just reach out manually to{" "}
                                 <a

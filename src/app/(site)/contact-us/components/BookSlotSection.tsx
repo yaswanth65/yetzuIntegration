@@ -1,5 +1,7 @@
 "use client";
 
+import MainHeading from "@/components/Typography/MainHeading";
+import Paragraph from "@/components/Typography/Paragraph";
 import Image from "next/image";
 
 export default function BookSlotSection() {
@@ -17,14 +19,9 @@ export default function BookSlotSection() {
             </div>
 
             <div className="text-center max-w-2xl mx-auto">
-                <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4 leading-tight">
-                    <span className="text-blue-700">Book</span> Your Slot{" "}
-                    <span className="text-blue-700">Today</span>
-                </h2>
-                <p className="text-gray-600 text-sm sm:text-base mb-8 px-2">
-                    Join a Thriving Community Dedicated to Academic Excellence Supported by
-                    Cutting-Edge Technology and Expert Mentorship.
-                </p>
+                <MainHeading text="Book Your Slot Today" highlights={['Book', 'Today']} />
+                <Paragraph text="Join a Thriving Community Dedicated to Academic Excellence Supported by
+                    Cutting-Edge Technology and Expert Mentorship."/>
 
                 <button className="bg-[#164CFF] hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105 text-sm sm:text-base">
                     Get Invested in Your Academic Success

@@ -865,42 +865,42 @@ export default function About() {
       </section>
 
       {/* Trusted by Leaders Section - Single Image + Text + Rounded Container */}
-       <section className="py-[60px] md:py-[80px] px-4 sm:px-6 md:px-12 lg:px-20 xl:px-[108px] min-h-[calc(100vh-80px)] flex items-center justify-center bg-[linear-gradient(180deg,_#FFFFFF_0%,_#F8FAFF_40%,_#F5F8FF_60%,_#FFFFFF_100%)]">
-      <div className="w-full max-w-[1224px] mx-auto rounded-3xl overflow-hidden shadow-lg relative">
-        {/* Main Combined Image - 16:9 Aspect Ratio */}
-        <div className="relative w-full aspect-[16/9] overflow-hidden">
-          <img
-            src="/images/testimonals.png"
-            alt="Trusted by Leaders from Diverse Educational Institutions and Industries"
-            className="w-full h-full object-cover"
-          />
-          {/* Gradient overlay for fog effect */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white pointer-events-none"></div>
+      <section className="py-[60px] md:py-[80px] px-4 sm:px-6 md:px-12 lg:px-20 xl:px-[108px] min-h-[calc(100vh-80px)] flex items-center justify-center bg-[linear-gradient(180deg,_#FFFFFF_0%,_#F8FAFF_40%,_#F5F8FF_60%,_#FFFFFF_100%)]">
+        <div className="w-full max-w-[1224px] mx-auto rounded-3xl overflow-hidden shadow-lg relative">
+          {/* Main Combined Image - 16:9 Aspect Ratio */}
+          <div className="relative w-full aspect-[16/9] overflow-hidden">
+            <img
+              src="/images/testimonals.png"
+              alt="Trusted by Leaders from Diverse Educational Institutions and Industries"
+              className="w-full h-full object-cover"
+            />
+            {/* Gradient overlay for fog effect */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white pointer-events-none"></div>
+          </div>
+
+          {/* Content: Headline + Subtext + Button - Overlapping the image */}
+          <div className="relative -mt-20 md:-mt-24 lg:-mt-28 pt-0 pb-6 px-6 md:pb-8 md:px-8 lg:pb-12 lg:px-12 text-center bg-white">
+            <h2 className="text-[22px] md:text-[32px] lg:text-4xl font-bold text-gray-900 mb-2 md:mb-3">
+              Trusted by <span className="text-blue-600">Leaders</span> From
+              Diverse
+              <br className="hidden md:block" />
+              Educational{" "}
+              <span className="text-blue-600">
+                Institutions And Industries.
+              </span>
+            </h2>
+
+            <p className="text-gray-600 text-[14px] md:text-base max-w-full md:max-w-2xl mx-auto mb-6 md:mb-8 mt-3 md:mt-5">
+              Join a Thriving Community Dedicated to Academic Excellence
+              Supported by Cutting-Edge Technology and Expert Mentorship.
+            </p>
+
+            <button className="px-6 md:px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium w-full sm:w-auto text-[14px] md:text-base">
+              Get Invested in Your Academic Success
+            </button>
+          </div>
         </div>
-
-        {/* Content: Headline + Subtext + Button - Overlapping the image */}
-        <div className="relative -mt-20 md:-mt-24 lg:-mt-28 pt-0 pb-6 px-6 md:pb-8 md:px-8 lg:pb-12 lg:px-12 text-center bg-white">
-          <h2 className="text-[22px] md:text-[32px] lg:text-4xl font-bold text-gray-900 mb-2 md:mb-3">
-            Trusted by <span className="text-blue-600">Leaders</span> From
-            Diverse
-            <br className="hidden md:block" />
-            Educational{" "}
-            <span className="text-blue-600">
-              Institutions And Industries.
-            </span>
-          </h2>
-
-          <p className="text-gray-600 text-[14px] md:text-base max-w-full md:max-w-2xl mx-auto mb-6 md:mb-8 mt-3 md:mt-5">
-            Join a Thriving Community Dedicated to Academic Excellence
-            Supported by Cutting-Edge Technology and Expert Mentorship.
-          </p>
-
-          <button className="px-6 md:px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium w-full sm:w-auto text-[14px] md:text-base">
-            Get Invested in Your Academic Success
-          </button>
-        </div>
-      </div>
-    </section>
+      </section>
     </>
   );
 }

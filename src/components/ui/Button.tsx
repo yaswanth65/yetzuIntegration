@@ -34,33 +34,33 @@ const Button: React.FC<ButtonProps> = ({
     trailingIcon,
     loading,
     disabled,
-    className,
+    className = "",
     ...props
 }) => {
     const isDisabled = disabled || loading;
 
     const base =
-        "flex items-center justify-center px-4 py-2 rounded-xl h-[44px] transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 gap-4";
+        "flex items-center justify-center px-10 py-1 rounded-md text-sm sm:text-base font-medium h-[44px] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 gap-2 select-none";
+
     const styles = {
         primary:
-            "bg-[#0047FF] text-white hover:bg-[#003ed6] border-transparent cursor-pointer",
+            "bg-[#0047FF] text-white hover:bg-[#0038cc] active:scale-[0.98] shadow-sm cursor-pointer",
         secondary:
-            "bg-white text-gray-700 border-2 border-gray-200 hover:border-[#003ed6] cursor-pointer",
+            "bg-transparent text-[#0047FF] border border-[#0047FF] hover:bg-[#0047FF] hover:text-white active:scale-[0.98] cursor-pointer transition-all duration-300",
         disabled:
             "bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed",
     };
 
-    let variantClass =
-        isDisabled
-            ? styles.disabled
-            : variant === "primary"
-                ? styles.primary
-                : styles.secondary;
+    const variantClass = isDisabled
+        ? styles.disabled
+        : variant === "primary"
+            ? styles.primary
+            : styles.secondary;
 
     return (
         <button
-            className={`${base} ${variantClass} ${className} cursor-pointer`}
             disabled={isDisabled}
+            className={`${base} ${variantClass} ${className}`}
             {...props}
         >
             {loading ? (
@@ -70,8 +70,8 @@ const Button: React.FC<ButtonProps> = ({
                 </span>
             ) : (
                 <>
-                    {trailingIcon && <span className="ml-2">{trailingIcon}</span>}
                     <span>{children}</span>
+                    {trailingIcon && <span className="ml-2">{trailingIcon}</span>}
                 </>
             )}
         </button>

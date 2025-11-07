@@ -34,6 +34,10 @@ const Navbar = () => {
             About Us
           </Link>
 
+          <Link href="/assignments" className="hover:text-blue-600 font-medium">
+            Assignments
+          </Link>
+
           <div className="relative">
             <button
               onClick={() => setIsCoursesOpen(!isCoursesOpen)}

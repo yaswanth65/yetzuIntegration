@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Minus } from "lucide-react";
-import MainHeading from "@/components/Typography/MainHeading";
 import SubHeading from "@/components/Typography/SubHeading";
 import Paragraph from "@/components/Typography/Paragraph";
 

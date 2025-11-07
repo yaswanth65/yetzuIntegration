@@ -1,5 +1,8 @@
 "use client";
 
+import MainHeading from "@/components/Typography/MainHeading";
+import Paragraph from "@/components/Typography/Paragraph";
+import SubHeading from "@/components/Typography/SubHeading";
 import Image from "next/image";
 
 const resources = [
@@ -29,17 +32,12 @@ const resources = [
 export default function ResourceCards() {
     return (
         <section className="w-full bg-gradient-to-b from-blue-50 to-white py-10 px-4 sm:px-6 lg:px-10">
-            <div className="max-w-7xl mx-auto text-center mb-10">
-                <h2 className="text-3xl sm:text-4xl font-bold text-blue-900 mb-3">
-                    Explore Our Resources
-                </h2>
-                <p className="text-gray-600 text-sm sm:text-base max-w-2xl mx-auto">
-                    Learn from our curated collection of materials and guides. These resources can
-                    help you master new concepts or explore advanced topics with ease.
-                </p>
+            <div className="max-w-7xl mx-auto text-center mb-10 text-center">
+                <SubHeading text="Explore our Resources" className="text-center" />
+                <Paragraph text="Learn from our curated collection of materials and guides. These resources can
+                    help you master new concepts or explore advanced topics with ease." className="mx-auto" />
             </div>
 
-            {/* Responsive Card Grid */}
             <div className="flex flex-wrap justify-center gap-6">
                 {resources.map((item) => (
                     <div
