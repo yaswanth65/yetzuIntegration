@@ -16,9 +16,11 @@ import {
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import useSession from "@/hooks/useSession";
+import { useLogoutMutation } from "@/lib/queries/identityService/useIdentityService";
 
 const Navbar = () => {
-  const { user: { name, email } = {} } = useSession();
+  const { user: { name, email, id = '' } = {} } = useSession();
+  const { mutateAsync: logout } = useLogoutMutation();
   const [isCoursesOpen, setIsCoursesOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -27,7 +29,6 @@ const Navbar = () => {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const coursesMenuRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -121,9 +122,8 @@ const Navbar = () => {
                 Courses
                 <ChevronDown
                   size={16}
-                  className={`transition-transform duration-300 ${
-                    isCoursesOpen ? "rotate-180" : ""
-                  }`}
+                  className={`transition-transform duration-300 ${isCoursesOpen ? "rotate-180" : ""
+                    }`}
                 />
               </button>
 
@@ -168,9 +168,8 @@ const Navbar = () => {
                   </div>
                   <ChevronDown
                     size={16}
-                    className={`text-gray-600 transition-transform duration-300 ${
-                      isUserMenuOpen ? "rotate-180" : ""
-                    }`}
+                    className={`text-gray-600 transition-transform duration-300 ${isUserMenuOpen ? "rotate-180" : ""
+                      }`}
                   />
                 </button>
 
@@ -202,7 +201,7 @@ const Navbar = () => {
                       })}
 
                       {/* Logout */}
-                      <button className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-red-600 hover:text-red-700 transition-colors duration-150 mt-1 border-t border-gray-100">
+                      <button onClick={async () => await logout({ userId: id })} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-red-600 hover:text-red-700 transition-colors duration-150 mt-1 border-t border-gray-100">
                         <LogOut size={18} />
                         <span className="font-medium">Log Out</span>
                       </button>
@@ -241,9 +240,8 @@ const Navbar = () => {
 
       {/* Mobile Sidebar */}
       <aside
-        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-50 lg:hidden transform transition-transform duration-300 ease-in-out ${
-          isSidebarOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-50 lg:hidden transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
@@ -306,9 +304,8 @@ const Navbar = () => {
                   </div>
                   <ChevronDown
                     size={16}
-                    className={`transition-transform duration-300 ${
-                      isCoursesOpen ? "rotate-180" : ""
-                    }`}
+                    className={`transition-transform duration-300 ${isCoursesOpen ? "rotate-180" : ""
+                      }`}
                   />
                 </button>
 
@@ -370,7 +367,7 @@ const Navbar = () => {
                 </div>
 
                 {/* Logout Button */}
-                <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors duration-200 font-medium">
+                <button onClick={async () => await logout({ userId: id })} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors duration-200 font-medium">
                   <LogOut size={18} />
                   Log Out
                 </button>

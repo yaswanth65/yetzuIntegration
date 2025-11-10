@@ -47,7 +47,7 @@ authApi.interceptors.response.use(
           refreshToken,
         });
 
-        const newAccessToken = data?.accessToken;
+        const newAccessToken = data?.data?.access_token;
         if (!newAccessToken) throw new Error("No new access token received");
 
         Cookies.set("jwtToken", newAccessToken, {
@@ -64,8 +64,6 @@ authApi.interceptors.response.use(
         Cookies.remove("jwtToken");
         Cookies.remove("refreshToken");
         Cookies.remove("isUserLoggedIn");
-
-        toast.error("Session expired. Please log in again.");
 
         if (typeof window !== "undefined") {
           window.location.href = "/login";

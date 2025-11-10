@@ -25,10 +25,11 @@ const useGetUserProfile = (): UseQueryResult<
   unknown
 > => {
   const jwtToken = Cookies.get("jwtToken") || "";
+  const refreshToken = Cookies.get("refreshToken") || "";
   return useQuery<GetUserProfileResponse>({
     queryKey: ["getUserProfile"],
     queryFn: identityService.getUserProfile,
-    enabled: !!jwtToken,
+    enabled: !!jwtToken || !!refreshToken,
     refetchInterval: false,
   });
 };
@@ -55,9 +56,13 @@ const useLoginMutation = (): UseMutationResult<
   const queryClient = useQueryClient();
   return useMutation<LoginResponse, unknown, LoginPayload>({
     mutationFn: identityService.login,
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       Cookies.set("jwtToken", data.userData.jwtToken, { expires: 1 });
-      Cookies.set("refreshToken", data.userData.refresh_token, { expires: 7 });
+      if (variables?.rememberMe) {
+        Cookies.set("refreshToken", data.userData.refresh_token, {
+          expires: 7,
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["getUserProfile"] });
     },
   });
@@ -110,6 +115,7 @@ const useSignUpMutation = (): UseMutationResult<
         const res = await login({
           email: variables.email,
           password: variables.password,
+          rememberMe: false,
         });
       } catch {
         toast.error("Error while logging in!");

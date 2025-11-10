@@ -14,6 +14,7 @@ import { api } from "@/lib/axios";
 import useSession from "@/hooks/useSession";
 import Cookies from "js-cookie";
 import { useGoogleLoginMutation, useLoginMutation } from "@/lib/queries/identityService/useIdentityService";
+import SubHeading from "@/components/Typography/SubHeading";
 
 const LoginSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Email is required"),
@@ -71,16 +72,14 @@ export default function LoginForm() {
     <div className="flex flex-col gap-6 mx-auto">
       <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" onLoad={initializeGoogleButtons} />
 
-      <h1 className="text-[28px] lg:text-[30px] xl:text-[34px] tracking-tight text-[#021165] font-semibold font-inter">
-        Log In
-      </h1>
+      <SubHeading text="Log In" />
 
       <Formik
         initialValues={{ email: "", password: "", rememberMe: false }}
         validationSchema={LoginSchema}
         onSubmit={async (values) => {
           try {
-            const data = await login({ email: values.email, password: values.password })
+            const data = await login({ email: values.email, password: values.password, rememberMe: values.rememberMe })
             if (data?.userData && data?.userProfileData) {
               setIsUserLoggedIn(true)
               toast.success("Login successful!");
@@ -156,7 +155,7 @@ export default function LoginForm() {
               <div className="flex-1 border-t border-gray-300" />
             </div>
 
-            {!isPending && <div id="google-login" className="w-full"></div>}
+            <div id="google-login" className="w-full"></div>
 
             <p className="text-xs lg:text-sm text-center mt-2 text-gray-600">
               Don’t have an account?{" "}
