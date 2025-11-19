@@ -31,7 +31,7 @@ const footerLinks = [
       { label: "Menu", route: "/" },
       { label: "Menu", route: "/" },
       { label: "Menu", route: "/" },
-      { label: "Menu", route: "/" }
+      { label: "Menu", route: "/" },
     ],
   },
 ];
@@ -42,7 +42,7 @@ export default function Footer() {
       <footer className="relative rounded-[28px] shadow-sm w-full max-w-7xl px-12 py-12 bg-gradient-to-l from-[#E6EAFF] to-[#FFFFFF] mx-auto">
         <div className="flex flex-col lg:flex-row justify-between gap-10">
           <div className="flex-1">
-            <img src="Images/Logo.png" alt="YETZU Logo" className="h-8 mb-4" />
+            <img src="/images/Logo.png" alt="YETZU Logo" className="h-8 mb-4" />
             <p className="text-gray-600 max-w-sm leading-relaxed">
               Lorem ipsym, can be used for free any where for anything. Ir is
               effective tool so solve our text relate problems. can be
@@ -68,7 +68,9 @@ export default function Footer() {
           <div className="flex flex-wrap justify-between flex-1">
             {footerLinks.map((section, index) => (
               <div key={index} className="min-w-[120px]">
-                <h4 className="font-semibold text-gray-800 mb-3">{section.title}</h4>
+                <h4 className="font-semibold text-gray-800 mb-3">
+                  {section.title}
+                </h4>
                 {section.links.map((link, i) => (
                   <Link
                     key={i}
@@ -86,12 +88,11 @@ export default function Footer() {
 
       <div className="w-full flex justify-center items-center bg-transparent mt-[100px]">
         <img
-          src="Images/Footer Last Logo.png"
+          src="/images/Footer Last Logo.png"
           alt="YETZU Watermark"
           className="w-full h-auto opacity-20 select-none pointer-events-none object-cover px-28 mt-12"
         />
       </div>
     </div>
-
   );
 }
