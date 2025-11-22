@@ -1,10 +1,11 @@
 export interface Course {
   _id: string;
   title: string;
+  subtitle: string;
   description: string;
   thumbnail: string;
   benefits: string[];
-  syllabus: string;
+  syllabus: { _id: string, title: string, desc: string }[];
   duration: string;
   cost: number;
   outcomes: string[];

@@ -36,7 +36,7 @@ const MainHeading: React.FC<MainHeadingProps> = ({
 
     return (
         <h1
-            className={`font-inter font-semibold text-[28px] sm:text-[34px] md:text-[52px] lg:text-[68px] leading-[1.2] tracking-[-0.04em] text-[#252525] max-w-[95%] md:max-w-4xl mx-auto relative z-10 mb-3 ${className}`}
+            className={`font-inter font-semibold text-[38px] sm:text-[44px] md:text-[52px] lg:text-[68px] leading-[1.2] tracking-[-0.04em] max-w-[95%] md:max-w-4xl mx-auto relative z-10 mb-3 ${className?.includes("text") ? className : "text-[#252525]"}`}
         >
             {getHighlightedText(text, highlights)}
         </h1>

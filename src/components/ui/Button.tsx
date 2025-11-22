@@ -40,7 +40,7 @@ const Button: React.FC<ButtonProps> = ({
     const isDisabled = disabled || loading;
 
     const base =
-        "flex items-center justify-center px-10 py-1 rounded-md text-sm sm:text-base font-medium h-[44px] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 gap-2 select-none";
+        "flex items-center justify-center px-10 py-1 rounded-md text-sm sm:text-base font-medium h-[44px] w-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 gap-2 select-none";
 
     const styles = {
         primary:

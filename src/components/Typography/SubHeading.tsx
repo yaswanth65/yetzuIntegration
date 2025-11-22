@@ -1,11 +1,33 @@
-import React from 'react'
+import React from "react";
 
-const SubHeading = ({ text, className }: { text: string, className?: string }) => {
-    return (
-        <h2 className={` ${className} font-inter font-medium text-[28px] md:text-[36px] lg:text-[46px] leading-[120%] md:leading-[56px] tracking-[-0.06em] text-[#021165]`}>
-            {text}
-        </h2>
-    )
+interface SubHeadingProps {
+    text: string;
+    level?: 1 | 2 | 3 | 4;
+    className?: string;
 }
 
-export default SubHeading
+const sizeMap = {
+    1: "text-[46px] leading-[120%] md:leading-[50px]",
+    2: "text-[36px] leading-[120%] md:leading-[42px]",
+    3: "text-[30px] leading-[120%] md:leading-[36px]",
+    4: "text-[24px] leading-[120%] md:leading-[30px]",
+};
+
+const SubHeading = ({ text, level = 1, className }: SubHeadingProps) => {
+    return (
+        <h2
+            className={`
+        font-inter font-medium
+        tracking-[-0.06em]
+        text-[#021165]
+        mb-4
+        ${sizeMap[level]}
+        ${className ?? ""}
+      `}
+        >
+            {text}
+        </h2>
+    );
+};
+
+export default SubHeading;

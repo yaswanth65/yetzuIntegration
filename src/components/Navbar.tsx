@@ -21,13 +21,11 @@ import { useLogoutMutation } from "@/lib/queries/identityService/useIdentityServ
 const Navbar = () => {
   const { user: { name, email, id = "" } = {} } = useSession();
   const { mutateAsync: logout } = useLogoutMutation();
-  const [isCoursesOpen, setIsCoursesOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(true);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const coursesMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -36,12 +34,6 @@ const Navbar = () => {
         !userMenuRef.current.contains(event.target as Node)
       ) {
         setIsUserMenuOpen(false);
-      }
-      if (
-        coursesMenuRef.current &&
-        !coursesMenuRef.current.contains(event.target as Node)
-      ) {
-        setIsCoursesOpen(false);
       }
     };
 
@@ -64,15 +56,10 @@ const Navbar = () => {
   const navigationLinks = [
     { href: "/", label: "Home" },
     { href: "/about", label: "About Us" },
+    { href: "/courses", label: "Courses" },
     { href: "/assignments", label: "Assignments" },
     { href: "/blog", label: "Blog" },
     { href: "/contact-us", label: "Contact Us" },
-  ];
-
-  const coursesDropdown = [
-    { href: "/courses/medical", label: "Course 1" },
-    { href: "/courses/engineering", label: "Course 2" },
-    { href: "/courses/commerce", label: "Course 3" },
   ];
 
   const userMenuItems = [
@@ -113,37 +100,6 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
-
-            {/* Courses Dropdown */}
-            <div className="relative" ref={coursesMenuRef}>
-              <button
-                onClick={() => setIsCoursesOpen(!isCoursesOpen)}
-                className="flex items-center gap-1 hover:text-[#2563eb] font-medium transition-colors duration-200"
-              >
-                Courses
-                <ChevronDown
-                  size={16}
-                  className={`transition-transform duration-300 ${
-                    isCoursesOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              {isCoursesOpen && (
-                <div className="absolute left-0 mt-2 w-48 bg-white shadow-lg border border-gray-100 rounded-xl py-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                  {coursesDropdown.map((course) => (
-                    <Link
-                      key={course.href}
-                      href={course.href}
-                      className="block px-4 py-2.5 hover:bg-blue-50 text-gray-700 hover:text-[#2563eb] transition-colors duration-150 font-medium"
-                      onClick={() => setIsCoursesOpen(false)}
-                    >
-                      {course.label}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Right: User Actions */}
@@ -170,9 +126,8 @@ const Navbar = () => {
                   </div>
                   <ChevronDown
                     size={16}
-                    className={`text-gray-600 transition-transform duration-300 ${
-                      isUserMenuOpen ? "rotate-180" : ""
-                    }`}
+                    className={`text-gray-600 transition-transform duration-300 ${isUserMenuOpen ? "rotate-180" : ""
+                      }`}
                   />
                 </button>
 
@@ -246,9 +201,8 @@ const Navbar = () => {
 
       {/* Mobile Sidebar */}
       <aside
-        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-50 lg:hidden transform transition-transform duration-300 ease-in-out ${
-          isSidebarOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-50 lg:hidden transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
@@ -298,40 +252,6 @@ const Navbar = () => {
                   {link.label}
                 </Link>
               ))}
-
-              {/* Courses Section */}
-              <div className="pt-2">
-                <button
-                  onClick={() => setIsCoursesOpen(!isCoursesOpen)}
-                  className="w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-[#2563eb] rounded-lg transition-all duration-200 font-medium"
-                >
-                  <div className="flex items-center gap-3">
-                    <Bell size={18} />
-                    Courses
-                  </div>
-                  <ChevronDown
-                    size={16}
-                    className={`transition-transform duration-300 ${
-                      isCoursesOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {isCoursesOpen && (
-                  <div className="mt-1 ml-6 space-y-1">
-                    {coursesDropdown.map((course) => (
-                      <Link
-                        key={course.href}
-                        href={course.href}
-                        className="block px-4 py-2.5 text-gray-600 hover:bg-blue-50 hover:text-[#2563eb] rounded-lg transition-all duration-200"
-                        onClick={() => setIsSidebarOpen(false)}
-                      >
-                        {course.label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
 
               {/* User Menu Items (Mobile - only when logged in) */}
               {name && (

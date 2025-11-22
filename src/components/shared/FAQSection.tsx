@@ -47,7 +47,7 @@ export default function FAQSection() {
   };
 
   return (
-    <section className="w-full bg-white px-4 sm:px-6 lg:px-10 flex flex-col items-center">
+    <section className="w-full bg-white px-4 sm:px-6 md:px-12 lg:px-20 xl:px-[108px] flex flex-col items-center mb-10">
       <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20">
         <div className="flex flex-col justify-between space-y-8">
           <div>
@@ -78,9 +78,8 @@ export default function FAQSection() {
             return (
               <div
                 key={item.id}
-                className={`bg-[#D0D7FF] rounded-xl overflow-hidden transition-all duration-300 ${
-                  isOpen ? "shadow-md" : "shadow-sm"
-                }`}
+                className={`bg-[#D0D7FF] rounded-xl overflow-hidden transition-all duration-300 ${isOpen ? "shadow-md" : "shadow-sm"
+                  }`}
               >
                 <button
                   className="w-full flex justify-between items-center text-left px-5 py-4 text-gray-900 focus:outline-none cursor-pointer"
