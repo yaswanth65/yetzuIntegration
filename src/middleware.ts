@@ -7,6 +7,9 @@ const protectedRoutes = [
   "/settings",
   "/account",
   "/home",
+  "/s",
+  "/a",
+  "/e",
 ];
 
 const authRoutes = [
