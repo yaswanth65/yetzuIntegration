@@ -147,10 +147,13 @@ export default function DashSidebar({ role, isOpen, onClose }: DashSidebarProps)
                             <span className="text-[14px]">Help & Support</span>
                         </button>
 
-                        <button className="flex items-center gap-2 px-4 py-2 text-[#5F6388] hover:text-[#2F327D] font-medium transition-colors w-full">
+                        <Link
+                            href={role === "admin" ? "/a/settings" : role === "educator" ? "/e/settings" : "/s/settings"}
+                            className="flex items-center gap-2 px-4 py-2 text-[#5F6388] hover:text-[#2F327D] font-medium transition-colors w-full"
+                        >
                             <Settings size={20} />
                             <span className="text-[14px]">Settings</span>
-                        </button>
+                        </Link>
 
                         <div className="pt-4 border-t border-gray-100 mt-2">
                             <button
