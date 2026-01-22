@@ -20,16 +20,21 @@ const authRoutes = [
   "/otp-verification",
 ];
 
+const publicRoutes = [
+  "/e/dashboard",
+];
+
 export function middleware(request: NextRequest) {
   const isUserLoggedIn = request.cookies.get("isUserLoggedIn")?.value;
   const { pathname } = request.nextUrl;
 
+  const isPublic = publicRoutes.some((route) => pathname.startsWith(route));
   const isProtected = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
-  if (!isUserLoggedIn && isProtected) {
+  if (!isUserLoggedIn && isProtected && !isPublic) {
     const loginUrl = new URL("/login", request.url);
     return NextResponse.redirect(loginUrl);
   }

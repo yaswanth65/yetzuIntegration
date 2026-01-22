@@ -58,7 +58,7 @@ export default function FAQSection() {
             />
           </div>
 
-          <div className="bg-blue-50 p-6 rounded-2xl shadow-sm max-w-sm">
+          <div className="bg-blue-50 p-6 rounded-2xl shadow-none max-w-sm">
             <h3 className="text-lg font-semibold text-gray-900 mb-1">
               Still have questions?
             </h3>
@@ -78,8 +78,9 @@ export default function FAQSection() {
             return (
               <div
                 key={item.id}
-                className={`bg-[#D0D7FF] rounded-xl overflow-hidden transition-all duration-300 ${isOpen ? "shadow-md" : "shadow-sm"
-                  }`}
+                className={`bg-[#D0D7FF] rounded-xl overflow-hidden transition-all duration-300 ${
+                  isOpen ? "shadow-md" : "shadow-none"
+                }`}
               >
                 <button
                   className="w-full flex justify-between items-center text-left px-5 py-4 text-gray-900 focus:outline-none cursor-pointer"

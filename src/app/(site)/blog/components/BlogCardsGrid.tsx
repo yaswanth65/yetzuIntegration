@@ -88,7 +88,7 @@ const blogPosts = [
       "Loren ipsum meta description is display here Loren ipsum meta...",
     date: "November 23, 2025",
     image: "/images/blog.png",
-  }
+  },
 ];
 
 export default function BlogCardsGrid() {
@@ -105,7 +105,7 @@ export default function BlogCardsGrid() {
         {/* Featured Blog Card */}
         {featuredPost && (
           <Link href={`/blog/${featuredPost.id}`}>
-            <div className="mb-12 bg-white rounded-[24px] overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
+            <div className="mb-12 bg-white rounded-[24px] overflow-hidden shadow-none hover:shadow-md transition-all duration-300 cursor-pointer">
               <div className="flex flex-col md:flex-row md:min-h-[500px]">
                 {/* Left Content */}
                 <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
@@ -199,7 +199,7 @@ export default function BlogCardsGrid() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {regularPosts.map((post) => (
             <Link key={post.id} href={`/blog/${post.id}`}>
-              <div className="bg-white rounded-[16px] overflow-hidden shadow-sm border border-[#E0E0E0] hover:bg-[#042BFD] hover:text-white transition-all duration-300 cursor-pointer group">
+              <div className="bg-white rounded-[16px] overflow-hidden shadow-none border border-[#E0E0E0] hover:bg-[#042BFD] hover:text-white transition-all duration-300 cursor-pointer group">
                 {/* Image */}
                 <div className="relative w-full h-[200px]">
                   <Image

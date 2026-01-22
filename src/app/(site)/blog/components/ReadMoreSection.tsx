@@ -43,7 +43,7 @@ export default function ReadMoreSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {relatedBlogs.map((blog) => (
             <Link key={blog.id} href={`/blog/${blog.id}`}>
-              <div className="bg-white rounded-[16px] overflow-hidden shadow-sm border border-[#E0E0E0] hover:shadow-md transition-all duration-300 cursor-pointer">
+              <div className="bg-white rounded-[16px] overflow-hidden shadow-none border border-[#E0E0E0] hover:shadow-md transition-all duration-300 cursor-pointer">
                 {/* Image */}
                 <div className="relative w-full h-[200px]">
                   <Image

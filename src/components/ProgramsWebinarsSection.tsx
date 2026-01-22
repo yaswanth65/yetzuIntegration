@@ -38,7 +38,7 @@ export default function ProgramsWebinarsSection() {
 
           {/* Date Badge */}
           <div
-            className="absolute top-[24px] left-1/2 -translate-x-1/2 bg-white rounded-full px-[20px] py-[10px] shadow-sm"
+            className="absolute top-[24px] left-1/2 -translate-x-1/2 bg-white rounded-full px-[20px] py-[10px] shadow-none"
             style={{ fontFamily: "var(--font-sfpro)" }}
           >
             <span className="text-[#252525] text-[16px] leading-[19px] tracking-[-0.03em]">

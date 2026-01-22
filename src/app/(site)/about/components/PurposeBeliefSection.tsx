@@ -20,7 +20,7 @@ export default function PurposeBeliefSection() {
 
             <div className="flex flex-col gap-4 lg:gap-6">
               <div className="flex gap-3 lg:gap-4 items-start">
-                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-white flex items-center justify-center flex-shrink-0 shadow-sm rounded-full">
+                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-white flex items-center justify-center flex-shrink-0 shadow-none rounded-full">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <path
                       d="M12 2L2 7L12 12L22 7L12 2Z"
@@ -41,7 +41,7 @@ export default function PurposeBeliefSection() {
               </div>
 
               <div className="flex gap-3 lg:gap-4 items-start">
-                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-white flex items-center justify-center flex-shrink-0 shadow-sm rounded-full">
+                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-white flex items-center justify-center flex-shrink-0 shadow-none rounded-full">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <circle
                       cx="12"

@@ -39,7 +39,7 @@ const footerLinks = [
 export default function Footer() {
   return (
     <div className="relative w-full   flex flex-col items-center">
-      <footer className="relative rounded-[28px] shadow-sm w-full max-w-7xl px-12 py-12 bg-gradient-to-l from-[#E6EAFF] to-[#FFFFFF] mx-auto">
+      <footer className="relative rounded-[28px] shadow-none w-full max-w-7xl px-12 py-12 bg-gradient-to-l from-[#E6EAFF] to-[#FFFFFF] mx-auto">
         <div className="flex flex-col lg:flex-row justify-between gap-10">
           <div className="flex-1">
             <img src="/images/Logo.png" alt="YETZU Logo" className="h-8 mb-4" />

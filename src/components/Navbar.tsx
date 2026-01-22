@@ -65,10 +65,14 @@ const Navbar = () => {
 
   const getDashboardLink = () => {
     switch (role?.toLowerCase()) {
-      case "admin": return "/a/dashboard";
-      case "educator": return "/e/dashboard";
-      case "student": return "/s/overview";
-      default: return "/s/dashboard";
+      case "admin":
+        return "/a/dashboard";
+      case "educator":
+        return "/e/dashboard";
+      case "student":
+        return "/s/overview";
+      default:
+        return "/s/dashboard";
     }
   };
 
@@ -137,8 +141,9 @@ const Navbar = () => {
                   </div>
                   <ChevronDown
                     size={16}
-                    className={`text-gray-600 transition-transform duration-300 ${isUserMenuOpen ? "rotate-180" : ""
-                      }`}
+                    className={`text-gray-600 transition-transform duration-300 ${
+                      isUserMenuOpen ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
 
@@ -184,7 +189,7 @@ const Navbar = () => {
             ) : (
               <Link
                 href="/login"
-                className="hidden lg:block bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-6 py-2.5 rounded-lg transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+                className="hidden lg:block bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-6 py-2.5 rounded-lg transition-all duration-200 font-medium shadow-none hover:shadow-md"
               >
                 Log In
               </Link>
@@ -212,8 +217,9 @@ const Navbar = () => {
 
       {/* Mobile Sidebar */}
       <aside
-        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-50 lg:hidden transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "translate-x-full"
-          }`}
+        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-50 lg:hidden transform transition-transform duration-300 ease-in-out ${
+          isSidebarOpen ? "translate-x-0" : "translate-x-full"
+        }`}
       >
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
@@ -317,7 +323,7 @@ const Navbar = () => {
             ) : (
               <Link
                 href="/login"
-                className="block w-full text-center bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-6 py-3 rounded-lg transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+                className="block w-full text-center bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-6 py-3 rounded-lg transition-all duration-200 font-medium shadow-none hover:shadow-md"
                 onClick={() => setIsSidebarOpen(false)}
               >
                 Log In
