@@ -110,7 +110,7 @@ export default function MySessionsPage() {
                            +4
                          </div>
                       </div>
-                      <h3 className="text-xl font-bold text-[#021165] mb-2">{item.title}</h3>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">{item.title}</h3>
                       <p className="text-sm text-gray-500 leading-relaxed mb-4 line-clamp-2">
                         {item.webinar.description}
                       </p>

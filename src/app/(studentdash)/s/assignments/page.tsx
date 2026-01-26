@@ -23,10 +23,8 @@ export default function AssignmentPage() {
     <div className="w-full min-h-screen bg-[#F9FAFB] p-6 md:p-8 font-['Inter']">
       
       {/* --- HEADER SECTION WITH TABS --- */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-[#021165]">Sessions</h2>
-        </div>
+      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4 mb-6">
+        
 
         {/* Tab Filters */}
         <div className="bg-white p-1 rounded-lg border border-gray-200 flex gap-1 shadow-sm overflow-x-auto max-w-full">
@@ -66,7 +64,7 @@ export default function AssignmentPage() {
                 {/* Title & Join Button Row */}
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex-1">
-                    <h3 className="text-lg font-bold text-[#021165] mb-1 line-clamp-1">
+                    <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-1">
                       {item.title}
                     </h3>
                     <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
