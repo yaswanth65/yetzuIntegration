@@ -22,7 +22,7 @@ const HomePageEditor = () => {
             placeholder="Your Ultimate Academic"
           />
           <TextInput
-            label="Sub Heading"
+            label="Highlighted Heading"
             placeholder="Mentorship & Learning Ecosystem"
           />
           <TextAreaInput
@@ -33,13 +33,50 @@ const HomePageEditor = () => {
           <ButtonInput label="Primary Button Text" placeholder="Get Started" />
           <ButtonInput label="Secondary Button Text" placeholder="Watch Demo" />
           <ImageUpload
-            label="Hero Background Image"
-            dimensions="1920 × 1080 (10 MB max)"
-          />
-          <ImageUpload
             label="Hero Illustration"
-            dimensions="800 × 600 (5 MB max)"
+            dimensions="1013 × 835 (10 MB max)"
           />
+          <TextInput
+            label="Student Count Text"
+            placeholder="150+ Students Enrolled"
+          />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map((index) => (
+              <div
+                key={index}
+                className="border border-gray-200 rounded-lg p-4"
+              >
+                <ImageUpload
+                  label={`Avatar ${index}`}
+                  dimensions="36 × 36 (1 MB max)"
+                  maxSizeMB={1}
+                />
+              </div>
+            ))}
+          </div>
+          <p className="text-sm font-semibold text-gray-700">Stats (4 items)</p>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[
+              { num: "200+", label: "Community Members" },
+              { num: "24+", label: "Courses Available" },
+              { num: "30k+", label: "Assignments Completed" },
+              { num: "100+", label: "Expert Mentors" },
+            ].map((stat, index) => (
+              <div
+                key={index}
+                className="border border-gray-200 rounded-lg p-4 space-y-3"
+              >
+                <NumberInput
+                  label={`Stat ${index + 1} Number`}
+                  placeholder={stat.num}
+                />
+                <TextInput
+                  label={`Stat ${index + 1} Label`}
+                  placeholder={stat.label}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -47,16 +84,13 @@ const HomePageEditor = () => {
       <div>
         <SectionHeader title="Video Section" />
         <div className="mt-6 space-y-4">
-          <TextInput label="Section Heading" placeholder="See How It Works" />
-          <TextAreaInput
-            label="Description"
-            placeholder="Watch this short video to understand how our platform works"
-            rows={2}
+          <TextInput
+            label="Section Heading"
+            placeholder="Lorem Ipsum Dolor Self Amet"
           />
-          <TextInput label="Video URL" placeholder="https://youtube.com/..." />
-          <ImageUpload
-            label="Video Thumbnail"
-            dimensions="1280 × 720 (5 MB max)"
+          <TextInput
+            label="YouTube Embed URL"
+            placeholder="https://youtube.com/embed/..."
           />
         </div>
       </div>
@@ -72,11 +106,11 @@ const HomePageEditor = () => {
             rows={2}
           />
           <ButtonInput
-            label="View All Button Text"
-            placeholder="View All Webinars"
+            label="Explore All Button Text"
+            placeholder="Explore All"
           />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[1, 2, 3].map((index) => (
+            {[1, 2, 3, 4, 5, 6].map((index) => (
               <div
                 key={index}
                 className="border border-gray-200 rounded-lg p-4 space-y-3"
@@ -86,9 +120,28 @@ const HomePageEditor = () => {
                 </p>
                 <ImageUpload label="Thumbnail" maxSizeMB={2} />
                 <TextInput label="Title" placeholder="Webinar Title" />
-                <TextInput label="Speaker" placeholder="Dr. John Doe" />
+                <TextAreaInput
+                  label="Description"
+                  placeholder="Webinar description..."
+                  rows={2}
+                />
+                <TextInput label="Price" placeholder="₹500.01" />
+                <TextInput label="Badge Text" placeholder="Live" />
+                <TextInput label="Author Name" placeholder="Dr. John Doe" />
                 <TextInput label="Date" placeholder="Feb 15, 2026" />
-                <TextInput label="Time" placeholder="6:00 PM IST" />
+                <ImageUpload
+                  label="Author Avatar"
+                  dimensions="36 × 36 (1 MB max)"
+                  maxSizeMB={1}
+                />
+                <ButtonInput
+                  label="Primary Button Text"
+                  placeholder="View details"
+                />
+                <ButtonInput
+                  label="Secondary Button Text"
+                  placeholder="Enroll now"
+                />
               </div>
             ))}
           </div>
@@ -108,30 +161,27 @@ const HomePageEditor = () => {
             placeholder="Experience Personalized Coaching and Strategic Academic Support"
             rows={3}
           />
-          <ButtonInput label="Button Text" placeholder="Book a Session" />
-          <ImageUpload
-            label="Section Image"
-            dimensions="800 × 600 (5 MB max)"
-          />
+          <ButtonInput label="Button Text" placeholder="Learn More" />
           <div className="space-y-4">
             <p className="text-sm font-semibold text-gray-700">
-              Features (3 items)
+              Feature Cards (4 items)
             </p>
-            {[1, 2, 3].map((index) => (
+            {[1, 2, 3, 4].map((index) => (
               <div
                 key={index}
                 className="border border-gray-200 rounded-lg p-4 space-y-3"
               >
                 <TextInput
                   label={`Feature ${index} Title`}
-                  placeholder="Personalized Guidance"
+                  placeholder="Customized Mentorship Sessions"
                 />
                 <TextAreaInput
                   label={`Feature ${index} Description`}
-                  placeholder="Get one-on-one support tailored to your goals"
+                  placeholder="One-on-one sessions focused on your personal academic needs and growth"
                   rows={2}
                 />
                 <ImageUpload label="Icon" maxSizeMB={1} />
+                <TextInput label="Background Color" placeholder="#E6EAFF" />
               </div>
             ))}
           </div>
@@ -146,16 +196,29 @@ const HomePageEditor = () => {
             label="Section Heading"
             placeholder="Assignment Support Made Easy"
           />
-          <TextAreaInput
-            label="Description"
-            placeholder="Get help with your assignments from expert tutors"
-            rows={2}
-          />
-          <ButtonInput label="Button Text" placeholder="Get Help Now" />
-          <ImageUpload
-            label="Section Image"
-            dimensions="800 × 600 (5 MB max)"
-          />
+          <ButtonInput label="Button Text" placeholder="Submit Now" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <p className="text-sm font-semibold text-gray-700 md:col-span-2">
+              Bento Cards (4 items — 2×2 grid)
+            </p>
+            {[1, 2, 3, 4].map((index) => (
+              <div
+                key={index}
+                className="border border-gray-200 rounded-lg p-4 space-y-3"
+              >
+                <p className="text-sm font-semibold text-gray-700">
+                  Card {index}
+                </p>
+                <TextInput label="Title" placeholder="Card Title" />
+                <TextAreaInput
+                  label="Description"
+                  placeholder="Card description..."
+                  rows={2}
+                />
+                <ImageUpload label="Card Image" maxSizeMB={3} />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -163,6 +226,7 @@ const HomePageEditor = () => {
       <div>
         <SectionHeader title="Testimonials Section" />
         <div className="mt-6 space-y-4">
+          <TextInput label="Pill Text" placeholder="Testimonials" />
           <TextInput
             label="Section Heading"
             placeholder="What Our Students Say"
@@ -173,7 +237,10 @@ const HomePageEditor = () => {
             rows={2}
           />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[1, 2, 3].map((index) => (
+            <p className="text-sm font-semibold text-gray-700 md:col-span-3">
+              Testimonials (5 items)
+            </p>
+            {[1, 2, 3, 4, 5].map((index) => (
               <div
                 key={index}
                 className="border border-gray-200 rounded-lg p-4 space-y-3"
@@ -181,7 +248,7 @@ const HomePageEditor = () => {
                 <p className="text-sm font-semibold text-gray-700">
                   Testimonial {index}
                 </p>
-                <ImageUpload label="Student Photo" maxSizeMB={1} />
+                <ImageUpload label="Student Avatar" maxSizeMB={1} />
                 <TextInput label="Student Name" placeholder="Sarah Johnson" />
                 <TextInput label="Student Role" placeholder="Medical Student" />
                 <TextAreaInput
@@ -189,7 +256,6 @@ const HomePageEditor = () => {
                   placeholder="This platform has transformed my learning experience..."
                   rows={3}
                 />
-                <NumberInput label="Rating (1-5)" placeholder="5" />
               </div>
             ))}
           </div>
@@ -204,27 +270,20 @@ const HomePageEditor = () => {
             label="Section Heading"
             placeholder="Join Our Learning Community"
           />
+          <TextInput
+            label="Highlighted Words"
+            placeholder="Learning Community"
+          />
           <TextAreaInput
             label="Description"
             placeholder="Connect with thousands of students worldwide"
             rows={2}
           />
-          <ButtonInput label="Button Text" placeholder="Join Now" />
+          <ButtonInput label="Button Text" placeholder="Get started today" />
           <ImageUpload
-            label="Background Image"
-            dimensions="1920 × 400 (5 MB max)"
+            label="Section Image"
+            dimensions="800 × 600 (5 MB max)"
           />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {["Students", "Mentors", "Countries"].map((label) => (
-              <div
-                key={label}
-                className="border border-gray-200 rounded-lg p-4 space-y-3"
-              >
-                <NumberInput label={`${label} Count`} placeholder="10,000+" />
-                <TextInput label={`${label} Label`} placeholder={label} />
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -241,6 +300,31 @@ const HomePageEditor = () => {
             placeholder="Choose from a variety of courses and webinars"
             rows={2}
           />
+          <div className="space-y-4">
+            <p className="text-sm font-semibold text-gray-700">
+              Cards (1 featured + 4 small = 5 total)
+            </p>
+            {[1, 2, 3, 4, 5].map((index) => (
+              <div
+                key={index}
+                className="border border-gray-200 rounded-lg p-4 space-y-3"
+              >
+                <p className="text-sm font-semibold text-gray-700">
+                  {index === 1 ? "Featured Card" : `Card ${index}`}
+                </p>
+                <ImageUpload label="Image" maxSizeMB={3} />
+                <TextInput label="Date Badge" placeholder="Feb 15, 2026" />
+                <TextInput label="Author Name" placeholder="Dr. John Doe" />
+                <TextInput label="Time" placeholder="6:00 PM IST" />
+                <TextInput label="Title" placeholder="Program Title" />
+                <ImageUpload
+                  label="Author Avatar"
+                  dimensions="36 × 36 (1 MB max)"
+                  maxSizeMB={1}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -254,22 +338,28 @@ const HomePageEditor = () => {
             placeholder="Access a wealth of study materials and guides"
             rows={2}
           />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[1, 2, 3].map((index) => (
+          <ButtonInput label="Button Text" placeholder="Check the Resource" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <p className="text-sm font-semibold text-gray-700 md:col-span-2">
+              Cards (1 featured + 3 small = 4 total)
+            </p>
+            {[1, 2, 3, 4].map((index) => (
               <div
                 key={index}
                 className="border border-gray-200 rounded-lg p-4 space-y-3"
               >
                 <p className="text-sm font-semibold text-gray-700">
-                  Resource {index}
+                  {index === 1 ? "Featured Resource" : `Resource ${index}`}
                 </p>
-                <ImageUpload label="Icon" maxSizeMB={1} />
-                <TextInput label="Title" placeholder="Study Guides" />
+                <ImageUpload label="Image" maxSizeMB={3} />
+                <TextInput label="Title" placeholder="Resource Title" />
                 <TextAreaInput
-                  label="Description"
-                  placeholder="Comprehensive guides for all subjects"
+                  label="Excerpt"
+                  placeholder="Resource description..."
                   rows={2}
                 />
+                <TextInput label="Author" placeholder="Author Name" />
+                <TextInput label="Date" placeholder="Feb 5, 2026" />
               </div>
             ))}
           </div>
@@ -290,6 +380,7 @@ const HomePageEditor = () => {
             rows={2}
           />
           <div className="space-y-4">
+            <p className="text-sm font-semibold text-gray-700">FAQ Items (5)</p>
             {[1, 2, 3, 4, 5].map((index) => (
               <div
                 key={index}
@@ -307,6 +398,18 @@ const HomePageEditor = () => {
               </div>
             ))}
           </div>
+          <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+            <p className="text-sm font-semibold text-gray-700">
+              &quot;Still Have Questions?&quot; CTA Box
+            </p>
+            <TextInput label="CTA Title" placeholder="Still have questions?" />
+            <TextAreaInput
+              label="CTA Description"
+              placeholder="Can't find the answer to your questions? Send us an email and we'll get back to you."
+              rows={2}
+            />
+            <ButtonInput label="CTA Button Text" placeholder="Ask Here" />
+          </div>
         </div>
       </div>
 
@@ -318,16 +421,17 @@ const HomePageEditor = () => {
             label="Section Heading"
             placeholder="Trusted by Top Universities"
           />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((index) => (
-              <div
-                key={index}
-                className="border border-gray-200 rounded-lg p-4"
-              >
-                <ImageUpload label={`Logo ${index}`} maxSizeMB={1} />
-              </div>
-            ))}
-          </div>
+          <TextInput label="Highlighted Words" placeholder="Top Universities" />
+          <TextAreaInput
+            label="Description"
+            placeholder="Section description text"
+            rows={2}
+          />
+          <ImageUpload
+            label="Section Image"
+            dimensions="1200 × 400 (5 MB max)"
+          />
+          <ButtonInput label="Button Text" placeholder="Learn More" />
         </div>
       </div>
     </div>

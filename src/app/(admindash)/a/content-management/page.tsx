@@ -5,7 +5,6 @@ import { Search, ChevronDown } from "lucide-react";
 import ContentEditor from "./components/ContentEditor";
 
 const pages = [
-  "Landing Page",
   "Home",
   "About Us",
   "Courses",
@@ -15,7 +14,7 @@ const pages = [
 ];
 
 const ContentManagementPage = () => {
-  const [selectedPage, setSelectedPage] = useState("Landing Page");
+  const [selectedPage, setSelectedPage] = useState("Home");
   const [isPageDropdownOpen, setIsPageDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 

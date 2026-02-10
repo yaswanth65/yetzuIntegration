@@ -7,7 +7,6 @@ import CoursesPageEditor from "./pages/CoursesPageEditor";
 import AssignmentsPageEditor from "./pages/AssignmentsPageEditor";
 import BlogPageEditor from "./pages/BlogPageEditor";
 import ContactPageEditor from "./pages/ContactPageEditor";
-import LandingPageEditor from "./pages/LandingPageEditor";
 
 interface ContentEditorProps {
   selectedPage: string;
@@ -16,8 +15,6 @@ interface ContentEditorProps {
 const ContentEditor: React.FC<ContentEditorProps> = ({ selectedPage }) => {
   const renderEditor = () => {
     switch (selectedPage) {
-      case "Landing Page":
-        return <LandingPageEditor />;
       case "Home":
         return <HomePageEditor />;
       case "About Us":

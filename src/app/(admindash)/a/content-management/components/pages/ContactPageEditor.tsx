@@ -4,7 +4,6 @@ import React from "react";
 import {
   TextInput,
   TextAreaInput,
-  ImageUpload,
   SectionHeader,
   ButtonInput,
 } from "../FormInputs";
@@ -16,74 +15,86 @@ const ContactPageEditor = () => {
       <div>
         <SectionHeader title="Contact Form Section" />
         <div className="mt-6 space-y-4">
-          <TextInput label="Section Heading" placeholder="Get in Touch" />
-          <TextAreaInput
-            label="Section Description"
-            placeholder="We'd love to hear from you. Send us a message and we'll respond as soon as possible."
-            rows={3}
-          />
-          <div className="space-y-3 border border-gray-200 rounded-lg p-4">
-            <p className="text-sm font-semibold text-gray-700">Form Fields</p>
-            <TextInput label="Name Field Placeholder" placeholder="Your Name" />
+          <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+            <p className="text-sm font-semibold text-gray-700">
+              Left Panel (Blue Background)
+            </p>
+            <TextInput label="Pill / Badge Text" placeholder="Contact us" />
+            <TextInput label="Heading" placeholder="Get in touch with us" />
             <TextInput
-              label="Email Field Placeholder"
-              placeholder="Your Email"
+              label="Email Line Text"
+              placeholder="Or just reach out manually to"
+            />
+            <TextInput label="Email Address" placeholder="email@yetzu.com" />
+            <TextInput label="Support Heading" placeholder="Customer Support" />
+            <TextAreaInput
+              label="Support Description"
+              placeholder="Our support team is available 24/7 to help you with any questions or issues you might face."
+              rows={2}
+            />
+            <TextInput label="Phone Number" placeholder="+91 98765 43210" />
+          </div>
+          <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+            <p className="text-sm font-semibold text-gray-700">
+              Right Panel (Contact Form — 6 fields)
+            </p>
+            <TextInput label="Field 1 Label" placeholder="Full Name" />
+            <TextInput
+              label="Field 1 Placeholder"
+              placeholder="Enter your name"
+            />
+            <TextInput label="Field 2 Label" placeholder="Email Address" />
+            <TextInput
+              label="Field 2 Placeholder"
+              placeholder="Enter your email"
+            />
+            <TextInput label="Field 3 Label" placeholder="Mobile Number" />
+            <TextInput
+              label="Field 3 Placeholder"
+              placeholder="Enter your number"
             />
             <TextInput
-              label="Phone Field Placeholder"
-              placeholder="Your Phone"
+              label="Field 4 Label"
+              placeholder="Medical School / Affiliation"
             />
             <TextInput
-              label="Subject Field Placeholder"
-              placeholder="Subject"
+              label="Field 4 Placeholder"
+              placeholder="Enter your institution"
             />
             <TextInput
-              label="Message Field Placeholder"
-              placeholder="Your Message"
+              label="Field 5 Label"
+              placeholder="Research Paper Focus"
+            />
+            <TextInput
+              label="Field 5 Placeholder"
+              placeholder="Choose from the option"
+            />
+            <TextAreaInput
+              label="Field 5 Options (comma separated)"
+              placeholder="Cardiology, Neurology, Oncology, Public Health"
+              rows={2}
+            />
+            <TextInput
+              label="Field 6 Label"
+              placeholder="Describe Your Mentorship Needs"
+            />
+            <TextInput label="Field 6 Placeholder" placeholder="Enter Input" />
+            <ButtonInput label="Submit Button Text" placeholder="Submit" />
+          </div>
+          <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+            <p className="text-sm font-semibold text-gray-700">
+              Thank You State (after submission)
+            </p>
+            <TextInput label="Heading" placeholder="Thank you!" />
+            <TextAreaInput
+              label="Message"
+              placeholder="Your submission has been received successfully. Our team will contact you soon!"
+              rows={2}
             />
             <ButtonInput
-              label="Submit Button Text"
-              placeholder="Send Message"
+              label="Button Text"
+              placeholder="Submit Another Response"
             />
-          </div>
-          <ImageUpload
-            label="Form Background Image"
-            dimensions="800 × 1000 (5 MB max)"
-          />
-        </div>
-      </div>
-
-      {/* Contact Information Section */}
-      <div>
-        <SectionHeader title="Contact Information" />
-        <div className="mt-6 space-y-4">
-          <TextInput label="Section Heading" placeholder="Contact Details" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="border border-gray-200 rounded-lg p-4 space-y-3">
-              <p className="text-sm font-semibold text-gray-700">Email</p>
-              <ImageUpload label="Email Icon" maxSizeMB={1} />
-              <TextInput
-                label="Email Address"
-                placeholder="support@yetzu.com"
-              />
-              <TextInput label="Email Label" placeholder="Email Us" />
-            </div>
-            <div className="border border-gray-200 rounded-lg p-4 space-y-3">
-              <p className="text-sm font-semibold text-gray-700">Phone</p>
-              <ImageUpload label="Phone Icon" maxSizeMB={1} />
-              <TextInput label="Phone Number" placeholder="+91 98765 43210" />
-              <TextInput label="Phone Label" placeholder="Call Us" />
-            </div>
-            <div className="border border-gray-200 rounded-lg p-4 space-y-3">
-              <p className="text-sm font-semibold text-gray-700">Address</p>
-              <ImageUpload label="Location Icon" maxSizeMB={1} />
-              <TextAreaInput
-                label="Address"
-                placeholder="123 Education Street, Learning City, 110001"
-                rows={2}
-              />
-              <TextInput label="Address Label" placeholder="Visit Us" />
-            </div>
           </div>
         </div>
       </div>
@@ -92,54 +103,60 @@ const ContactPageEditor = () => {
       <div>
         <SectionHeader title="Our Offices Section" />
         <div className="mt-6 space-y-4">
-          <TextInput
-            label="Section Heading"
-            placeholder="Our Global Presence"
-          />
+          <TextInput label="Section Heading" placeholder="Our Offices" />
           <TextAreaInput
             label="Section Description"
-            placeholder="Find us in multiple locations around the world"
+            placeholder="Join a Thriving Community Dedicated to Academic Excellence Supported by Cutting-Edge Technology and Expert Mentorship."
             rows={2}
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[1, 2, 3, 4].map((index) => (
+          <TextInput label="Card Heading" placeholder="Contact us" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <p className="text-sm font-semibold text-gray-700 md:col-span-3">
+              Contact Info Items (6 items)
+            </p>
+            {[
+              {
+                icon: "Phone",
+                title: "Phone Number",
+                detail: "+91 8747398748",
+              },
+              { icon: "Mail", title: "Email", detail: "hello@gmail.com" },
+              {
+                icon: "MapPin",
+                title: "Location",
+                detail: "Lorem ipsum is free text to use",
+              },
+              {
+                icon: "MessageCircle",
+                title: "WhatsApp",
+                detail: "+91 652365756",
+              },
+              {
+                icon: "Youtube",
+                title: "Youtube",
+                detail: "Lorem ipsum is free text to use",
+              },
+              {
+                icon: "Instagram",
+                title: "Instagram",
+                detail: "+91 652365756",
+              },
+            ].map((item, index) => (
               <div
                 key={index}
                 className="border border-gray-200 rounded-lg p-4 space-y-3"
               >
                 <p className="text-sm font-semibold text-gray-700">
-                  Office {index}
+                  {item.icon}
                 </p>
-                <ImageUpload label="Office Image" maxSizeMB={3} />
-                <TextInput
-                  label="City/Country"
-                  placeholder="New Delhi, India"
-                />
-                <TextAreaInput
-                  label="Address"
-                  placeholder="Complete office address"
-                  rows={2}
-                />
-                <TextInput label="Phone" placeholder="+91 98765 43210" />
-                <TextInput label="Email" placeholder="delhi@yetzu.com" />
+                <TextInput label="Title" placeholder={item.title} />
+                <TextInput label="Detail" placeholder={item.detail} />
               </div>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* Map Section */}
-      <div>
-        <SectionHeader title="Map Section" />
-        <div className="mt-6 space-y-4">
-          <TextInput label="Section Heading" placeholder="Find Us on Map" />
           <TextInput
             label="Google Maps Embed URL"
-            placeholder="https://maps.google.com/..."
-          />
-          <ImageUpload
-            label="Map Preview Image"
-            dimensions="1200 × 600 (5 MB max)"
+            placeholder="https://www.google.com/maps/embed?..."
           />
         </div>
       </div>
@@ -148,13 +165,19 @@ const ContactPageEditor = () => {
       <div>
         <SectionHeader title="Resource Cards Section" />
         <div className="mt-6 space-y-4">
-          <TextInput label="Section Heading" placeholder="Helpful Resources" />
+          <TextInput
+            label="Section Heading"
+            placeholder="Explore our Resources"
+          />
           <TextAreaInput
             label="Section Description"
-            placeholder="Explore our resources to learn more"
+            placeholder="Learn from our curated collection of materials and guides."
             rows={2}
           />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <p className="text-sm font-semibold text-gray-700 md:col-span-3">
+              Resource Cards (3 items)
+            </p>
             {[1, 2, 3].map((index) => (
               <div
                 key={index}
@@ -163,14 +186,15 @@ const ContactPageEditor = () => {
                 <p className="text-sm font-semibold text-gray-700">
                   Resource Card {index}
                 </p>
-                <ImageUpload label="Card Image" maxSizeMB={2} />
-                <TextInput label="Title" placeholder="Help Center" />
+                <TextInput
+                  label="Title"
+                  placeholder="Loren ipsym, can be used for free any where"
+                />
                 <TextAreaInput
                   label="Description"
-                  placeholder="Find answers to common questions"
+                  placeholder="Loren ipsym, can be used for free any where for anything. It is effective tool..."
                   rows={2}
                 />
-                <ButtonInput label="Button Text" placeholder="Visit" />
               </div>
             ))}
           </div>
@@ -181,11 +205,14 @@ const ContactPageEditor = () => {
       <div>
         <SectionHeader title="FAQ Section" />
         <div className="mt-6 space-y-4">
-          <TextInput
-            label="Section Heading"
-            placeholder="Frequently Asked Questions"
+          <TextInput label="Section Heading" placeholder="FAQ" />
+          <TextAreaInput
+            label="Description"
+            placeholder="Know answers to all of your questions"
+            rows={2}
           />
           <div className="space-y-4">
+            <p className="text-sm font-semibold text-gray-700">FAQ Items (5)</p>
             {[1, 2, 3, 4, 5].map((index) => (
               <div
                 key={index}
@@ -193,15 +220,27 @@ const ContactPageEditor = () => {
               >
                 <TextInput
                   label={`Question ${index}`}
-                  placeholder="How can I contact support?"
+                  placeholder="Your Question goes here?"
                 />
                 <TextAreaInput
                   label={`Answer ${index}`}
-                  placeholder="You can reach our support team via email, phone, or contact form..."
+                  placeholder="Accordion description goes here."
                   rows={3}
                 />
               </div>
             ))}
+          </div>
+          <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+            <p className="text-sm font-semibold text-gray-700">
+              &quot;Still Have Questions?&quot; CTA Box
+            </p>
+            <TextInput label="CTA Title" placeholder="Still have questions?" />
+            <TextAreaInput
+              label="CTA Description"
+              placeholder="Can't find the answer to your questions? Send us an email and we'll get back to you."
+              rows={2}
+            />
+            <ButtonInput label="CTA Button Text" placeholder="Ask Here" />
           </div>
         </div>
       </div>
@@ -212,82 +251,18 @@ const ContactPageEditor = () => {
         <div className="mt-6 space-y-4">
           <TextInput
             label="Section Heading"
-            placeholder="Schedule a Consultation"
+            placeholder="Book Your Slot Today"
           />
+          <TextInput label="Highlighted Words" placeholder="Book, Today" />
           <TextAreaInput
             label="Description"
-            placeholder="Book a free consultation with our education counselors"
+            placeholder="Join a Thriving Community Dedicated to Academic Excellence Supported by Cutting-Edge Technology and Expert Mentorship."
             rows={3}
           />
-          <ButtonInput label="Button Text" placeholder="Book a Slot" />
-          <ImageUpload
-            label="Section Background Image"
-            dimensions="1920 × 600 (10 MB max)"
+          <ButtonInput
+            label="Button Text"
+            placeholder="Get Invested in Your Academic Success"
           />
-          <div className="space-y-3 border border-gray-200 rounded-lg p-4">
-            <p className="text-sm font-semibold text-gray-700">
-              Booking Form Fields
-            </p>
-            <TextInput label="Name Placeholder" placeholder="Full Name" />
-            <TextInput label="Email Placeholder" placeholder="Email Address" />
-            <TextInput label="Phone Placeholder" placeholder="Phone Number" />
-            <TextInput label="Date Placeholder" placeholder="Preferred Date" />
-            <TextInput label="Time Placeholder" placeholder="Preferred Time" />
-            <TextInput
-              label="Topic Placeholder"
-              placeholder="Topic of Discussion"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Social Media Section */}
-      <div>
-        <SectionHeader title="Social Media Links" />
-        <div className="mt-6 space-y-4">
-          <TextInput label="Section Heading" placeholder="Connect With Us" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              "Facebook",
-              "Twitter",
-              "LinkedIn",
-              "Instagram",
-              "YouTube",
-              "WhatsApp",
-            ].map((platform) => (
-              <div
-                key={platform}
-                className="border border-gray-200 rounded-lg p-4 space-y-3"
-              >
-                <ImageUpload label={`${platform} Icon`} maxSizeMB={1} />
-                <TextInput
-                  label={`${platform} URL`}
-                  placeholder={`https://${platform.toLowerCase()}.com/yetzu`}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Business Hours Section */}
-      <div>
-        <SectionHeader title="Business Hours" />
-        <div className="mt-6 space-y-4">
-          <TextInput
-            label="Section Heading"
-            placeholder="When We're Available"
-          />
-          <div className="space-y-3">
-            {["Monday - Friday", "Saturday", "Sunday"].map((day) => (
-              <div
-                key={day}
-                className="border border-gray-200 rounded-lg p-4 space-y-3"
-              >
-                <TextInput label={day} placeholder="9:00 AM - 6:00 PM" />
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>

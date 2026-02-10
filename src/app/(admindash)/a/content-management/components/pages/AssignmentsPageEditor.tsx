@@ -18,15 +18,17 @@ const AssignmentsPageEditor = () => {
         <div className="mt-6 space-y-4">
           <TextInput
             label="Main Heading"
-            placeholder="Meet the Brains Behind Your Success"
+            placeholder="Meet the Brains Behind Yetzu"
           />
+          <TextInput label="Highlighted Word" placeholder="Brains" />
           <TextAreaInput
             label="Description"
-            placeholder="Our expert team of academic professionals is here to guide you through every challenge"
+            placeholder="Our approach is simple — partner with passionate people, chase excellence, and make learning unforgettable."
             rows={3}
           />
-          <ImageUpload label="Hero Image" dimensions="1920 × 600 (10 MB max)" />
-          <ButtonInput label="CTA Button Text" placeholder="Get Started" />
+          <ButtonInput label="Button 1 Text" placeholder="Button" />
+          <ButtonInput label="Button 2 Text" placeholder="Button" />
+          <ImageUpload label="Hero Image" dimensions="1200 × 700 (10 MB max)" />
         </div>
       </div>
 
@@ -34,137 +36,117 @@ const AssignmentsPageEditor = () => {
       <div>
         <SectionHeader title="Assignment Workflow Steps" />
         <div className="mt-6 space-y-4">
-          <TextInput label="Section Heading" placeholder="How It Works" />
+          <TextInput
+            label="Section Heading"
+            placeholder="Assignments Workflow"
+          />
           <TextAreaInput
             label="Section Description"
-            placeholder="Our simple 4-step process to get your assignments done"
+            placeholder="Experience personalized coaching and strategic academic support that adapts to your unique goals and challenges."
             rows={2}
           />
+          <ButtonInput label="Button Text" placeholder="Try it out!" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <p className="text-sm font-semibold text-gray-700 md:col-span-2">
+              Steps (4 items)
+            </p>
+            {[
+              {
+                title: "Upload",
+                desc: "Upload your assignment and share your specific requirements with ease.",
+              },
+              {
+                title: "Completion / Download",
+                desc: "Our approach is simple — partner with passionate people.",
+              },
+              {
+                title: "In Review",
+                desc: "Your assignment is being carefully reviewed by our expert mentors.",
+              },
+              {
+                title: "Feedback And Revision",
+                desc: "Receive detailed feedback and request revisions.",
+              },
+            ].map((step, index) => (
+              <div
+                key={index}
+                className="border border-gray-200 rounded-lg p-4 space-y-3"
+              >
+                <p className="text-sm font-semibold text-gray-700">
+                  Step {index + 1}
+                </p>
+                <TextInput label="Step Title" placeholder={step.title} />
+                <TextAreaInput
+                  label="Step Description"
+                  placeholder={step.desc}
+                  rows={2}
+                />
+                <ImageUpload
+                  label="Step Image"
+                  dimensions="600 × 550 (3 MB max)"
+                  maxSizeMB={3}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Assignment Workflow Details (WrokFlow) Section */}
+      <div>
+        <SectionHeader title="Assignment Workflow Cards" />
+        <div className="mt-6 space-y-4">
+          <TextInput
+            label="Section Heading"
+            placeholder="Assignments Workflow"
+          />
+          <TextAreaInput
+            label="Description"
+            placeholder="Experience Personalized Coaching and Strategic Academic Support that Adapts to your Unique Goals."
+            rows={3}
+          />
+          <ButtonInput label="Button Text" placeholder="Try it out!" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <p className="text-sm font-semibold text-gray-700 md:col-span-2">
+              Feature Cards (4 items)
+            </p>
             {[1, 2, 3, 4].map((index) => (
               <div
                 key={index}
                 className="border border-gray-200 rounded-lg p-4 space-y-3"
               >
                 <p className="text-sm font-semibold text-gray-700">
-                  Step {index}
+                  Card {index}
                 </p>
-                <ImageUpload label="Step Icon" maxSizeMB={1} />
-                <TextInput label="Step Number" placeholder={`0${index}`} />
                 <TextInput
-                  label="Step Title"
-                  placeholder="Submit Your Assignment"
+                  label="Title"
+                  placeholder="Customized Mentorship Sessions"
                 />
                 <TextAreaInput
-                  label="Step Description"
-                  placeholder="Upload your assignment details and requirements"
+                  label="Description"
+                  placeholder="One-on-one sessions focused on your personal academic needs and growth"
                   rows={2}
                 />
               </div>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* Assignment Workflow Section */}
-      <div>
-        <SectionHeader title="Assignment Workflow Details" />
-        <div className="mt-6 space-y-4">
-          <TextInput
-            label="Section Heading"
-            placeholder="Comprehensive Assignment Support"
-          />
-          <TextAreaInput
-            label="Description"
-            placeholder="From initial consultation to final submission, we're with you every step"
-            rows={3}
-          />
           <div className="space-y-4">
-            {[1, 2, 3].map((index) => (
-              <div
-                key={index}
-                className="border border-gray-200 rounded-lg p-4 space-y-3"
-              >
-                <p className="text-sm font-semibold text-gray-700">
-                  Feature {index}
-                </p>
-                <ImageUpload label="Feature Image" maxSizeMB={3} />
-                <TextInput
-                  label="Feature Title"
-                  placeholder="Expert Guidance"
-                />
-                <TextAreaInput
-                  label="Feature Description"
-                  placeholder="Get personalized help from subject matter experts"
-                  rows={3}
-                />
-                <ButtonInput label="Button Text" placeholder="Learn More" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Pricing Section */}
-      <div>
-        <SectionHeader title="Pricing Section" />
-        <div className="mt-6 space-y-4">
-          <TextInput
-            label="Section Heading"
-            placeholder="Affordable Pricing Plans"
-          />
-          <TextAreaInput
-            label="Section Description"
-            placeholder="Choose a plan that works for you"
-            rows={2}
-          />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {["Basic", "Standard", "Premium"].map((plan) => (
-              <div
-                key={plan}
-                className="border border-gray-200 rounded-lg p-4 space-y-3"
-              >
-                <p className="text-sm font-semibold text-gray-700">
-                  {plan} Plan
-                </p>
-                <TextInput label="Plan Name" placeholder={plan} />
-                <TextInput label="Price" placeholder="₹999" />
-                <TextInput
-                  label="Price Duration"
-                  placeholder="per assignment"
-                />
-                <TextAreaInput
-                  label="Features (comma separated)"
-                  placeholder="Feature 1, Feature 2, Feature 3"
-                  rows={3}
-                />
-                <ButtonInput label="Button Text" placeholder="Choose Plan" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Subject Coverage Section */}
-      <div>
-        <SectionHeader title="Subject Coverage" />
-        <div className="mt-6 space-y-4">
-          <TextInput label="Section Heading" placeholder="Subjects We Cover" />
-          <TextAreaInput
-            label="Description"
-            placeholder="Expert assistance across all major subjects and disciplines"
-            rows={2}
-          />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((index) => (
-              <div
-                key={index}
-                className="border border-gray-200 rounded-lg p-4 space-y-3"
-              >
-                <ImageUpload label={`Subject ${index} Icon`} maxSizeMB={1} />
-                <TextInput label="Subject Name" placeholder="Mathematics" />
-              </div>
-            ))}
+            <p className="text-sm font-semibold text-gray-700">
+              Marquee Chips (10 items)
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((index) => (
+                <div
+                  key={index}
+                  className="border border-gray-200 rounded-lg p-3"
+                >
+                  <TextInput
+                    label={`Chip ${index}`}
+                    placeholder="Medical Students"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -173,11 +155,14 @@ const AssignmentsPageEditor = () => {
       <div>
         <SectionHeader title="FAQ Section" />
         <div className="mt-6 space-y-4">
-          <TextInput
-            label="Section Heading"
-            placeholder="Frequently Asked Questions"
+          <TextInput label="Section Heading" placeholder="FAQ" />
+          <TextAreaInput
+            label="Description"
+            placeholder="Know answers to all of your questions"
+            rows={2}
           />
           <div className="space-y-4">
+            <p className="text-sm font-semibold text-gray-700">FAQ Items (5)</p>
             {[1, 2, 3, 4, 5].map((index) => (
               <div
                 key={index}
@@ -185,46 +170,27 @@ const AssignmentsPageEditor = () => {
               >
                 <TextInput
                   label={`Question ${index}`}
-                  placeholder="How quickly can I get help?"
+                  placeholder="Your Question goes here?"
                 />
                 <TextAreaInput
                   label={`Answer ${index}`}
-                  placeholder="We typically respond within 24 hours..."
+                  placeholder="Accordion description goes here."
                   rows={3}
                 />
               </div>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* Testimonials Section */}
-      <div>
-        <SectionHeader title="Success Stories" />
-        <div className="mt-6 space-y-4">
-          <TextInput
-            label="Section Heading"
-            placeholder="Student Success Stories"
-          />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[1, 2, 3].map((index) => (
-              <div
-                key={index}
-                className="border border-gray-200 rounded-lg p-4 space-y-3"
-              >
-                <p className="text-sm font-semibold text-gray-700">
-                  Testimonial {index}
-                </p>
-                <ImageUpload label="Student Photo" maxSizeMB={1} />
-                <TextInput label="Student Name" placeholder="Mike Johnson" />
-                <TextInput label="Grade/Achievement" placeholder="Scored A+" />
-                <TextAreaInput
-                  label="Testimonial"
-                  placeholder="The assignment help was incredible..."
-                  rows={3}
-                />
-              </div>
-            ))}
+          <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+            <p className="text-sm font-semibold text-gray-700">
+              &quot;Still Have Questions?&quot; CTA Box
+            </p>
+            <TextInput label="CTA Title" placeholder="Still have questions?" />
+            <TextAreaInput
+              label="CTA Description"
+              placeholder="Can't find the answer to your questions? Send us an email and we'll get back to you."
+              rows={2}
+            />
+            <ButtonInput label="CTA Button Text" placeholder="Ask Here" />
           </div>
         </div>
       </div>
