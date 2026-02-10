@@ -18,7 +18,7 @@ export default function EducatorDashLayout() {
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   return (
-    /* FIXED: Changed min-h-screen to h-screen and added overflow-hidden */
+    /* FIXED: Change min-h-screen to h-screen and added overflow-hidden */
     <div className="flex h-screen w-full bg-white text-gray-900 font-inter overflow-hidden">
       
       {/* 1. Permanent Sidebar */}

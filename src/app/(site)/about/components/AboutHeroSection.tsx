@@ -47,7 +47,7 @@ export default function AboutHeroSection() {
                 color: "#000000",
               }}
             >
-              Our approach is simple — partner with passionate people, chase
+              Our approach is simple- partner with passionate people, chase
               excellence, and make learning unforgettable.
             </p>
           </div>

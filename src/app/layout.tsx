@@ -11,7 +11,14 @@ import { QueryClientWrapper } from "@/providers/QueryClientProvider";
 
 // Configure Inter font with Latin subset and create a CSS variable
 // This variable (--font-inter) can be used in CSS/SCSS files
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+// Added fallback and display options for better resilience during builds
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+  fallback: ["system-ui", "arial"],
+  adjustFontFallback: false,
+});
 
 // Export metadata for SEO and browser display
 // This sets the document title, description, favicon, and viewport settings
