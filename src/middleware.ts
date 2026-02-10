@@ -22,6 +22,10 @@ const authRoutes = [
 
 const publicRoutes = [
   "/e/dashboard",
+   "/a/dashboard",
+      "/a/security",
+   "/a/sessions",
+    "/a/content-management",
   "/assignments",
   "/about",
   "/courses",
