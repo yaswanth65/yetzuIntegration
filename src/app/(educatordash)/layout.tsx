@@ -1,3 +1,4 @@
+ 
 "use client";
 
 import React, { useState } from "react";
@@ -9,55 +10,64 @@ import AssignmentsTable from "./components/AssignmentsTable";
 import SchedulePanel from "./components/SchedulePanel";
 import MySessions from "./components/MySessions";
 import AssignmentsPage from "./components/AssignmentsPage";
+import ChatWidget from "./components/ChatWidget";
 
-export default function EducatorDashLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function EducatorDashLayout() {
   const [activeView, setActiveView] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans">
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
+    /* FIXED: Changed min-h-screen to h-screen and added overflow-hidden */
+    <div className="flex h-screen w-full bg-white text-gray-900 font-inter overflow-hidden">
+      
+      {/* 1. Permanent Sidebar */}
       <Sidebar
         activeView={activeView}
         onNavigate={(view) => {
           setActiveView(view);
+          setIsChatOpen(false); 
           setSidebarOpen(false);
         }}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
 
-      <div className="min-h-screen bg-white">
-        <Header onMenuClick={() => setSidebarOpen(true)} />
+      {/* 2. Main Content Wrapper */}
+      <div className="flex-1 flex flex-col min-w-0 lg:pl-64 h-full">
+        
+        {/* 3. FIXED HEADER */}
+        {/* Removed the extra div wrapper and used the Header's internal sticky/relative logic */}
+        <Header 
+          onMenuClick={() => setSidebarOpen(true)} 
+          onChatToggle={() => setIsChatOpen(!isChatOpen)}
+          isChatActive={isChatOpen}
+        />
 
-        <div className="lg:pl-64">
-          {activeView === "dashboard" && (
-            <main className="p-4 sm:p-6 max-w-[1600px] mx-auto flex flex-col gap-4 sm:gap-6">
-              <StatsGrid />
-
-              <TrendingSection />
-
-              <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
-                <AssignmentsTable />
-                <SchedulePanel />
-              </div>
+        {/* 4. Center Content Area */}
+        {/* Locked height to ensure only this area scrolls */}
+        <div className="flex-1 overflow-hidden relative">
+          {isChatOpen ? (
+            <div className="w-full h-full animate-in fade-in duration-300">
+              <ChatWidget onClose={() => setIsChatOpen(false)} />
+            </div>
+          ) : (
+            /* overflow-y-auto here ensures dashboard scrolls while Header remains fixed above it */
+            <main className="h-full w-full overflow-y-auto p-4 sm:p-6 custom-scrollbar">
+              {activeView === "dashboard" && (
+                <div className="max-w-[1600px] mx-auto flex flex-col gap-6 pb-10">
+                  <StatsGrid />
+                  <TrendingSection />
+                  <div className="flex flex-col lg:flex-row gap-6">
+                    <AssignmentsTable />
+                    <SchedulePanel />
+                  </div>
+                </div>
+              )}
+              {activeView === "sessions" && <MySessions />}
+              {activeView === "assignments" && <AssignmentsPage />}
             </main>
           )}
-
-          {activeView === "sessions" && <MySessions />}
-
-          {activeView === "assignments" && <AssignmentsPage />}
         </div>
       </div>
     </div>
