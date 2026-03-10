@@ -39,6 +39,7 @@ export default function CertificatesPage() {
   return (
     <div className="w-full min-h-screen bg-[#F8F9FA] font-sans">
       {/* Header Section */}
+      {/* Header Sections for git */}
       <div className="bg-white px-6 md:px-10 py-6 border-b border-gray-100">
         <h1 className="text-[22px] font-bold text-gray-900 mb-5">
           Ceritificates
