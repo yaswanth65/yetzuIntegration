@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Search,
   ChevronDown,
@@ -8,9 +8,12 @@ import {
   Upload,
   Info,
   FileText,
+  Loader2,
 } from "lucide-react";
 import { FULL_ASSIGNMENTS_LIST, SUBMISSIONS_LIST } from "../constants";
 import { CreateAssignmentModal, UploadFeedbackModal } from "./AssignmentModals";
+import { EducatorAPI } from "@/lib/api";
+import useSession from "@/hooks/useSession";
 
 const EmptyState: React.FC<{ onCreate: () => void }> = ({ onCreate }) => (
   <div className="flex-1 flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
@@ -81,7 +84,15 @@ const StatusPill: React.FC<{ status: string }> = ({ status }) => {
   );
 };
 
-const AssignmentsTab: React.FC = () => {
+const AssignmentsTab: React.FC<{ assignments: any[], loading: boolean }> = ({ assignments, loading }) => {
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-none p-8 flex items-center justify-center">
+        <Loader2 className="animate-spin text-blue-600" size={24} />
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-none">
       <div className="overflow-x-auto">
@@ -111,9 +122,9 @@ const AssignmentsTab: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {FULL_ASSIGNMENTS_LIST.map((item, idx) => (
+            {assignments.map((item, idx) => (
               <tr
-                key={idx}
+                key={item.id || idx}
                 className="border-b border-gray-200 hover:bg-gray-50/50 transition-colors last:border-b-0 group"
               >
                 <td className="py-4 px-4 text-center">
@@ -127,7 +138,7 @@ const AssignmentsTab: React.FC = () => {
                 <td className="py-4 px-4">
                   <div className="flex flex-col gap-0.5">
                     <span className="text-sm font-semibold text-gray-900">
-                      {item.name}
+                      {item.name || item.courseName || "Assignment"}
                     </span>
                     <span className="text-[11px] text-gray-400 font-medium">
                       {item.id}
@@ -137,7 +148,7 @@ const AssignmentsTab: React.FC = () => {
                 <td className="py-4 px-4">
                   <div className="flex items-center justify-between gap-4 max-w-md">
                     <span className="text-sm text-gray-600 truncate font-medium">
-                      {item.assignment}
+                      {item.assignment || item.title || item.description}
                     </span>
                     <Info
                       size={16}
@@ -146,10 +157,10 @@ const AssignmentsTab: React.FC = () => {
                   </div>
                 </td>
                 <td className="py-4 px-4">
-                  <StatusPill status={item.status} />
+                  <StatusPill status={item.status || "Posted"} />
                 </td>
                 <td className="py-4 px-4 text-sm text-gray-600 font-medium">
-                  {item.deadline}
+                  {item.deadline || item.dueDate || "N/A"}
                 </td>
               </tr>
             ))}
@@ -287,20 +298,54 @@ const SubmissionsTab: React.FC<{ onUploadClick: () => void }> = ({
 };
 
 const AssignmentsPage: React.FC = () => {
+  const { user, accessToken } = useSession();
   const [viewState, setViewState] = useState<"empty" | "content">("content");
   const [activeTab, setActiveTab] = useState<"Assignments" | "Submissions">(
     "Assignments",
   );
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [assignments, setAssignments] = useState(FULL_ASSIGNMENTS_LIST);
+  const [loading, setLoading] = useState(true);
 
-  if (viewState === "empty") {
+  const fetchAssignments = async () => {
+    if (!accessToken || !user?.id) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await EducatorAPI.getAssignments(accessToken, user.id);
+      if (response?.data && Array.isArray(response.data)) {
+        const mappedAssignments = response.data.map((item: any) => ({
+          id: item.id || item._id,
+          name: item.courseName || item.name || "Assignment",
+          assignment: item.title || item.description || "",
+          status: item.status || "Posted",
+          deadline: item.dueDate ? new Date(item.dueDate).toLocaleDateString() : "N/A",
+        }));
+        setAssignments(mappedAssignments.length > 0 ? mappedAssignments : FULL_ASSIGNMENTS_LIST);
+        setViewState(mappedAssignments.length > 0 ? "content" : "empty");
+      }
+    } catch (error) {
+      console.error("Failed to fetch assignments:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAssignments();
+  }, [accessToken, user?.id]);
+
+  if (viewState === "empty" && !loading) {
     return (
       <>
         <EmptyState onCreate={() => setShowCreateModal(true)} />
         <CreateAssignmentModal
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
+          onSuccess={fetchAssignments}
         />
       </>
     );
@@ -377,7 +422,7 @@ const AssignmentsPage: React.FC = () => {
       {/* Content Table */}
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
         {activeTab === "Assignments" ? (
-          <AssignmentsTab />
+          <AssignmentsTab assignments={assignments} loading={loading} />
         ) : (
           <SubmissionsTab onUploadClick={() => setShowFeedbackModal(true)} />
         )}
@@ -387,6 +432,7 @@ const AssignmentsPage: React.FC = () => {
       <CreateAssignmentModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
+        onSuccess={fetchAssignments}
       />
       <UploadFeedbackModal
         isOpen={showFeedbackModal}

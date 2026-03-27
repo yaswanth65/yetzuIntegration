@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 import toast from "react-hot-toast";
 import Cookies from "js-cookie";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://productionyetzuapi.yetzu.com';
 
 // 🔹 Public Axios instance (no auth)
 export const api = axios.create({

@@ -1,24 +1,80 @@
 "use client";
 
-import React, { useState } from "react";
-import { Search, ChevronDown, ChevronRight } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Search, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import CalendarViews from "./CalendarViews";
 import SlotsSidePanel from "./SlotsSidePanel";
 import { TRENDING_SKILLS, CALENDAR_SESSIONS } from "../constants";
+import { EducatorAPI } from "@/lib/api";
+import useSession from "@/hooks/useSession";
 
 const MySessions: React.FC = () => {
+  const { user, accessToken } = useSession();
   // Calendar view mode state: day, week, or month
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("week");
   // Currently selected date for the calendar
-  const [selectedDate, setSelectedDate] = useState(new Date(2026, 0, 7));
+  const [selectedDate, setSelectedDate] = useState(new Date());
   // Controls visibility of the date picker dropdown
   const [showDatePicker, setShowDatePicker] = useState(false);
   // Currently selected month in the date picker (0-11 for Jan-Dec)
-  const [pickerMonth, setPickerMonth] = useState(0);
+  const [pickerMonth, setPickerMonth] = useState(new Date().getMonth());
   // Currently selected year in the date picker
-  const [pickerYear, setPickerYear] = useState(2026);
+  const [pickerYear, setPickerYear] = useState(new Date().getFullYear());
   // All calendar sessions/slots
   const [allSessions, setAllSessions] = useState(CALENDAR_SESSIONS);
+  // Sessions from API
+  const [sessionCards, setSessionCards] = useState(TRENDING_SKILLS.slice(0, 2));
+  const [loading, setLoading] = useState(true);
+
+  // Fetch sessions from API
+  useEffect(() => {
+    const fetchSessions = async () => {
+      if (!accessToken || !user?.id) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await EducatorAPI.getMySessions(accessToken, user.id);
+        if (response?.data) {
+          // Map API data to calendar format
+          if (response.data.sessions && Array.isArray(response.data.sessions)) {
+            const mappedSessions = response.data.sessions.map((s: any, idx: number) => ({
+              id: s.id || s._id || idx,
+              title: s.title || s.name || "Session",
+              dayIndex: new Date(s.startDateTime || s.date).getDay(),
+              startHour: new Date(s.startDateTime || s.date).getHours(),
+              duration: s.duration || 1,
+              color: ["blue", "green", "purple"][idx % 3],
+              timeString: s.timeString || `${new Date(s.startDateTime || s.date).getHours()}:00`,
+              participants: s.participants || s.enrolledStudents || 0,
+            }));
+            setAllSessions(mappedSessions.length > 0 ? mappedSessions : CALENDAR_SESSIONS);
+          }
+          
+          // Map API data to session cards
+          if (response.data.upcomingSessions && Array.isArray(response.data.upcomingSessions)) {
+            const mappedCards = response.data.upcomingSessions.slice(0, 2).map((s: any, idx: number) => ({
+              id: s.id || s._id || idx,
+              title: s.title || s.name || "Session",
+              description: s.description || "Join this session",
+              participants: s.participants || s.enrolledStudents || 0,
+              images: s.participantImages || TRENDING_SKILLS[idx]?.images || []
+            }));
+            if (mappedCards.length > 0) {
+              setSessionCards(mappedCards);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch sessions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSessions();
+  }, [accessToken, user?.id]);
 
   // Creates a new session slot and adds it to the calendar
   // Maps the SlotsSidePanel slot format to the Calendar session format
@@ -324,57 +380,63 @@ const MySessions: React.FC = () => {
       <div className="flex flex-col xl:flex-row gap-4 sm:gap-6">
         {/* Left Side: Session Cards */}
         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-          {TRENDING_SKILLS.slice(0, 2).map((item) => (
-            <div
-              key={item.id}
-              className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-xl hover:border-gray-300 transition-all duration-300 flex flex-col"
-            >
-              {/* Gray Placeholder for session thumbnail/image */}
-              <div className="bg-gray-200 h-32 sm:h-[60%] shrink-0 w-full"></div>
+          {loading ? (
+            <div className="col-span-2 flex items-center justify-center py-10">
+              <Loader2 className="animate-spin text-blue-600" size={24} />
+            </div>
+          ) : (
+            sessionCards.map((item) => (
+              <div
+                key={item.id}
+                className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-xl hover:border-gray-300 transition-all duration-300 flex flex-col"
+              >
+                {/* Gray Placeholder for session thumbnail/image */}
+                <div className="bg-gray-200 h-32 sm:h-[60%] shrink-0 w-full"></div>
 
-              <div className="p-4 sm:p-6 flex flex-col gap-2 sm:gap-3 flex-1">
-                {/* Session title, description, and join button */}
-                <div className="flex justify-between items-start gap-2 sm:gap-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-1 leading-tight">
-                      {item.title}
-                    </h3>
-                    <p className="text-[10px] sm:text-xs text-gray-600 leading-relaxed line-clamp-2">
-                      {item.description}
-                    </p>
-                  </div>
-                  <button className="bg-[#042BFD] text-white text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-none shadow-blue-500/30 hover:bg-blue-700 transition-all whitespace-nowrap shrink-0">
-                    Join In
-                  </button>
-                </div>
-
-                {/* Participant avatars and reschedule button */}
-                <div className="mt-auto flex items-center justify-between pt-2 sm:pt-3 border-t border-gray-100">
-                  <div className="flex items-center -space-x-2">
-                    {item.images.slice(0, 3).map((img, idx) => (
-                      <img
-                        key={idx}
-                        src={img}
-                        alt=""
-                        className="w-5 h-5 sm:w-7 sm:h-7 rounded-full border-2 border-white shadow-none"
-                      />
-                    ))}
-                    <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-blue-50 border-2 border-white flex items-center justify-center text-[7px] sm:text-[9px] font-bold text-blue-800 shadow-none">
-                      +4
+                <div className="p-4 sm:p-6 flex flex-col gap-2 sm:gap-3 flex-1">
+                  {/* Session title, description, and join button */}
+                  <div className="flex justify-between items-start gap-2 sm:gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-1 leading-tight">
+                        {item.title}
+                      </h3>
+                      <p className="text-[10px] sm:text-xs text-gray-600 leading-relaxed line-clamp-2">
+                        {item.description}
+                      </p>
                     </div>
+                    <button className="bg-[#042BFD] text-white text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-none shadow-blue-500/30 hover:bg-blue-700 transition-all whitespace-nowrap shrink-0">
+                      Join In
+                    </button>
                   </div>
 
-                  <button className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-semibold text-gray-600 hover:text-gray-900 transition-colors group">
-                    Reschedule
-                    <ChevronRight
-                      size={12}
-                      className="sm:w-[14px] sm:h-[14px] group-hover:translate-x-0.5 transition-transform"
-                    />
-                  </button>
-                </div>
+                  {/* Participant avatars and reschedule button */}
+                  <div className="mt-auto flex items-center justify-between pt-2 sm:pt-3 border-t border-gray-100">
+                    <div className="flex items-center -space-x-2">
+                      {item.images.slice(0, 3).map((img, idx) => (
+                        <img
+                          key={idx}
+                          src={img}
+                          alt=""
+                          className="w-5 h-5 sm:w-7 sm:h-7 rounded-full border-2 border-white shadow-none"
+                        />
+                      ))}
+                      <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-blue-50 border-2 border-white flex items-center justify-center text-[7px] sm:text-[9px] font-bold text-blue-800 shadow-none">
+                        +{item.participants || 4}
+                      </div>
+                    </div>
+
+                    <button className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-semibold text-gray-600 hover:text-gray-900 transition-colors group">
+                      Reschedule
+                      <ChevronRight
+                        size={12}
+                        className="sm:w-[14px] sm:h-[14px] group-hover:translate-x-0.5 transition-transform"
+                      />
+                    </button>
+                  </div>
               </div>
             </div>
-          ))}
+          ))
+          )}
         </div>
 
         {/* Right Side: Slots Panel for creating new sessions - Now visible on all screens */}

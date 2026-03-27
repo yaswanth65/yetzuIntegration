@@ -3,7 +3,7 @@ import { ContactFormPayload } from "./types";
 
 export const formService = {
   postContactInfo: async (payload: ContactFormPayload) => {
-    const res = await api.post("/form/v1/contact", payload);
+    const res = await api.post("/api/form/v1/contact", payload);
     return res?.data;
   },
 };

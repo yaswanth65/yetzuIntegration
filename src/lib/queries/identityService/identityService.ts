@@ -5,17 +5,17 @@ import Cookies from "js-cookie";
 export const identityService = {
   getAccessToken: async () => {
     const refreshToken = Cookies.get("refreshToken") || "";
-    const res = await authApi.post("/identityapi/v1/auth/refresh", {
+    const res = await authApi.post("/api/identityapi/v1/auth/refresh", {
       refreshToken,
     });
     return res?.data;
   },
   getUserProfile: async () => {
-    const res = await authApi.get("/identityapi/v1/auth/me");
+    const res = await authApi.get("/api/identityapi/v1/auth/me");
     return res?.data;
   },
   signup: async ({ email, password, name, role, mobileno }: SignupPayload) => {
-    const res = await api.post("/identityapi/v1/auth/signup", {
+    const res = await api.post("/api/identityapi/v1/auth/signup", {
       email,
       password,
       name,
@@ -25,39 +25,39 @@ export const identityService = {
     return res?.data;
   },
   login: async ({ email, password }: LoginPayload) => {
-    const res = await api.post("/identityapi/v1/auth/signin", {
+    const res = await api.post("/api/identityapi/v1/auth/signin", {
       email,
       password,
     });
     return res?.data;
   },
   googleLogin: async (idToken: string) => {
-    const res = await api.post("/identityapi/v1/auth/google-signin", {
+    const res = await api.post("/api/identityapi/v1/auth/google-signin", {
       id_token: idToken,
     });
     return res?.data;
   },
   logout: async (userId: string) => {
-    const res = await authApi.post("/identityapi/v1/auth/signout", {
+    const res = await authApi.post("/api/identityapi/v1/auth/signout", {
       userId,
     });
     return res?.data;
   },
   forgotPassword: async (email: string) => {
-    const res = await api.post("/identityapi/v1/auth/forgot-password", {
+    const res = await api.post("/api/identityapi/v1/auth/forgot-password", {
       email,
     });
     return res.data;
   },
   verifyOtp: async (email: string, otp: string) => {
-    const res = await api.post("/identityapi/v1/auth/verify-otp", {
+    const res = await api.post("/api/identityapi/v1/auth/verify-otp", {
       email,
       otp,
     });
     return res.data;
   },
   resetPassowrd: async (email: string, otp: string, newPassword: string) => {
-    const res = await api.post("/identityapi/v1/auth/reset-password", {
+    const res = await api.post("/api/identityapi/v1/auth/reset-password", {
       email,
       otp,
       newPassword,

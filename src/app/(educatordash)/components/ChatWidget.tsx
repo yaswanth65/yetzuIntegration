@@ -1,27 +1,193 @@
- "use client";
+"use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   X, Search, Filter, Edit, Paperclip, Smile, 
-  Image as ImageIcon, Type, Send, ChevronDown, UserPlus,
-  ArrowLeft 
+  Image as ImageIcon, Send, ChevronDown, UserPlus,
+  ArrowLeft, Loader2
 } from "lucide-react";
 import { CHAT_LIST, MOCK_MESSAGES } from "../constants";
+import { EducatorChatAPI } from "@/lib/api";
+import useSession from "@/hooks/useSession";
 
 interface ChatWidgetProps {
   onClose: () => void;
 }
 
+interface Student {
+  id: string;
+  name: string;
+  avatar?: string;
+  lastMessage?: string;
+  lastMessageTime?: string;
+  isOnline?: boolean;
+}
+
+interface Message {
+  id: string;
+  text: string;
+  sender: "me" | "them";
+  timestamp?: string;
+}
+
 const ChatWidget: React.FC<ChatWidgetProps> = ({ onClose }) => {
-  const [selectedChatId, setSelectedChatId] = useState<number | null>(CHAT_LIST[0]?.id || null);
-  // NEW: State to toggle between list and chat window on mobile
+  const { user, accessToken } = useSession();
+  const [students, setStudents] = useState<Student[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
+  const [newMessage, setNewMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const activeChat = CHAT_LIST.find((c) => c.id === selectedChatId);
+  const activeStudent = students.find((s) => s.id === selectedStudentId);
 
-  const handleSelectChat = (id: number) => {
-    setSelectedChatId(id);
+  // Fetch students list
+  useEffect(() => {
+    const fetchStudents = async () => {
+      if (!accessToken || !user?.id) {
+        // Fall back to mock data
+        setStudents(CHAT_LIST.map(c => ({
+          id: String(c.id),
+          name: c.name,
+          avatar: c.avatar,
+          lastMessage: c.message,
+          lastMessageTime: c.time,
+          isOnline: true
+        })));
+        if (CHAT_LIST.length > 0) {
+          setSelectedStudentId(String(CHAT_LIST[0].id));
+        }
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await EducatorChatAPI.getStudents(accessToken, user.id);
+        if (response?.data && Array.isArray(response.data)) {
+          const mappedStudents = response.data.map((s: any) => ({
+            id: s.id || s._id || s.studentId,
+            name: s.name || s.studentName || "Unknown",
+            avatar: s.avatar || s.profileImage || `https://picsum.photos/40/40?random=${s.id}`,
+            lastMessage: s.lastMessage || "No messages yet",
+            lastMessageTime: s.lastMessageTime || "",
+            isOnline: s.isOnline ?? true
+          }));
+          setStudents(mappedStudents);
+          if (mappedStudents.length > 0) {
+            setSelectedStudentId(mappedStudents[0].id);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch students:", error);
+        // Fall back to mock data
+        setStudents(CHAT_LIST.map(c => ({
+          id: String(c.id),
+          name: c.name,
+          avatar: c.avatar,
+          lastMessage: c.message,
+          lastMessageTime: c.time,
+          isOnline: true
+        })));
+        if (CHAT_LIST.length > 0) {
+          setSelectedStudentId(String(CHAT_LIST[0].id));
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, [accessToken, user?.id]);
+
+  // Fetch messages when student is selected
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!selectedStudentId || !accessToken || !user?.id) {
+        // Fall back to mock messages
+        setMessages(MOCK_MESSAGES.map(m => ({
+          id: String(m.id),
+          text: m.text,
+          sender: m.sender as "me" | "them",
+          timestamp: "13:34"
+        })));
+        return;
+      }
+
+      setLoadingMessages(true);
+      try {
+        const response = await EducatorChatAPI.getMessages(accessToken, user.id, selectedStudentId);
+        if (response?.data && Array.isArray(response.data)) {
+          const mappedMessages = response.data.map((m: any) => ({
+            id: m.id || m._id || String(Math.random()),
+            text: m.content || m.message || m.text,
+            sender: (m.senderId === user.id || m.senderType === "educator") ? "me" : "them",
+            timestamp: m.timestamp || m.createdAt || ""
+          }));
+          setMessages(mappedMessages);
+        }
+      } catch (error) {
+        console.error("Failed to fetch messages:", error);
+        setMessages(MOCK_MESSAGES.map(m => ({
+          id: String(m.id),
+          text: m.text,
+          sender: m.sender as "me" | "them",
+          timestamp: "13:34"
+        })));
+      } finally {
+        setLoadingMessages(false);
+      }
+    };
+
+    fetchMessages();
+  }, [selectedStudentId, accessToken, user?.id]);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSelectChat = (id: string) => {
+    setSelectedStudentId(id);
     setMobileView("chat");
+  };
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedStudentId) return;
+
+    const messageText = newMessage.trim();
+    setNewMessage("");
+
+    // Optimistic update
+    const tempMessage: Message = {
+      id: `temp-${Date.now()}`,
+      text: messageText,
+      sender: "me",
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    };
+    setMessages(prev => [...prev, tempMessage]);
+
+    if (!accessToken || !user?.id) return;
+
+    setSendingMessage(true);
+    try {
+      await EducatorChatAPI.sendMessage(accessToken, user.id, selectedStudentId, messageText);
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
   };
 
   return (
@@ -35,7 +201,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ onClose }) => {
         <div className="p-5 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900">Chats</h2>
-            {/* Mobile close button */}
             <button onClick={onClose} className="md:hidden p-1">
               <X size={24} />
             </button>
@@ -60,25 +225,33 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ onClose }) => {
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar">
-          {CHAT_LIST.map((chat) => (
-            <div
-              key={chat.id}
-              onClick={() => handleSelectChat(chat.id)}
-              className={`flex items-center gap-3 px-5 py-4 cursor-pointer transition-all border-b border-gray-50 ${selectedChatId === chat.id ? "bg-blue-50/50" : "hover:bg-gray-50"}`}
-            >
-              <div className="relative shrink-0">
-                <img src={chat.avatar} className="w-10 h-10 rounded-full object-cover" alt="" />
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-baseline">
-                  <h4 className="text-sm font-bold text-gray-900 truncate">{chat.name}</h4>
-                  <span className="text-[10px] text-gray-400 font-medium">{chat.time}</span>
-                </div>
-                <p className="text-xs text-gray-500 truncate mt-0.5">{chat.message}</p>
-              </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="animate-spin text-blue-600" size={24} />
             </div>
-          ))}
+          ) : (
+            students.map((student) => (
+              <div
+                key={student.id}
+                onClick={() => handleSelectChat(student.id)}
+                className={`flex items-center gap-3 px-5 py-4 cursor-pointer transition-all border-b border-gray-50 ${selectedStudentId === student.id ? "bg-blue-50/50" : "hover:bg-gray-50"}`}
+              >
+                <div className="relative shrink-0">
+                  <img src={student.avatar} className="w-10 h-10 rounded-full object-cover" alt="" />
+                  {student.isOnline && (
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-baseline">
+                    <h4 className="text-sm font-bold text-gray-900 truncate">{student.name}</h4>
+                    <span className="text-[10px] text-gray-400 font-medium">{student.lastMessageTime}</span>
+                  </div>
+                  <p className="text-xs text-gray-500 truncate mt-0.5">{student.lastMessage}</p>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -90,14 +263,15 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ onClose }) => {
         {/* Chat Header */}
         <div className="px-4 md:px-6 py-4 bg-white border-b border-gray-100 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            {/* Back Arrow for Mobile */}
             <button onClick={() => setMobileView("list")} className="md:hidden mr-1">
               <ArrowLeft size={24} className="text-gray-600" />
             </button>
-            <img src={activeChat?.avatar} className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover" alt="" />
+            <img src={activeStudent?.avatar} className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover" alt="" />
             <div>
-              <h3 className="font-bold text-sm md:text-base text-gray-900 leading-tight">{activeChat?.name}</h3>
-              <p className="text-[10px] md:text-[11px] text-green-500 font-bold">Online</p>
+              <h3 className="font-bold text-sm md:text-base text-gray-900 leading-tight">{activeStudent?.name}</h3>
+              <p className="text-[10px] md:text-[11px] text-green-500 font-bold">
+                {activeStudent?.isOnline ? "Online" : "Offline"}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2 md:gap-3">
@@ -115,22 +289,29 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ onClose }) => {
 
         {/* Messages Body */}
         <div className="flex-1 p-4 md:p-8 overflow-y-auto space-y-8 custom-scrollbar">
-          {MOCK_MESSAGES.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}>
-               <div className="max-w-[85%] md:max-w-[70%] relative">
-                  <div className={`px-4 py-2 md:px-5 md:py-3 rounded-2xl text-[12px] md:text-[13px] font-medium leading-relaxed shadow-sm ${
-                    msg.sender === "me" 
-                      ? "bg-[#003FC7] text-white rounded-tr-none" 
-                      : "bg-white text-gray-800 border border-gray-100 rounded-tl-none"
-                  }`}>
-                    {msg.text}
-                  </div>
-                  <span className={`absolute -bottom-5 text-[10px] font-bold text-gray-400 ${msg.sender === "me" ? "right-0" : "left-0"}`}>
-                    13:34
-                  </span>
-               </div>
+          {loadingMessages ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="animate-spin text-blue-600" size={24} />
             </div>
-          ))}
+          ) : (
+            messages.map((msg) => (
+              <div key={msg.id} className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}>
+                 <div className="max-w-[85%] md:max-w-[70%] relative">
+                    <div className={`px-4 py-2 md:px-5 md:py-3 rounded-2xl text-[12px] md:text-[13px] font-medium leading-relaxed shadow-sm ${
+                      msg.sender === "me" 
+                        ? "bg-[#003FC7] text-white rounded-tr-none" 
+                        : "bg-white text-gray-800 border border-gray-100 rounded-tl-none"
+                    }`}>
+                      {msg.text}
+                    </div>
+                    <span className={`absolute -bottom-5 text-[10px] font-bold text-gray-400 ${msg.sender === "me" ? "right-0" : "left-0"}`}>
+                      {msg.timestamp || ""}
+                    </span>
+                 </div>
+              </div>
+            ))
+          )}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}
@@ -138,6 +319,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ onClose }) => {
           <div className="bg-white border border-gray-200 rounded-2xl p-2 md:p-3 shadow-sm focus-within:ring-1 focus-within:ring-blue-100 transition-all">
              <textarea 
                 placeholder="Type message..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
                 className="w-full px-2 py-1 bg-transparent text-sm resize-none outline-none min-h-[60px] md:min-h-[80px]"
              />
              <div className="flex items-center justify-between mt-2">
@@ -146,21 +330,25 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ onClose }) => {
                   <Smile size={18} className="cursor-pointer hover:text-[#003FC7]" />
                   <ImageIcon size={18} className="cursor-pointer hover:text-[#003FC7] hidden sm:block" />
                 </div>
-                <button className="bg-[#fb5e44] hover:bg-[#e4543d] text-white px-4 md:px-6 py-2 md:py-2.5 rounded-xl flex items-center gap-2 text-xs font-bold transition-all shadow-md">
-                   Send <Send size={14} />
+                <button 
+                  onClick={handleSendMessage}
+                  disabled={sendingMessage || !newMessage.trim()}
+                  className="bg-[#fb5e44] hover:bg-[#e4543d] text-white px-4 md:px-6 py-2 md:py-2.5 rounded-xl flex items-center gap-2 text-xs font-bold transition-all shadow-md disabled:opacity-50"
+                >
+                   {sendingMessage ? <Loader2 size={14} className="animate-spin" /> : "Send"} <Send size={14} />
                 </button>
              </div>
           </div>
         </div>
       </div>
 
-      {/* 3. RIGHT PANEL: Contact Details (Hidden on mobile and small tablets) */}
+      {/* 3. RIGHT PANEL: Contact Details */}
       <div className="w-[300px] border-l border-gray-100 bg-white hidden xl:flex flex-col shrink-0 overflow-y-auto custom-scrollbar">
         <div className="p-6 flex flex-col gap-8">
            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                 <img src={activeChat?.avatar} className="w-10 h-10 rounded-full object-cover" alt="" />
-                 <h4 className="font-bold text-sm text-gray-900">{activeChat?.name}</h4>
+                 <img src={activeStudent?.avatar} className="w-10 h-10 rounded-full object-cover" alt="" />
+                 <h4 className="font-bold text-sm text-gray-900">{activeStudent?.name}</h4>
               </div>
               <button className="p-2 border border-gray-100 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-50 transition-all">
                 <Edit size={16}/>
@@ -170,15 +358,11 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ onClose }) => {
            <div className="space-y-4">
               <div className="flex justify-between items-center text-[12px]">
                  <span className="text-gray-400 font-semibold">Channel</span>
-                 <span className="text-gray-900 font-bold">WhatsAppB2B</span>
+                 <span className="text-gray-900 font-bold">Chat</span>
               </div>
               <div className="flex justify-between items-center text-[12px]">
                  <span className="text-gray-400 font-semibold">ID</span>
-                 <span className="text-gray-900 font-bold">2023113142356</span>
-              </div>
-              <div className="flex justify-between items-start text-[12px]">
-                 <span className="text-gray-400 font-semibold">Address</span>
-                 <span className="text-gray-900 font-bold text-right max-w-[150px]">5467 Richmond View, Kentucky, 43546-6636</span>
+                 <span className="text-gray-900 font-bold">{activeStudent?.id?.slice(0, 15) || "N/A"}</span>
               </div>
            </div>
 
@@ -195,18 +379,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ onClose }) => {
                     <Smile size={16} className="cursor-pointer hover:text-gray-500" />
                  </div>
               </div>
-           </div>
-
-           <div className="space-y-6 pt-2">
-              {[1, 2].map((i) => (
-                <div key={i} className="flex gap-3 pb-6 border-b border-gray-50 last:border-0">
-                  <img src={activeChat?.avatar} className="w-8 h-8 rounded-full flex-shrink-0" alt="" />
-                  <div>
-                    <span className="text-[11px] font-bold text-gray-900 block mb-1">Justin Hickle</span>
-                    <p className="text-[11px] text-gray-500 leading-relaxed font-medium">Send Sarah an update by email by 4PM tomorrow.</p>
-                  </div>
-                </div>
-              ))}
            </div>
         </div>
       </div>

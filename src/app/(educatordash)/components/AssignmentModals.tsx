@@ -1,20 +1,89 @@
 "use client";
 
-import React, { useState } from "react";
-import { X, Upload, ChevronDown } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { X, Upload, ChevronDown, Loader2 } from "lucide-react";
 import { WEBINARS_LIST } from "../constants";
+import { EducatorAPI } from "@/lib/api";
+import useSession from "@/hooks/useSession";
+import toast from "react-hot-toast";
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 export const CreateAssignmentModal: React.FC<ModalProps> = ({
   isOpen,
   onClose,
+  onSuccess,
 }) => {
+  const { user, accessToken } = useSession();
   const [selectedWebinar, setSelectedWebinar] = useState<number | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      if (selectedFile.size > 500 * 1024) {
+        toast.error("File size must be less than 500KB");
+        return;
+      }
+      setFile(selectedFile);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!title.trim()) {
+      toast.error("Please enter a title");
+      return;
+    }
+    if (!description.trim()) {
+      toast.error("Please enter a description");
+      return;
+    }
+    if (!accessToken || !user?.id) {
+      toast.error("Please login to create assignment");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("description", description);
+      if (dueDate) {
+        formData.append("dueDate", new Date(dueDate).toISOString());
+      }
+      if (selectedWebinar) {
+        formData.append("courseId", String(selectedWebinar));
+      }
+      if (file) {
+        formData.append("file", file);
+      }
+
+      await EducatorAPI.createAssignment(accessToken, user.id, formData);
+      toast.success("Assignment created successfully!");
+      onSuccess?.();
+      onClose();
+      setTitle("");
+      setDescription("");
+      setDueDate("");
+      setFile(null);
+      setSelectedWebinar(null);
+    } catch (error: any) {
+      console.error("Failed to create assignment:", error);
+      toast.error(error.message || "Failed to create assignment");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -96,6 +165,8 @@ export const CreateAssignmentModal: React.FC<ModalProps> = ({
             <input
               type="text"
               placeholder="Enter Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               className="w-full border border-gray-200 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all text-gray-700 text-xs sm:text-sm placeholder:text-gray-400"
             />
           </div>
@@ -106,7 +177,21 @@ export const CreateAssignmentModal: React.FC<ModalProps> = ({
             </label>
             <textarea
               placeholder="Enter your Message"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               className="w-full border border-gray-200 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all text-gray-700 min-h-[100px] sm:min-h-[140px] resize-none text-xs sm:text-sm placeholder:text-gray-400"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5 sm:gap-2">
+            <label className="text-sm sm:text-base font-bold text-gray-900">
+              Due Date
+            </label>
+            <input
+              type="datetime-local"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3.5 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all text-gray-700 text-xs sm:text-sm"
             />
           </div>
 
@@ -114,22 +199,40 @@ export const CreateAssignmentModal: React.FC<ModalProps> = ({
             <label className="text-sm sm:text-base font-bold text-gray-900">
               Add Attachment
             </label>
-            <div className="border border-gray-200 rounded-xl p-6 sm:p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 transition-colors border-dashed bg-white">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".pdf,.png,.jpg,.jpeg"
+              className="hidden"
+            />
+            <div 
+              onClick={() => fileInputRef.current?.click()}
+              className="border border-gray-200 rounded-xl p-6 sm:p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 transition-colors border-dashed bg-white"
+            >
               <Upload
                 size={20}
                 className="sm:w-6 sm:h-6 text-gray-900 mb-2 sm:mb-3"
                 strokeWidth={2}
               />
-              <p className="text-sm sm:text-base font-bold text-gray-900 mb-1">
-                Drop your file here
-              </p>
-              <p className="text-xs sm:text-sm text-gray-500">
-                or{" "}
-                <span className="text-blue-600 font-bold hover:underline">
-                  browse file
-                </span>{" "}
-                in your computer
-              </p>
+              {file ? (
+                <p className="text-sm sm:text-base font-bold text-green-600 mb-1">
+                  {file.name}
+                </p>
+              ) : (
+                <>
+                  <p className="text-sm sm:text-base font-bold text-gray-900 mb-1">
+                    Drop your file here
+                  </p>
+                  <p className="text-xs sm:text-sm text-gray-500">
+                    or{" "}
+                    <span className="text-blue-600 font-bold hover:underline">
+                      browse file
+                    </span>{" "}
+                    in your computer
+                  </p>
+                </>
+              )}
               <p className="text-[10px] sm:text-xs text-gray-400 mt-3 sm:mt-4">
                 Supports PDF up to 500kb
               </p>
@@ -138,7 +241,12 @@ export const CreateAssignmentModal: React.FC<ModalProps> = ({
         </div>
 
         <div className="flex justify-end px-4 sm:px-8 pb-4 sm:pb-8 pt-4 sm:pt-6 border-t border-gray-200 flex-shrink-0 bg-white">
-          <button className="bg-[#042BFD] hover:bg-blue-700 text-white font-bold py-2.5 sm:py-3.5 px-6 sm:px-8 rounded-lg transition-colors shadow-none shadow-blue-600/20 text-xs sm:text-sm w-full sm:w-auto">
+          <button 
+            onClick={handleSubmit}
+            disabled={loading}
+            className="bg-[#042BFD] hover:bg-blue-700 text-white font-bold py-2.5 sm:py-3.5 px-6 sm:px-8 rounded-lg transition-colors shadow-none shadow-blue-600/20 text-xs sm:text-sm w-full sm:w-auto flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {loading ? <Loader2 size={16} className="animate-spin" /> : null}
             Create Assignment
           </button>
         </div>

@@ -3,7 +3,7 @@ import { StudentOverviewResponse } from "./types";
 
 export const dashboardService = {
     getStudentOverview: async () => {
-        const res = await authApi.get("/dashboard/studentOverview");
+        const res = await authApi.get("/api/dashboard/studentOverview");
         console.log("Student Overview API Response:", res);
         const data = res.data?.data || {};
 
