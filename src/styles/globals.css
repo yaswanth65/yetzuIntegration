@@ -1,0 +1,70 @@
+/* src/styles/globals.css */
+@import "tailwindcss";
+@import "./theme.css";
+@import "./typography.css";
+
+/* Prevent zooming issues on mobile */
+* {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Ensure proper box-sizing and smooth scrolling */
+html {
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+body {
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+
+  button {
+    cursor: pointer;
+  }
+}
+
+/* Prevent horizontal scroll on all devices */
+body,
+html {
+  max-width: 100vw;
+}
+
+/* Ensure sections have proper spacing accounting for navbar */
+:root {
+  --navbar-height: 68px;
+}
+
+/* Smooth scroll padding for sticky navbar */
+html {
+  scroll-padding-top: var(--navbar-height);
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}
+
+/* Hide scrollbar utility class */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
