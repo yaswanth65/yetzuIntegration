@@ -1,3 +1,4 @@
+
 // Import Inter font from Google Fonts for consistent typography
 import { Inter } from "next/font/google";
 // Import global CSS styles that apply to the entire application
@@ -14,10 +15,9 @@ import { QueryClientWrapper } from "@/providers/QueryClientProvider";
 // Added fallback and display options for better resilience during builds
 const inter = Inter({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-inter",
   display: "swap",
-  fallback: ["system-ui", "arial"],
-  adjustFontFallback: false,
 });
 
 // Export metadata for SEO and browser display
@@ -57,7 +57,7 @@ export default function RootLayout({
   return (
     // Set HTML language to English and apply the Inter font CSS variable
     <html lang="en" className={inter.variable}>
-      <body>
+      <body className="font-inter">
         {/* QueryClientWrapper: Provides React Query context for data fetching, caching, and state management */}
         <QueryClientWrapper>
           {/* SessionProvider: Manages user authentication state across the app */}

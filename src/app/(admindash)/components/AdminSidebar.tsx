@@ -1,118 +1,41 @@
-"use client";
+"use client"
 
-import React from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { X } from "lucide-react";
-import { ADMIN_MENU_ITEMS, ADMIN_BOTTOM_MENU_ITEMS } from "../constants";
-import { usePathname } from "next/navigation";
+import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation'
+import React from 'react'
 
-interface SidebarProps {
-  activeView?: string;
-  onNavigate?: (view: string) => void;
-  isOpen?: boolean;
-  onClose?: () => void;
-}
+const menuItems = [
+    { name: "Overview", path: "/a/dashboard", icon: "/admin-dashboard/ad-overview-icon.svg"},
+    { name: "Session", path: "/a/sessions", icon: "/admin-dashboard/ad-sessions-icon.svg"},
+    { name: "Analytics", path: "/a/analytics", icon: "/admin-dashboard/ad-analytics-icon.svg"},
+    { name: "User Management", path: "/a/users", icon: "/admin-dashboard/ad-user-management-icon.svg"},
+    { name: "CMS", path: "/a/cms", icon: "/admin-dashboard/ad-cms-icon.svg"},
+    { name: "Blogs", path: "/a/blogs", icon: "/admin-dashboard/ad-blogs-icon.svg"},
+    { name: "Contact Submissions", path: "/a/contacts", icon: "/admin-dashboard/ad-contact-submissions-icon.svg"},
+    { name: "Coupon Management", path: "/a/coupons", icon: "/admin-dashboard/ad-coupon-management-icon.svg"}
+]
 
-const AdminSidebar: React.FC<SidebarProps> = ({
-  activeView = "dashboard",
-  onNavigate,
-  isOpen = false,
-  onClose,
-}) => {
-  const pathname = usePathname();
+export default function AdminSidebar() {
 
-  const getHref = (id: string) => {
-    const routes: { [key: string]: string } = {
-      users: "/a/dashboard",
-      sessions: "/a/sessions",
-      security: "/a/security",
-      content: "/a/content-management",
-    };
-    return routes[id] || "/a/dashboard";
-  };
+    const pathname = usePathname();
 
-  const isActive = (id: string) => {
-    if (pathname) {
-      const routes: { [key: string]: string } = {
-        users: "/a/dashboard",
-        sessions: "/a/sessions",
-        security: "/a/security",
-        content: "/a/content-management",
-      };
-      return pathname === routes[id] || pathname.startsWith(routes[id]);
-    }
-    return activeView === id;
-  };
+    
+    return (
+        <div className='w-62 h-screen bg-white border-r p-5 border-gray-200'>
 
-  return (
-    <aside
-      className={`w-64 bg-gray-50 h-screen flex flex-col justify-between fixed left-0 top-0 border-r border-gray-200/70 z-50 transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
-    >
-      <div>
-        <div className="h-[72px] px-5 flex items-center justify-between bg-gray-50 mb-4 border-b border-gray-200/70">
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/images/Logo.png"
-              alt="Yetzu Logo"
-              width={120}
-              height={40}
-              className="object-contain"
-              priority
-            />
-          </Link>
-          <button
-            onClick={onClose}
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-200 transition-colors"
-            aria-label="Close menu"
-          >
-            <X size={20} className="text-gray-600" />
-          </button>
+        <div className='flex flex-col items-start gap-4 '>
+            
+            {menuItems.map((item)=>{
+                
+                const isActive = pathname === item.path
+                return(
+                    <Link className={`flex items-center gap-3 px-4 py-2 text-[14px] ${ isActive ? "bg-gray-200 w-full font-medium rounded-lg" : "text-[#404040] hover:bg-gray-200 w-full rounded-lg"} `} href={item.path} key={item.name}> <Image width={20} height={20} src={item.icon} alt="drop"/> {item.name}</Link>
+                )
+            })}
         </div>
+    </div>
+  )
 
-        <nav className="px-3 space-y-1">
-          {ADMIN_MENU_ITEMS.map((item) => (
-            <Link
-              key={item.id}
-              href={getHref(item.id)}
-              onClick={() => {
-                onNavigate && onNavigate(item.id);
-                onClose && onClose();
-              }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                isActive(item.id)
-                  ? "bg-blue-50 text-black"
-                  : "text-gray-500 hover:bg-gray-100 hover:text-black"
-              }`}
-            >
-              <item.icon
-                className={`w-5 h-5 ${isActive(item.id) ? "text-black" : "text-gray-900"}`}
-                strokeWidth={1.5}
-              />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
 
-      <div className="px-3 py-6">
-        {ADMIN_BOTTOM_MENU_ITEMS.map((item) => (
-          <a
-            key={item.label}
-            href="#"
-            className="
-            flex items-center gap-3
-            px-4 py-3 rounded-lg text-sm font-medium
-            text-gray-500 hover:bg-gray-100 hover:text-black transition-colors
-            "
-          >
-            <item.icon className="w-5 h-5" strokeWidth={1.5} />
-            {item.label}
-          </a>
-        ))}
-      </div>
-    </aside>
-  );
-};
-
-export default AdminSidebar;
+}

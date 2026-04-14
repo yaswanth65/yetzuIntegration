@@ -12,6 +12,9 @@ const config: Config = {
       "2xl": "1920px",
     },
     extend: {
+      fontFamily: {
+        inter: ["var(--font-inter)", "system-ui", "sans-serif"],
+      },
       borderRadius: {
         1: "var(--radius-1)",
         2: "var(--radius-2)",
@@ -64,10 +67,6 @@ const config: Config = {
           400: "var(--color-success-400)",
           700: "var(--color-success-700)",
         },
-      },
-      fontFamily: {
-        inter: "var(--font-inter)",
-        sfpro: "var(--font-sfpro)",
       },
       fontSize: {
         h1: [

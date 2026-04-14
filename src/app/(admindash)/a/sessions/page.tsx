@@ -1,8 +1,0 @@
-"use client";
-
-import React from "react";
-import SessionsView from "../../components/SessionsView";
-
-export default function SessionsPage() {
-  return <SessionsView />;
-}
