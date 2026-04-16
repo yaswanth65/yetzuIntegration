@@ -1,29 +1,16 @@
-import { td } from "framer-motion/client";
+import { Session, Status as SessionStatus } from "@/app/(admindash)/types/SessionType";
 
-type SessionType = "Webinar" | "Cohort" | "1:1" | "Workshop";
-type SessionStatus = "Live" | "Scheduled" | "Completed";
-
-interface Session {
-    id: string;
-    type: SessionType;
-    educator: string;
-    students: number,
-    date: string;
-    status: SessionStatus;
+interface Props {
+  data: Session[];
+  showHeader?: boolean;
+  title?: string;
 }
-
-const sessionsData: Session[] = [
-    { id: "WEB_204", type: "Webinar", educator: "Dr. Sarah Chen", students: 45, date: "Mar 16, 2026", status: "Live", },
-    { id: "COH-112", type: "Cohort", educator: "Prof. James W.", students: 28, date: "Mar 16, 2026", status: "Scheduled" },
-    { id: "MTR-089", type: "1:1", educator: "Dr. Anita Roy", students: 1, date: "Mar 16, 2026", status: "Completed" },
-    { id: "WRK-056", type: "Workshop", educator: "Dr. Liu Wei", students: 32, date: "Mar 15, 2026", status: "Completed" },
-    { id: "WEB-203", type: "Webinar", educator: "Prof. Brown", students: 67, date: "Mar 15, 2026", status: "Completed" },
-]
 
 const statusStyles: Record<SessionStatus, string> = {
     Live: "text-green-600 bg-green-50",
     Scheduled: "text-blue-600 bg-blue-50",
     Completed: "text-gray-500 bg-gray-100",
+    Missed: "text-red-600 bg-red-50",
 }
 
 function EyeIcon() {
@@ -62,13 +49,17 @@ function StatusBadge({ status }: { status: SessionStatus }) {
   );
 }
 
-export default function RecentSession() {
+export default function SessionTable({data,showHeader = true, title }: Props) {
+
+  console.log(showHeader, title)
     return (
-        <div className="bg-white  rounded-2xl mt-10 border shadow-sm border-gray-100 ">
-            <div className="flex items-center justify-between p-6">
-                <h1 className="font-semibold">Recent Sessions</h1>
+        <div className="bg-white rounded-2xl mt-10 border-2 border-gray-100 overflow-hidden ">
+            {showHeader && (
+              <div className="flex items-center justify-between p-6">
+                <h1 className="font-semibold">{title || "Recent Sessions"}</h1>
                 <p className="text-blue-600 text-sm font-semibold">View All</p>
             </div>
+            )}
 
             <div className="overflow-x-auto">
                 <table className="w-full text-sm table-auto">
@@ -83,14 +74,14 @@ export default function RecentSession() {
                     </thead>
 
                     <tbody className="divide-y divide-gray-200">
-                        {sessionsData.map((data, idx) => (
+                        {data.map((item, idx) => (
                             <tr key={idx}>
-                                <td className="px-7 py-4 font-semibold">{data.id}</td>
-                                <td className="px-7 py-4 text-gray-500">{data.type}</td>
-                                <td className="px-7 py-4">{data.educator}</td>
-                                <td className="px-7 py-4 text-gray-500">{data.students}</td>
-                                <td className="px-7 py-4 text-gray-500">{data.date}</td>
-                                <td className="px-7 py-4"><StatusBadge status={data.status} /></td>
+                                <td className="px-7 py-4 font-semibold">{item.id}</td>
+                                <td className="px-7 py-4 text-gray-500">{item.type}</td>
+                                <td className="px-7 py-4">{item.educator}</td>
+                                <td className="px-7 py-4 text-gray-500">{item.students}</td>
+                                <td className="px-7 py-4 text-gray-500">{item.date}</td>
+                                <td className="px-7 py-4"><StatusBadge status={item.status} /></td>
                                 <td className="px-7 py-4"><EyeIcon/></td>
                             </tr>
                         ))}

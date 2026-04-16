@@ -1,11 +1,12 @@
-import OverviewPage from "@/app/(studentdash)/s/dashboard/page";
+
 import React from "react";
 import OverViewStats from "./components/OverViewStats";
 import RevenueChart from "./components/RevenueChart";
 import LiveActivityFeed from "./components/LiveActivityFeed";
 import AlertIssues from "./components/AlertIssues";
-import RecentSession from "./components/RecentSession";
+import RecentSession from "../../components/SessionTable";
 import SupportTickets from "./components/SupportTickets";
+import { sessionsData } from "@/app/(admindash)/data/SessionData";
 
 export default function page() {
   return (
@@ -18,7 +19,7 @@ export default function page() {
           <LiveActivityFeed />
           <AlertIssues />
         </div>
-        <RecentSession />
+        <RecentSession data={sessionsData} />
         <SupportTickets />
       </div>
     </div>
