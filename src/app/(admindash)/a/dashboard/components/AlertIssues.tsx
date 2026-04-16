@@ -41,7 +41,7 @@ export default function AlertIssues() {
         <div className="bg-white rounded-2xl mt-10 border shadow-sm border-gray-100 p-6 ">
             <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                    <Image width={20} height={20} src="/admin-dashboard/alert-icon.svg" />
+                    <Image width={20} height={20} src="/admin-dashboard/alert-icon.svg" alt="dashBoard" />
                     <h3 className="font-semibold">Alerts & Issues</h3>
                 </div>
                 <span className="inline-block px-2 py-1 bg-gray-200/50 rounded-sm text-xs">
