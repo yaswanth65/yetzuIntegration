@@ -57,6 +57,9 @@ export default function RootLayout({
   return (
     // Set HTML language to English and apply the Inter font CSS variable
     <html lang="en" className={inter.variable}>
+      <head>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.css" integrity="sha512-kJlvECunwXftkPwyvHbclArO8wszgBGisiLeuDFwNM8ws+wKIw0sv1os3ClWZOcrEB2eRXULYUsm8OVRGJKwGA==" crossOrigin="anonymous" referrerPolicy="no-referrer" />
+      </head>
       <body className="font-inter">
         {/* QueryClientWrapper: Provides React Query context for data fetching, caching, and state management */}
         <QueryClientWrapper>

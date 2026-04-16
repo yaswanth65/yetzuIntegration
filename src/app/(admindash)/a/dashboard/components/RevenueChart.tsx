@@ -195,12 +195,13 @@ export default function RevenueBreakdown() {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mt-10 w-full">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 border-b border-gray-200 pb-3 ">
+      <div className="flex items-center justify-between">
         <h2 className="text-base font-semibold text-gray-900 tracking-tight">
           Revenue Breakdown
         </h2>
         <PeriodSelector active={period} onChange={setPeriod} />
       </div>
+      <div className="w-[calc(100%+3rem)] -mx-6 h-px bg-gray-200 my-3"></div>
 
       {/* Chart */}
       <ResponsiveContainer width="100%" height={320}>
