@@ -1,5 +1,5 @@
 import SessionTable from "@/app/(admindash)/components/SessionTable";
-import { sessionsData, Session } from "@/app/(admindash)/data/SessionData";
+import { Session } from "@/app/(admindash)/types/SessionType";
 
 interface Props {
     data: Session[];
