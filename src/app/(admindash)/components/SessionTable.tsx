@@ -1,9 +1,13 @@
+"use client";
+
 import { Session, Status as SessionStatus } from "@/app/(admindash)/types/SessionType";
 
 interface Props {
   data: Session[];
   showHeader?: boolean;
   title?: string;
+  onRowClick?: (session: Session) => void;
+  selectedSessionId?: string;
 }
 
 const statusStyles: Record<SessionStatus, string> = {
@@ -49,7 +53,7 @@ function StatusBadge({ status }: { status: SessionStatus }) {
   );
 }
 
-export default function SessionTable({data,showHeader = true, title }: Props) {
+export default function SessionTable({data,showHeader = true, title, onRowClick, selectedSessionId }: Props) {
 
   console.log(showHeader, title)
     return (
@@ -75,14 +79,24 @@ export default function SessionTable({data,showHeader = true, title }: Props) {
 
                     <tbody className="divide-y divide-gray-200">
                         {data.map((item, idx) => (
-                            <tr key={idx}>
+                            <tr 
+                              key={idx} 
+                              className={`transition-colors hover:bg-gray-50 ${selectedSessionId === item.id ? "bg-blue-50/50" : ""}`}
+                            >
                                 <td className="px-7 py-4 font-semibold">{item.id}</td>
                                 <td className="px-7 py-4 text-gray-500">{item.type}</td>
                                 <td className="px-7 py-4">{item.educator}</td>
                                 <td className="px-7 py-4 text-gray-500">{item.students}</td>
                                 <td className="px-7 py-4 text-gray-500">{item.date}</td>
                                 <td className="px-7 py-4"><StatusBadge status={item.status} /></td>
-                                <td className="px-7 py-4"><EyeIcon/></td>
+                                <td className="px-7 py-4">
+                                  <button 
+                                    onClick={() => onRowClick && onRowClick(item)}
+                                    className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                  >
+                                    <EyeIcon/>
+                                  </button>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
