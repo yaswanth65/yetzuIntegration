@@ -8,6 +8,7 @@ interface Props {
   title?: string;
   onRowClick?: (session: Session) => void;
   selectedSessionId?: string;
+  className?: string;
 }
 
 const statusStyles: Record<SessionStatus, string> = {
@@ -53,11 +54,10 @@ function StatusBadge({ status }: { status: SessionStatus }) {
   );
 }
 
-export default function SessionTable({data,showHeader = true, title, onRowClick, selectedSessionId }: Props) {
+export default function SessionTable({data,showHeader = true, title, onRowClick, selectedSessionId, className = "mt-10" }: Props) {
 
-  console.log(showHeader, title)
     return (
-        <div className="bg-white rounded-2xl mt-10 border-2 border-gray-100 overflow-hidden ">
+        <div className={`bg-white rounded-2xl border-2 border-gray-100 overflow-hidden w-full ${className}`}>
             {showHeader && (
               <div className="flex items-center justify-between p-6">
                 <h1 className="font-semibold">{title || "Recent Sessions"}</h1>

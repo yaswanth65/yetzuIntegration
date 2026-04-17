@@ -193,9 +193,9 @@ export default function RevenueBreakdown() {
   const data = revenueData[period];
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mt-10 w-full">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 w-full overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h2 className="text-base font-semibold text-gray-900 tracking-tight">
           Revenue Breakdown
         </h2>

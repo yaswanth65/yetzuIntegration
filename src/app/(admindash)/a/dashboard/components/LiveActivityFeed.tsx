@@ -58,8 +58,8 @@ const activityData: ActivityItem[] = [
 
 export default function LiveActivityFeed() {
   return (
-    <div className="bg-white rounded-2xl mt-10 border shadow-sm border-gray-100 p-6">
-      <div className="flex items-center justify-between">
+    <div className="bg-white rounded-2xl border shadow-sm border-gray-100 p-4 sm:p-6 w-full">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Image
             width={20}

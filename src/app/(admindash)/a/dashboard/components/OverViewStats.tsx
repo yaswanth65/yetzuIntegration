@@ -72,7 +72,7 @@ const statsCards = [
 
 export default function OverViewStats() {
   return (
-    <div className="grid grid-cols-4 mt-5 gap-5 w-full">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 w-full">
       {statsCards.map((item) => {
         const isPositive = item.change.startsWith("+");
 

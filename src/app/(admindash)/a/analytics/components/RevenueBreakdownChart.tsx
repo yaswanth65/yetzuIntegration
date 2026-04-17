@@ -27,7 +27,7 @@ const tabs = ['1M', '3M', '6M', '1Y', 'All'];
 const formatYAxis = (value: number) => `$${value / 1000}k`;
 
 const CustomLegend = () => (
-  <div className="flex items-center justify-center gap-5 mt-2">
+  <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-2">
     {[
       { color: '#6366f1', label: 'Webinars' },
       { color: '#14b8a6', label: 'Cohorts' },
@@ -45,8 +45,8 @@ export default function RevenueBreakdownChart() {
   const [activeTab, setActiveTab] = useState('1M');
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 h-full">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 h-full relative overflow-hidden">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-semibold text-gray-800">Revenue Breakdown</h3>
           <button className="text-gray-400 hover:text-gray-600">
@@ -56,7 +56,7 @@ export default function RevenueBreakdownChart() {
             </svg>
           </button>
         </div>
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-0.5 overflow-x-auto max-w-full no-scrollbar pb-1">
           {tabs.map((tab) => (
             <button
               key={tab}
