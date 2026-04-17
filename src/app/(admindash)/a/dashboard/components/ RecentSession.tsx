@@ -5,9 +5,9 @@ interface Props {
     data: Session[];
 }
 
-export default function  RecentSession({data} : Props) {
+export default function RecentSession({data} : Props) {
   return (
-      <SessionTable data={data} showHeader={true} title="Recent Session"   />
+      <SessionTable className="" data={data} showHeader={true} title="Recent Session"   />
 
   )
 }

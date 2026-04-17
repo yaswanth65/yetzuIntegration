@@ -10,12 +10,12 @@ import { sessionsData } from "@/app/(admindash)/data/SessionData";
 
 export default function page() {
   return (
-    <div className="bg-gray-100 p-6 min-h-screen">
-      <h1 className="text-[#0A0A0A] text-3xl font-semibold">Overview</h1>
-      <div className="">
+    <div className="bg-gray-100 p-4 md:p-6 min-h-screen">
+      <h1 className="text-[#0A0A0A] text-2xl md:text-3xl font-semibold">Overview</h1>
+      <div className="flex flex-col gap-5 mt-5">
         <OverViewStats />
-          <RevenueChart />
-        <div className="grid grid-cols-[1fr_400px] gap-5">
+        <RevenueChart />
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-5">
           <LiveActivityFeed />
           <AlertIssues />
         </div>

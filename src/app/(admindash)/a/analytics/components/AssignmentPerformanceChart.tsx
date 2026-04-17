@@ -22,7 +22,7 @@ const data = [
 ];
 
 const CustomLegend = () => (
-  <div className="flex items-center justify-center gap-6 mt-2">
+  <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2">
     {[
       { color: '#6366f1', label: 'Yet to Submit' },
       { color: '#2dd4bf', label: 'Completed' },

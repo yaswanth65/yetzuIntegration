@@ -127,8 +127,8 @@ function EyeIcon() {
 // Main Component
 export default function SupportTickets() {
     return (
-        <div className="bg-white  rounded-2xl mt-10 border shadow-sm border-gray-100">
-            <div className="flex items-center justify-between p-6">
+        <div className="bg-white rounded-2xl border shadow-sm border-gray-100 w-full">
+            <div className="flex items-center justify-between p-4 sm:p-6">
                 <h1 className="font-semibold">Support Tickets</h1>
                 <p className="text-blue-600 text-sm font-semibold">View All</p>
             </div>
