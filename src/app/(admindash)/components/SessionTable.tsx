@@ -1,3 +1,5 @@
+"use client";
+
 import { Session, Status as SessionStatus } from "@/app/(admindash)/types/SessionType";
 
 interface Props {
