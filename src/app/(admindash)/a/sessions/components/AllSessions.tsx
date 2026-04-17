@@ -1,7 +1,10 @@
 "use client"
 import React, { useMemo, useState } from "react";
 import SessionTable from "@/app/(admindash)/components/SessionTable";
+import SessionDetailsPanel from "@/app/(admindash)/components/SessionDetailsPanel";
 import { Session, Status, Tab } from "@/app/(admindash)/types/SessionType";
+import CreateSession from "./CreateSession";
+import CalendarView from "./CalendarView";
 
 interface Props {
   data: Session[];
@@ -18,6 +21,9 @@ const tabStatusMap: Record<Exclude<Tab, "All">, Status> = {
 export default function AllSessions({ data }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("All");
   const [search, setSearch] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
 
   const filteredData = useMemo(() => {
     let list = data;
@@ -49,11 +55,18 @@ export default function AllSessions({ data }: Props) {
     [data]
   );
 
+  if (isCreating) {
+    return <CreateSession onBack={() => setIsCreating(false)} />;
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl font-bold text-gray-900">Sessions</h1>
-        <button className="inline-flex items-center gap-1.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors shadow-sm">
+        <button 
+          onClick={() => setIsCreating(true)}
+          className="inline-flex items-center gap-1.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors shadow-sm"
+        >
           <i className="ri-add-line"></i>
           Create Session
         </button>
@@ -92,7 +105,60 @@ export default function AllSessions({ data }: Props) {
         </div>
       </div>
 
-      <SessionTable data={filteredData} showHeader={false} />
+      <div className="mb-6 flex">
+        <div className="flex bg-gray-50/80 p-1 rounded-xl border border-gray-100">
+          <button
+            onClick={() => setViewMode('list')}
+            className={`flex items-center gap-2 px-5 py-2 text-sm font-medium rounded-lg transition-colors ${
+              viewMode === 'list'
+                ? 'text-gray-900 bg-white shadow-sm border border-gray-200/50'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <i className="ri-list-check"></i> Sessions List
+          </button>
+          <button
+            onClick={() => setViewMode('calendar')}
+            className={`flex items-center gap-2 px-5 py-2 text-sm font-medium rounded-lg transition-colors ${
+              viewMode === 'calendar'
+                ? 'text-gray-900 bg-white shadow-sm border border-gray-200/50'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <i className="ri-calendar-event-line"></i> Calendar View
+          </button>
+        </div>
+      </div>
+
+      <div className="flex gap-6 relative items-start">
+        <div className="transition-all duration-300 w-full">
+          {viewMode === 'list' ? (
+            <SessionTable 
+              data={filteredData} 
+              showHeader={false} 
+              onRowClick={setSelectedSession}
+              selectedSessionId={selectedSession?.id}
+            />
+          ) : (
+            <CalendarView />
+          )}
+        </div>
+        
+        {selectedSession && (
+          <>
+            <div 
+              className="fixed inset-0 bg-gray-900/20 backdrop-blur-sm z-40 transition-opacity" 
+              onClick={() => setSelectedSession(null)} 
+            />
+            <div className="fixed top-0 right-0 bottom-0 w-full max-w-[500px] bg-white z-50 shadow-2xl animate-in slide-in-from-right duration-300">
+              <SessionDetailsPanel 
+                 session={selectedSession} 
+                 onClose={() => setSelectedSession(null)} 
+              />
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
