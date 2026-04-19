@@ -676,3 +676,19 @@ export const EducatorChatAPI = {
     return response.json();
   },
 };
+
+export const AdminAPI = {
+  getOverview: async () => {
+    const response = await fetch(`${BASE_URL}/api/admin/dashboard/overview`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({}),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch admin overview');
+    }
+
+    return response.json();
+  },
+};
