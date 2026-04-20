@@ -9,7 +9,8 @@ import { X } from 'lucide-react';
 const menuItems = [
     { name: "Overview", path: "/a/dashboard", icon: "/admin-dashboard/ad-overview-icon.svg"},
     { name: "Session", path: "/a/sessions", icon: "/admin-dashboard/ad-sessions-icon.svg"},
-    { name: "Analytics", path: "/a/analytics", icon: "/admin-dashboard/ad-analytics-icon.svg"},
+    { name: "Analytics Dashboard", path: "/a/analytics", icon: "/admin-dashboard/ad-analytics-icon.svg"},
+    { name: "Organisations", path: "/a/organisation", icon: "/admin-dashboard/ad-cms-icon.svg"},
     { name: "User Management", path: "/a/users", icon: "/admin-dashboard/ad-user-management-icon.svg"},
     { name: "CMS", path: "/a/cms", icon: "/admin-dashboard/ad-cms-icon.svg"},
     { name: "Blogs", path: "/a/blogs", icon: "/admin-dashboard/ad-blogs-icon.svg"},

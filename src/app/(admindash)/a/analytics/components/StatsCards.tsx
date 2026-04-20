@@ -69,9 +69,9 @@ const stats = [
 export default function StatsCards() {
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm mb-6 w-full overflow-hidden">
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 xl:divide-x divide-gray-100 divide-y xl:divide-y-0">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 xl:divide-x divide-gray-100 divide-y xl:divide-y-0 gap-3">
         {stats.map((stat, i) => (
-          <div key={i} className={`p-4 flex flex-col gap-2 ${i % 2 === 1 && i < 4 ? 'sm:border-l sm:border-gray-100 xl:border-0' : ''}`}>
+          <div key={i} className={`p-4 flex flex-col gap-5 ${i % 2 === 1 && i < 4 ? 'sm:border-l sm:border-gray-100 xl:border-0' : ''}`}>
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">
                 {stat.label}
