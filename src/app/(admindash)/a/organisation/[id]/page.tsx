@@ -10,7 +10,7 @@ import SessionsTab from './components/SessionsTab';
 import ProgressTab from './components/ProgressTab';
 import BillingTab from './components/BillingTab';
 
-export default function OrganizationProfilePage({ params }: { params: { id: string } }) {
+export default function OrganizationProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const [activeTab, setActiveTab] = useState('overview');
 
   return (

@@ -7,20 +7,20 @@ import React from 'react'
 import { X } from 'lucide-react';
 
 const menuItems = [
-    { name: "Overview", path: "/a/dashboard", icon: "/admin-dashboard/ad-overview-icon.svg"},
-    { name: "Session", path: "/a/sessions", icon: "/admin-dashboard/ad-sessions-icon.svg"},
-    { name: "Analytics Dashboard", path: "/a/analytics", icon: "/admin-dashboard/ad-analytics-icon.svg"},
-    { name: "Organisations", path: "/a/organisation", icon: "/admin-dashboard/ad-cms-icon.svg"},
-    { name: "User Management", path: "/a/users", icon: "/admin-dashboard/ad-user-management-icon.svg"},
-    { name: "CMS", path: "/a/cms", icon: "/admin-dashboard/ad-cms-icon.svg"},
-    { name: "Blogs", path: "/a/blogs", icon: "/admin-dashboard/ad-blogs-icon.svg"},
-    { name: "Contact Submissions", path: "/a/contacts", icon: "/admin-dashboard/ad-contact-submissions-icon.svg"},
-    { name: "Coupon Management", path: "/a/coupons", icon: "/admin-dashboard/ad-coupon-management-icon.svg"}
+    { name: "Overview", path: "/a/dashboard", icon: "/admin-dashboard/ad-overview-icon.svg" },
+    { name: "Session", path: "/a/sessions", icon: "/admin-dashboard/ad-sessions-icon.svg" },
+    { name: "Analytics", path: "/a/analytics", icon: "/admin-dashboard/ad-analytics-icon.svg" },
+    { name: "Organisations", path: "/a/organisation", icon: "/admin-dashboard/organisation-icon.svg" },
+    { name: "User Management", path: "/a/users", icon: "/admin-dashboard/ad-user-management-icon.svg" },
+    { name: "CMS", path: "/a/cms", icon: "/admin-dashboard/cms-icon.svg" },
+    { name: "Blogs", path: "/a/blogs", icon: "/admin-dashboard/ad-blogs-icon.svg" },
+    { name: "Contact Submissions", path: "/a/contact", icon: "/admin-dashboard/ad-contact-submissions-icon.svg" },
+    { name: "Coupon Management", path: "/a/coupons", icon: "/admin-dashboard/ad-coupon-management-icon.svg" }
 ]
 
 interface AdminSidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
+    isOpen: boolean;
+    onClose: () => void;
 }
 
 export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
@@ -30,7 +30,7 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         <>
             {/* Mobile Overlay */}
             {isOpen && (
-                <div 
+                <div
                     className="md:hidden fixed inset-0 bg-black/40 z-40 transition-opacity"
                     onClick={onClose}
                 />
@@ -54,19 +54,19 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                     </div>
 
                     <div className='flex flex-col items-start gap-2'>
-                        {menuItems.map((item)=>{
-                            const isActive = pathname.startsWith(item.path); 
-                            
-                            return(
-                                <Link 
-                                    onClick={onClose} 
-                                    className={`flex items-center gap-3 px-4 py-3 md:py-2.5 text-[14px] ${ isActive ? "bg-slate-100 text-slate-900 w-full font-medium rounded-lg" : "text-[#404040] hover:bg-gray-50 hover:text-slate-900 w-full rounded-lg transition-colors"} `} 
-                                    href={item.path} 
+                        {menuItems.map((item) => {
+                            const isActive = pathname.startsWith(item.path);
+
+                            return (
+                                <Link
+                                    onClick={onClose}
+                                    className={`flex items-center gap-3 px-4 py-3 md:py-2.5 text-[14px] ${isActive ? "bg-slate-100 text-slate-900 w-full font-medium rounded-lg" : "text-[#404040] hover:bg-gray-50 hover:text-slate-900 w-full rounded-lg transition-colors"} `}
+                                    href={item.path}
                                     key={item.name}
-                                > 
+                                >
                                     <div className="w-5 flex justify-center shrink-0">
-                                        <Image width={20} height={20} src={item.icon} alt="icon"/>
-                                    </div> 
+                                        <Image width={20} height={20} src={item.icon} alt="icon" />
+                                    </div>
                                     <span className="truncate">{item.name}</span>
                                 </Link>
                             )
@@ -80,7 +80,7 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                         <Image
                             width={36}
                             height={36}
-                            src="/admin-dashboard/profile-NataliaSam.svg" 
+                            src="/admin-dashboard/profile-NataliaSam.svg"
                             alt="avatar"
                             className="rounded-full"
                         />
@@ -92,5 +92,5 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                 </div>
             </div>
         </>
-  )
+    )
 }
