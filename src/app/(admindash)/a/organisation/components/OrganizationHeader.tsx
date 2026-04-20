@@ -1,5 +1,6 @@
 import React from 'react';
 import { Download, Plus } from 'lucide-react';
+import Link from 'next/link';
 
 export default function OrganizationHeader() {
   return (
@@ -9,9 +10,9 @@ export default function OrganizationHeader() {
         <button className="flex items-center gap-2 border border-gray-200 px-4 py-2 rounded-lg text-sm bg-white font-medium hover:bg-gray-50 transition-colors">
           <Download size={16} /> Export
         </button>
-        <button className="flex items-center gap-2 bg-[#0A0A0A] text-white px-4 py-2 rounded-lg text-sm font-medium  hover:bg-gray-800 transition-colors">
+        <Link href="/a/organisation/create" className="flex items-center gap-2 bg-[#0A0A0A] text-white px-4 py-2 rounded-lg text-sm font-medium  hover:bg-gray-800 transition-colors">
           <Plus size={16} /> Create Organization
-        </button>
+        </Link>
       </div>
     </div>
   );
