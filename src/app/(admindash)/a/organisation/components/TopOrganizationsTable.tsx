@@ -18,7 +18,7 @@ export default function TopOrganizationsTable() {
           View All
         </Link>
       </div>
-      
+
       <div className="overflow-x-auto w-full">
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
@@ -28,7 +28,8 @@ export default function TopOrganizationsTable() {
               <th className="py-3.5 px-5 text-xs font-semibold text-gray-500 w-[15%]">Active Users</th>
               <th className="py-3.5 px-5 text-xs font-semibold text-gray-500 w-[15%]">Revenue</th>
               <th className="py-3.5 px-5 text-xs font-semibold text-gray-500 w-[20%]">Session Completion Rate</th>
-              <th className="py-3.5 px-5 text-xs font-semibold text-gray-500 w-[15%] text-right">Status</th>
+              <th className="py-3.5 px-5 text-xs font-semibold text-gray-500 w-[10%] text-right">Status</th>
+              <th className="py-3.5 px-5 text-xs font-semibold text-gray-500 w-[5%] text-right">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -49,8 +50,8 @@ export default function TopOrganizationsTable() {
                 <td className="py-4 px-5">
                   <div className="flex items-center gap-4">
                     <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-[#3B82F6] rounded-full" 
+                      <div
+                        className="h-full bg-[#3B82F6] rounded-full"
                         style={{ width: `${org.completionRate}%` }}
                       />
                     </div>
@@ -61,6 +62,11 @@ export default function TopOrganizationsTable() {
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-[#ECFDF5] text-[#10B981]">
                     Active
                   </span>
+                </td>
+                <td className="py-4 px-5 text-right">
+                  <Link href={`/a/organisation/${index + 1}`} className="text-xs font-semibold text-[#3B82F6] hover:underline whitespace-nowrap">
+                    View Details
+                  </Link>
                 </td>
               </tr>
             ))}

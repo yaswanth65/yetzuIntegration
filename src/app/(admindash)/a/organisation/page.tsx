@@ -7,7 +7,7 @@ import TopOrganizationsTable from './components/TopOrganizationsTable';
 
 export default function OrganizationPage() {
   return (
-    <div className="bg-gray-200 p-4 md:p-6 min-h-[calc(100vh-64px)] w-full">
+    <div className="bg-gray-100 p-4 md:p-6 min-h-[calc(100vh-64px)] w-full">
       <div className="max-w-[1600px] mx-auto">
         <OrganizationHeader />
         <StatCards />
