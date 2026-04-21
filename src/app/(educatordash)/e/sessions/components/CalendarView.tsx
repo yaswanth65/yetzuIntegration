@@ -1,173 +1,135 @@
 import React from 'react';
-import { ChevronDown, Clock } from 'lucide-react';
+import { Session } from '../types';
 
-export default function CalendarView() {
+interface CalendarViewProps {
+  sessions: Session[];
+}
+
+export default function CalendarView({ sessions }: CalendarViewProps) {
+  const days = [
+    { date: 7, name: 'Monday' },
+    { date: 8, name: 'Tuesday' },
+    { date: 9, name: 'Wednesday' },
+    { date: 10, name: 'Thursday' },
+    { date: 11, name: 'Friday' },
+    { date: 12, name: 'Saturday' },
+  ];
+
+  const hours = ['9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM'];
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6 mb-8">
-      {/* Header */}
-      <div className="p-5 flex justify-between items-end md:items-center border-b border-gray-100 flex-col md:flex-row gap-4">
-        <div>
-          <div className="text-gray-400 text-[13px] mb-1 font-medium">Calendar</div>
-          <div className="flex items-center gap-2 cursor-pointer">
-            <h2 className="text-[20px] font-bold text-gray-900">7th Jan, 2026</h2>
-            <ChevronDown className="w-4 h-4 text-gray-500 mt-1" />
-          </div>
+    <div className="bg-white rounded-[20px] shadow-sm overflow-hidden border border-gray-100 p-2 md:p-6 mt-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold text-lg text-gray-900">7th Jan, 2026</h3>
+          <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
-        <div className="flex bg-white border border-gray-200 rounded-lg p-0.5">
-          <button className="px-5 py-2 text-[13px] font-semibold text-gray-500 hover:text-gray-900 rounded-md transition-colors">Day</button>
-          <button className="px-5 py-2 text-[13px] font-bold bg-gray-100 text-gray-900 rounded-md shadow-sm">Week</button>
-          <button className="px-5 py-2 text-[13px] font-semibold text-gray-500 hover:text-gray-900 rounded-md transition-colors">Month</button>
+        <div className="flex items-center bg-gray-50 rounded-xl p-1">
+          <button className="px-4 py-1.5 text-sm font-medium text-gray-500 rounded-lg">Day</button>
+          <button className="px-4 py-1.5 text-sm font-medium bg-white text-gray-900 shadow-sm rounded-lg">Week</button>
+          <button className="px-4 py-1.5 text-sm font-medium text-gray-500 rounded-lg">Month</button>
         </div>
       </div>
 
-      {/* Grid */}
-      <div className="w-full overflow-x-auto">
-        <div className="min-w-[950px] flex flex-col pb-4">
-          {/* Grid Header labels */}
-          <div className="flex border-b border-gray-100">
-            <div className="w-[85px] shrink-0 border-r border-gray-100"></div>
-            {[
-              { date: '7', day: 'Monday' },
-              { date: '8', day: 'Tuesday' },
-              { date: '9', day: 'Wednesday' },
-              { date: '10', day: 'Thursday' },
-              { date: '10', day: 'Thursday' }, // Image actually repeats '10 Thursday'
-            ].map((d, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center justify-center py-4 border-r border-gray-100 last:border-r-0">
-                <div className="text-[18px] font-bold text-gray-900">{d.date}</div>
-                <div className="text-[13px] text-gray-500 font-medium">{d.day}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Grid Body */}
-          <div className="relative">
-            {/* Background horizontal lines and time labels */}
-            {['9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM'].map((time, rowIdx) => (
-              <div key={rowIdx} className="flex border-b border-gray-100 h-[120px]">
-                <div className="w-[85px] shrink-0 border-r border-gray-100 flex items-start justify-end py-2.5 pr-4 text-[12px] text-gray-400 font-medium">
-                  {time}
-                </div>
-                <div className="flex-1 border-r border-gray-100"></div>
-                <div className="flex-1 border-r border-gray-100"></div>
-                <div className="flex-1 border-r border-gray-100"></div>
-                <div className="flex-1 border-r border-gray-100"></div>
-                <div className="flex-1 border-r-0"></div>
-              </div>
-            ))}
-
-            {/* Event Overlay Layer */}
-            <div className="absolute inset-0 left-[85px] flex pointer-events-auto">
-              {/* Col 0 - Monday */}
-              <div className="flex-1 relative border-r border-transparent">
-                {/* 1 PM Event -> top 480px, height approx 200px spilling off bottom */}
-                <div className="absolute top-[488px] left-[8px] right-[8px] h-[200px] bg-[#FAF5FF] border-l-[3.5px] border-[#D946EF] rounded-r-xl rounded-l p-3.5 shadow-sm flex flex-col">
-                  <div>
-                    <div className="text-[12px] font-bold text-purple-900 leading-tight mb-1.5 line-clamp-2">How is AR used in medical procedure</div>
-                    <div className="text-[11px] text-gray-500 font-semibold flex items-center gap-1.5 opacity-80">
-                      <Clock className="w-3.5 h-3.5" /> 01 PM - 03 PM
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Col 1 - Tuesday */}
-              <div className="flex-1 relative border-r border-transparent">
-                {/* 9AM to 10AM Event -> top 8px, height 104px */}
-                <div className="absolute top-[8px] left-[8px] right-[8px] h-[104px] bg-[#EEF2FF] border-l-[3.5px] border-[#3B82F6] rounded-r-xl rounded-l p-3.5 shadow-sm flex flex-col justify-between">
-                  <div>
-                    <div className="text-[12px] font-bold text-blue-900 leading-tight mb-1.5 line-clamp-2">How is AR used in medical procedure</div>
-                    <div className="text-[11px] text-gray-500 font-semibold flex items-center gap-1.5 opacity-80">
-                      <Clock className="w-3.5 h-3.5" /> 09 AM - 10 AM
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="flex -space-x-2">
-                      <div className="w-6 h-6 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center text-[8px] text-gray-400 font-bold overflow-hidden"><div className="w-full h-full bg-blue-100 opacity-50"></div></div>
-                      <div className="w-6 h-6 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center text-[8px] text-gray-400 font-bold overflow-hidden"><div className="w-full h-full bg-blue-100 opacity-50"></div></div>
-                      <div className="w-6 h-6 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center text-[8px] text-gray-400 font-bold overflow-hidden"><div className="w-full h-full bg-blue-100 opacity-50"></div></div>
-                    </div>
-                    <span className="text-[11px] text-gray-400 ml-2.5 font-medium">+4 Other</span>
-                  </div>
-                </div>
-
-                {/* 12PM to 1PM Event -> top 368px, height 104px */}
-                <div className="absolute top-[368px] left-[8px] right-[8px] h-[104px] bg-[#EEF2FF] border-l-[3.5px] border-[#3B82F6] rounded-r-xl rounded-l p-3.5 shadow-sm flex flex-col justify-between">
-                  <div>
-                    <div className="text-[12px] font-bold text-blue-900 leading-tight mb-1.5 line-clamp-2">How is AR used in medical procedure</div>
-                    <div className="text-[11px] text-gray-500 font-semibold flex items-center gap-1.5 opacity-80">
-                      <Clock className="w-3.5 h-3.5" /> 09 AM - 10 AM
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="flex -space-x-2">
-                      <div className="w-6 h-6 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center overflow-hidden"><div className="w-full h-full bg-blue-100 opacity-50"></div></div>
-                      <div className="w-6 h-6 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center overflow-hidden"><div className="w-full h-full bg-blue-100 opacity-50"></div></div>
-                      <div className="w-6 h-6 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center overflow-hidden"><div className="w-full h-full bg-blue-100 opacity-50"></div></div>
-                    </div>
-                    <span className="text-[11px] text-gray-400 ml-2.5 font-medium">+4 Other</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Col 2 - Wednesday */}
-              <div className="flex-1 relative border-r border-transparent">
-                {/* 11AM Event -> top 248px, height 104px */}
-                <div className="absolute top-[248px] left-[8px] right-[8px] h-[104px] bg-[#F0FDF4] border-l-[3.5px] border-[#22C55E] rounded-r-xl rounded-l p-3.5 shadow-sm flex flex-col justify-between">
-                  <div>
-                    <div className="text-[12px] font-bold text-green-700 leading-tight mb-1.5 line-clamp-2">How is AR used in medical procedure</div>
-                    <div className="text-[11px] text-gray-500 font-semibold flex items-center gap-1.5 opacity-80">
-                      <Clock className="w-3.5 h-3.5" /> 09 AM - 10 AM
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Col 3 - Thursday 1 */}
-              <div className="flex-1 relative border-r border-transparent">
-                {/* 10AM Event -> top 128px, height 232px */}
-                <div className="absolute top-[128px] left-[8px] right-[8px] h-[232px] bg-[#FAF5FF] border-l-[3.5px] border-[#9333EA] rounded-r-xl rounded-l p-3.5 shadow-sm flex flex-col justify-between">
-                  <div>
-                    <div className="text-[12px] font-bold text-purple-900 leading-tight mb-1.5 line-clamp-2">How is AR used in medical procedure</div>
-                    <div className="text-[11px] text-gray-500 font-semibold flex items-center gap-1.5 opacity-80">
-                      <Clock className="w-3.5 h-3.5" /> 01 PM - 03 PM
-                    </div>
-                  </div>
-
-                  <div className="flex items-center">
-                    <div className="flex -space-x-2">
-                      <div className="w-6 h-6 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center overflow-hidden"><div className="w-full h-full bg-purple-100 opacity-50"></div></div>
-                      <div className="w-6 h-6 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center overflow-hidden"><div className="w-full h-full bg-purple-100 opacity-50"></div></div>
-                      <div className="w-6 h-6 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center overflow-hidden"><div className="w-full h-full bg-purple-100 opacity-50"></div></div>
-                    </div>
-                    <span className="text-[11px] text-gray-400 ml-2.5 font-medium">+4 Other</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Col 4 - Thursday 2 */}
-              <div className="flex-1 relative">
-                {/* Same event on 10AM */}
-                <div className="absolute top-[128px] left-[8px] right-[8px] h-[232px] bg-[#FAF5FF] border-l-[3.5px] border-[#9333EA] rounded-r-xl rounded-l p-3.5 shadow-sm flex flex-col justify-between">
-                  <div>
-                    <div className="text-[12px] font-bold text-purple-900 leading-tight mb-1.5 line-clamp-2">How is AR used in medical procedure</div>
-                    <div className="text-[11px] text-gray-500 font-semibold flex items-center gap-1.5 opacity-80">
-                      <Clock className="w-3.5 h-3.5" /> 01 PM - 03 PM
-                    </div>
-                  </div>
-
-                  <div className="flex items-center">
-                    <div className="flex -space-x-2">
-                      <div className="w-6 h-6 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center overflow-hidden"><div className="w-full h-full bg-purple-100 opacity-50"></div></div>
-                      <div className="w-6 h-6 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center overflow-hidden"><div className="w-full h-full bg-purple-100 opacity-50"></div></div>
-                      <div className="w-6 h-6 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center overflow-hidden"><div className="w-full h-full bg-purple-100 opacity-50"></div></div>
-                    </div>
-                    <span className="text-[11px] text-gray-400 ml-2.5 font-medium">+4 Other</span>
-                  </div>
-                </div>
-              </div>
+      <div className="border border-gray-100 rounded-xl overflow-hidden">
+        <div className="grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr] border-b border-gray-100 bg-white">
+          <div className="py-4 border-r border-gray-100"></div>
+          {days.map((day) => (
+            <div key={day.date} className="py-4 text-center border-r border-gray-100 last:border-r-0">
+              <div className="font-bold text-gray-900">{day.date}</div>
+              <div className="text-sm text-gray-500">{day.name}</div>
             </div>
-          </div>
+          ))}
+        </div>
+
+        <div className="relative">
+          {hours.map((hour) => (
+            <div key={hour} className="grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr] border-b border-gray-100 last:border-b-0">
+              <div className="py-8 text-center text-sm text-gray-500 border-r border-gray-100 relative">
+                <span className="absolute -top-3 left-0 right-0 bg-white text-xs">{hour}</span>
+              </div>
+              <div className="border-r border-gray-100"></div>
+              <div className="border-r border-gray-100 relative">
+                {hour === '9 AM' && (
+                  <div className="absolute top-4 left-2 right-2 bg-blue-100/50 border-l-4 border-blue-500 rounded-r-lg p-2 z-10 h-24">
+                    <div className="font-semibold text-blue-900 text-xs">WEB - 204</div>
+                    <div className="text-[10px] text-blue-800 mt-1">Dr. Sane Chen</div>
+                    <div className="text-[10px] text-blue-800">40 Students</div>
+                    <div className="text-[10px] text-blue-800">09 AM - 10 AM</div>
+                  </div>
+                )}
+                {hour === '11 AM' && (
+                  <div className="absolute top-4 left-2 right-2 bg-blue-100/50 border-l-4 border-blue-500 rounded-r-lg p-2 z-10 h-24">
+                    <div className="font-semibold text-blue-900 text-xs">WEB - 207</div>
+                    <div className="text-[10px] text-blue-800 mt-1">Dr. End Johns</div>
+                    <div className="text-[10px] text-blue-800">32 Students</div>
+                    <div className="text-[10px] text-blue-800">11 AM - 12 PM</div>
+                  </div>
+                )}
+              </div>
+              <div className="border-r border-gray-100 relative">
+                {hour === '9 AM' && (
+                  <div className="absolute top-4 left-2 right-2 bg-blue-100/50 border-l-4 border-blue-500 rounded-r-lg p-2 z-10 h-24">
+                    <div className="font-semibold text-blue-900 text-xs">WEB - 209</div>
+                    <div className="text-[10px] text-blue-800 mt-1">Dr. Manoj Kumar</div>
+                    <div className="text-[10px] text-blue-800">32 Students</div>
+                    <div className="text-[10px] text-blue-800">09 AM - 10 AM</div>
+                  </div>
+                )}
+                {hour === '12 PM' && (
+                  <div className="absolute top-4 left-2 right-2 bg-green-100/50 border-l-4 border-green-500 rounded-r-lg p-2 z-10 h-24">
+                    <div className="font-semibold text-green-900 text-xs">COH - 112</div>
+                    <div className="text-[10px] text-green-800 mt-1">Dr. Sarah Jones</div>
+                    <div className="text-[10px] text-green-800">22 Students</div>
+                    <div className="text-[10px] text-green-800">12 PM - 01 PM</div>
+                  </div>
+                )}
+              </div>
+              <div className="border-r border-gray-100 relative">
+                 {hour === '11 AM' && (
+                  <div className="absolute top-4 left-2 right-2 bg-purple-100/50 border-l-4 border-purple-500 rounded-r-lg p-2 z-10 h-24">
+                    <div className="font-semibold text-purple-900 text-xs">WRK - 115</div>
+                    <div className="text-[10px] text-purple-800 mt-1">Dr. Sane Chen</div>
+                    <div className="text-[10px] text-purple-800">25 Students</div>
+                    <div className="text-[10px] text-purple-800">11 AM - 12 PM</div>
+                  </div>
+                )}
+              </div>
+              <div className="border-r border-gray-100 relative">
+                 {hour === '11 AM' && (
+                  <div className="absolute top-4 left-2 right-2 bg-purple-100/50 border-l-4 border-purple-500 rounded-r-lg p-2 z-10 h-24">
+                    <div className="font-semibold text-purple-900 text-xs">WRK - 118</div>
+                    <div className="text-[10px] text-purple-800 mt-1">Dr. Sane Chen</div>
+                    <div className="text-[10px] text-purple-800">25 Students</div>
+                    <div className="text-[10px] text-purple-800">11 AM - 01 PM</div>
+                  </div>
+                )}
+              </div>
+              <div className="border-r border-gray-100 relative"></div>
+            </div>
+          ))}
+          
+           {/* Row for 3 PM just for the WRK-128 block at left side */}
+           <div className="grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr] border-b border-gray-100">
+              <div className="py-8 text-center text-sm text-gray-500 border-r border-gray-100 relative">
+                <span className="absolute -top-3 left-0 right-0 bg-white text-xs">3 PM</span>
+              </div>
+              <div className="border-r border-gray-100 relative">
+                  <div className="absolute top-4 left-2 right-2 bg-purple-100/50 border-l-4 border-purple-500 rounded-r-lg p-2 z-10 h-24">
+                    <div className="font-semibold text-purple-900 text-xs">WRK - 128</div>
+                    <div className="text-[10px] text-purple-800 mt-1">Dr. End Johns</div>
+                    <div className="text-[10px] text-purple-800">22 Students</div>
+                    <div className="text-[10px] text-purple-800">03 PM - 04 PM</div>
+                  </div>
+              </div>
+              <div className="border-r border-gray-100"></div>
+              <div className="border-r border-gray-100"></div>
+              <div className="border-r border-gray-100"></div>
+              <div className="border-r border-gray-100"></div>
+              <div className="border-r border-gray-100"></div>
+           </div>
         </div>
       </div>
     </div>

@@ -1,58 +1,72 @@
 import React from 'react';
-import { User, BookOpen, Video, Award } from 'lucide-react';
-
-const stats = [
-  {
-    title: 'Active Students',
-    value: '12',
-    description: 'Total students assigned',
-    icon: User,
-    iconColor: 'text-blue-600',
-    iconBg: 'bg-blue-50',
-  },
-  {
-    title: 'Pending Reviews',
-    value: '4',
-    description: 'Assignments awaiting action',
-    icon: BookOpen,
-    iconColor: 'text-red-500',
-    iconBg: 'bg-red-50',
-  },
-  {
-    title: 'Sessions Today',
-    value: '3',
-    description: '1:1, Webinars, Cohorts',
-    icon: Video,
-    iconColor: 'text-green-600',
-    iconBg: 'bg-green-50',
-  },
-  {
-    title: 'Rating',
-    value: '4.8',
-    description: 'Student Feedback Score',
-    icon: Award,
-    iconColor: 'text-yellow-600',
-    iconBg: 'bg-yellow-50',
-  },
-];
+import { Play, DollarSign, Star, Clock, TrendingUp } from 'lucide-react';
 
 export default function StatCards() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      {stats.map((stat, index) => (
-        <div key={index} className="bg-white p-5 rounded-xl border border-gray-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] flex flex-col justify-between h-[120px]">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-gray-700 text-[15px] font-medium">{stat.title}</h3>
-            <div className={`p-2 rounded-full ${stat.iconBg}`}>
-              <stat.icon className={`w-4 h-4 ${stat.iconColor}`} />
-            </div>
-          </div>
-          <div>
-            <div className="text-[28px] font-bold text-gray-900 leading-none mb-1.5">{stat.value}</div>
-            <div className="text-[11px] text-gray-500">{stat.description}</div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* SCHEDULED SESSIONS */}
+      <div className="bg-white rounded-xl p-5 border border-gray-100 flex flex-col justify-between h-[130px] shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+        <div className="flex justify-between items-start mb-2">
+          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Scheduled Sessions</p>
+          <div className="w-8 h-8 rounded-full bg-[#F3E8FF] flex items-center justify-center text-[#7C3AED]">
+            <Play className="w-4 h-4 fill-current" />
           </div>
         </div>
-      ))}
+        <div className="flex items-end justify-between">
+          <h3 className="text-3xl font-bold text-gray-900">02</h3>
+          <p className="text-xs font-semibold text-[#10B981] flex items-center gap-1">
+            <TrendingUp className="w-3.5 h-3.5" /> View All
+          </p>
+        </div>
+      </div>
+
+      {/* PENDING ASSIGNMENTS */}
+      <div className="bg-white rounded-xl p-5 border border-gray-100 flex flex-col justify-between h-[130px] shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+        <div className="flex justify-between items-start mb-2">
+          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Pending Assignments</p>
+          <div className="w-8 h-8 rounded-full bg-[#ECFDF5] flex items-center justify-center text-[#10B981]">
+            <DollarSign className="w-4 h-4" />
+          </div>
+        </div>
+        <div className="flex items-end justify-between">
+          <h3 className="text-3xl font-bold text-gray-900">23</h3>
+          <p className="text-xs font-semibold text-[#10B981] flex items-center gap-1">
+            <TrendingUp className="w-3.5 h-3.5" /> +14.5%
+          </p>
+        </div>
+      </div>
+
+      {/* MY SESSIONS */}
+      <div className="bg-white rounded-xl p-5 border border-gray-100 flex flex-col justify-between h-[130px] shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+        <div className="flex justify-between items-start mb-2">
+          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">My Sessions</p>
+          <div className="w-8 h-8 rounded-full bg-[#FFF7ED] flex items-center justify-center text-[#F97316]">
+            <Star className="w-4 h-4 fill-current" />
+          </div>
+        </div>
+        <div className="flex items-end justify-between">
+          <h3 className="text-3xl font-bold text-gray-900">12</h3>
+          <p className="text-xs font-semibold text-[#10B981] flex items-center gap-1">
+            <TrendingUp className="w-3.5 h-3.5" /> +0.2
+          </p>
+        </div>
+      </div>
+
+      {/* ASSIGNMENTS CREATED */}
+      <div className="bg-white rounded-xl p-5 border border-gray-100 flex flex-col justify-between h-[130px] shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+        <div className="flex justify-between items-start mb-2">
+          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Assignments Created</p>
+          <div className="w-8 h-8 rounded-full bg-[#F1F5F9] flex items-center justify-center text-[#64748B]">
+            <Clock className="w-4 h-4" />
+          </div>
+        </div>
+        <div className="flex items-end justify-between">
+          <h3 className="text-3xl font-bold text-gray-900">04</h3>
+          <p className="text-xs font-semibold text-[#10B981] flex items-center gap-1">
+            <TrendingUp className="w-3.5 h-3.5" /> +5.1%
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

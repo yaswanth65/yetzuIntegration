@@ -1192,7 +1192,7 @@ export default function ChatPage() {
   useEffect(() => {
     const fetchEducators = async () => {
       try {
-        const res = // await StudentAPI.getChatEducators();
+        const res = await StudentAPI.getChatEducators();
         const educatorList = Array.isArray(res) ? res : (res.data || res.educators || []);
         setEducators(educatorList);
 

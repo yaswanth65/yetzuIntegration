@@ -1,179 +1,111 @@
 import React from 'react';
-import { Users, Video, User, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
+import { Session } from '../types';
+import { Eye, Users } from 'lucide-react';
 
-const sessionsData = [
-  {
-    id: 1,
-    title: 'Research Methodology',
-    subtitle: 'Pradhyumn Dhondi',
-    date: '2026-02-11',
-    type: '1:1',
-    typeColor: 'text-blue-600 bg-blue-50 border-blue-200',
-    typeIcon: User,
-    status: 'Confirmed',
-    statusColor: 'text-green-600',
-    statusIcon: CheckCircle2,
-    time: '10:30 AM - 11:45 AM',
-    hasReschedule: true,
-  },
-  {
-    id: 2,
-    title: 'Spring 2026 Cohort - W4',
-    subtitle: 'Research Methods - 2026 - Batch 1',
-    date: '2026-02-11',
-    type: 'Cohort',
-    typeColor: 'text-fuchsia-600 bg-fuchsia-50 border-fuchsia-200',
-    typeIcon: Users,
-    status: 'Confirmed',
-    statusColor: 'text-green-600',
-    statusIcon: CheckCircle2,
-    time: '10:30 AM - 11:45 AM',
-    hasReschedule: false,
-  },
-  {
-    id: 3,
-    title: 'Spring 2026 Cohort - W3',
-    subtitle: 'Research Methods - 2026 - Batch 2',
-    date: '2026-02-11',
-    type: 'Cohort',
-    typeColor: 'text-fuchsia-600 bg-fuchsia-50 border-fuchsia-200',
-    typeIcon: Users,
-    status: 'Confirmed',
-    statusColor: 'text-green-600',
-    statusIcon: CheckCircle2,
-    time: '10:30 AM - 11:45 AM',
-    hasReschedule: false,
-  },
-  {
-    id: 4,
-    title: 'Cardiology Masterclass',
-    subtitle: 'Diptish Gohane',
-    date: '2026-02-11',
-    type: '1:1',
-    typeColor: 'text-blue-600 bg-blue-50 border-blue-200',
-    typeIcon: User,
-    status: 'Reschedule Requested',
-    statusColor: 'text-orange-500',
-    statusIcon: Clock,
-    time: '12:30 PM - 01:45 PM',
-    hasReschedule: true,
-  },
-  {
-    id: 5,
-    title: 'Academic Writing Workshop',
-    subtitle: 'Fall 2025 Cohort',
-    date: '2026-02-11',
-    type: 'Webinar',
-    typeColor: 'text-green-600 bg-green-50 border-green-200',
-    typeIcon: Video,
-    status: 'Confirmed',
-    statusColor: 'text-green-600',
-    statusIcon: CheckCircle2,
-    time: '10:30 AM - 11:45 AM',
-    hasReschedule: false,
-  },
-  {
-    id: 6,
-    title: 'Academic Publishing',
-    subtitle: 'Fall 2025 Cohort',
-    date: '2026-02-11',
-    type: 'Webinar',
-    typeColor: 'text-green-600 bg-green-50 border-green-200',
-    typeIcon: Video,
-    status: 'Confirmed',
-    statusColor: 'text-green-600',
-    statusIcon: CheckCircle2,
-    time: '10:30 AM - 11:45 AM',
-    hasReschedule: false,
-  },
-  {
-    id: 7,
-    title: 'Publication Strategy Session',
-    subtitle: 'Winter 2025 Cohort',
-    date: '2026-02-11',
-    type: 'Cohort',
-    typeColor: 'text-fuchsia-600 bg-fuchsia-50 border-fuchsia-200',
-    typeIcon: Users,
-    status: 'Confirmed',
-    statusColor: 'text-green-600',
-    statusIcon: CheckCircle2,
-    time: '10:30 AM - 11:45 AM',
-    hasReschedule: false,
-  },
-  {
-    id: 8,
-    title: 'H-Index Applications',
-    subtitle: 'Pradhyumn Dhondi',
-    date: '2026-02-11',
-    type: '1:1',
-    typeColor: 'text-blue-600 bg-blue-50 border-blue-200',
-    typeIcon: User,
-    status: 'Reschedule Requested',
-    statusColor: 'text-orange-500',
-    statusIcon: Clock,
-    time: '12:30 PM - 01:45 PM',
-    hasReschedule: true,
-  },
-];
+interface SessionsListProps {
+  sessions: Session[];
+}
 
-export default function SessionsList() {
+export default function SessionsList({ sessions }: SessionsListProps) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6 mb-8">
+    <div className="bg-white rounded-[20px] shadow-sm overflow-hidden border border-gray-100 p-2 md:p-6 mt-6">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-[13px] whitespace-nowrap">
-          <thead className="bg-[#F8FAFC] border-b border-gray-100 text-gray-500 font-semibold">
-            <tr>
-              <th className="px-6 py-4">Session</th>
-              <th className="px-6 py-4">Date</th>
-              <th className="px-6 py-4">Type</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4">Time</th>
-              <th className="px-6 py-4 text-right">Actions</th>
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="text-sm text-gray-500 border-b border-gray-100">
+              <th className="font-semibold py-4 px-4 whitespace-nowrap">Session ID</th>
+              <th className="font-semibold py-4 px-4 whitespace-nowrap">Session Title</th>
+              <th className="font-semibold py-4 px-4 whitespace-nowrap">Type</th>
+              <th className="font-semibold py-4 px-4 text-center whitespace-nowrap">
+                <Users size={16} className="mx-auto" />
+              </th>
+              <th className="font-semibold py-4 px-4 whitespace-nowrap">Date</th>
+              <th className="font-semibold py-4 px-4 whitespace-nowrap">Status</th>
+              <th className="font-semibold py-4 px-4 text-center whitespace-nowrap">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
-            {sessionsData.map((session) => (
-              <tr key={session.id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="font-bold text-gray-900 mb-0.5">{session.title}</div>
-                  <div className="text-[11px] text-gray-500">{session.subtitle}</div>
-                </td>
-                <td className="px-6 py-4 text-gray-600 font-medium">
-                  <div className="flex items-center gap-2">
-                    <User className="w-3.5 h-3.5 text-blue-500" />
-                    {session.date}
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`inline-flex items-center px-2.5 py-1 text-[11px] font-bold rounded-md border ${session.typeColor}`}>
-                    {session.type}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <div className={`flex items-center gap-1.5 font-bold ${session.statusColor}`}>
-                    <session.statusIcon className="w-4 h-4" />
-                    {session.status}
-                  </div>
-                </td>
-                <td className="px-6 py-4 font-medium text-gray-900">
-                  {session.time}
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <button className="px-5 py-1.5 bg-white border border-gray-200 text-gray-700 font-bold text-[12px] rounded shadow-sm hover:bg-gray-50 transition-colors">
-                      Join
-                    </button>
-                    {session.hasReschedule && (
-                      <button className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 font-bold text-[12px] rounded shadow-sm hover:bg-gray-50 transition-colors">
-                        Reschedule
-                      </button>
-                    )}
-                  </div>
+          <tbody>
+            {sessions.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="text-center py-8 text-gray-500">
+                  No sessions found
                 </td>
               </tr>
-            ))}
+            ) : (
+              sessions.map((session, index) => (
+                <tr
+                  key={session.id}
+                  className={`border-b border-gray-50 text-sm hover:bg-gray-50 transition-colors ${
+                    index === sessions.length - 1 ? 'border-none' : ''
+                  }`}
+                >
+                  <td className="py-4 px-4 font-medium text-gray-900 whitespace-nowrap">{session.id}</td>
+                  <td className="py-4 px-4 text-gray-600 whitespace-nowrap">{session.title}</td>
+                  <td className="py-4 px-4 text-gray-600 whitespace-nowrap">{session.type}</td>
+                  <td className="py-4 px-4 text-center text-gray-600 whitespace-nowrap">{session.attendees}</td>
+                  <td className="py-4 px-4 text-gray-600 whitespace-nowrap">{session.date}</td>
+                  <td className="py-4 px-4 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      {session.status === 'Live' && (
+                        <>
+                          <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                          <span className="text-green-600 font-medium">{session.status}</span>
+                        </>
+                      )}
+                      {session.status === 'Scheduled' && (
+                        <>
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                          <span className="text-blue-600 font-medium">{session.status}</span>
+                        </>
+                      )}
+                      {session.status === 'Completed' && (
+                        <>
+                          <div className="w-1.5 h-1.5 rounded-full bg-gray-500"></div>
+                          <span className="text-gray-600 font-medium">{session.status}</span>
+                        </>
+                      )}
+                      {session.status === 'Missed' && (
+                        <>
+                          <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                          <span className="text-red-600 font-medium">{session.status}</span>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-4 px-4 whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-4 min-w-[120px]">
+                      <button className="text-gray-400 hover:text-gray-600 transition-colors">
+                        <Eye size={18} />
+                      </button>
+                      {session.status === 'Live' && (
+                        <button className="border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 font-medium py-1.5 px-4 rounded-xl text-sm transition-colors shadow-sm">
+                          Join Now
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
+      </div>
+
+      <div className="flex items-center justify-between mt-6 text-sm text-gray-500">
+        <span>
+          Showing 1 - {sessions.length} of {sessions.length}
+        </span>
+        <div className="flex items-center gap-2">
+          <button className="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors">
+            {'<'}
+          </button>
+          <button className="w-8 h-8 flex items-center justify-center rounded-xl bg-blue-50 text-blue-600 font-medium transition-colors">
+            1
+          </button>
+          <button className="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors">
+            {'>'}
+          </button>
+        </div>
       </div>
     </div>
   );
