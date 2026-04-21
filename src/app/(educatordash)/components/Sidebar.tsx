@@ -2,110 +2,89 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { X } from "lucide-react";
-import { MENU_ITEMS, BOTTOM_MENU_ITEMS } from "../constants";
+import { usePathname } from "next/navigation";
+import { X, Award, CreditCard, Settings, HeadphonesIcon } from "lucide-react";
+import { MENU_ITEMS } from "../constants";
 
-/**
- * Props for the Sidebar component
- * @property activeView - The currently active view identifier (default: "dashboard")
- * @property onNavigate - Callback function triggered when a menu item is clicked
- * @property isOpen - Controls mobile sidebar visibility
- * @property onClose - Callback to close mobile sidebar
- */
 interface SidebarProps {
-  activeView?: string;
-  onNavigate?: (view: string) => void;
-  isOpen?: boolean;
-  onClose?: () => void;
+    isOpen?: boolean;
+    onClose?: () => void;
 }
 
-/**
- * Sidebar component for the educator dashboard
- * Displays navigation menu items at the top and additional menu items at the bottom
- * Responsive: Hidden on mobile with slide-in animation when opened
- */
-const Sidebar: React.FC<SidebarProps> = ({
-  activeView = "dashboard",
-  onNavigate,
-  isOpen = false,
-  onClose,
-}) => {
-  return (
-    // Fixed sidebar container - left side, full height, gray background
-    // Mobile: transforms off-screen by default, slides in when isOpen is true
-    <aside
-      className={`w-64 bg-gray-50 h-screen flex flex-col justify-between fixed left-0 top-0 border-r border-gray-200/70 z-50 transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
-    >
-      {/* Top section: Logo and main navigation */}
-      <div>
-        {/* Logo Area - displays Yetzu branding */}
-        <div className="h-[72px] px-5 flex items-center justify-between bg-gray-50 mb-4 border-b border-gray-200/70">
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/images/Logo.png"
-              alt="Yetzu Logo"
-              width={120}
-              height={40}
-              className="object-contain"
-              priority
-            />
-          </Link>
-          {/* Mobile close button */}
-          <button
-            onClick={onClose}
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-200 transition-colors"
-            aria-label="Close menu"
-          >
-            <X size={20} className="text-gray-600" />
-          </button>
-        </div>
+const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
+    const pathname = usePathname();
 
-        {/* Main navigation menu - renders items from MENU_ITEMS constant */}
-        <nav className="px-3 space-y-1">
-          {MENU_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => onNavigate && onNavigate(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                activeView === item.id
-                  ? "bg-blue-50 text-black"
-                  : "text-gray-500 hover:bg-gray-100 hover:text-black"
-              }`}
-            >
-              {/* Menu item icon - changes color based on active state */}
-              <item.icon
-                className={`w-5 h-5 ${activeView === item.id ? "text-black" : "text-gray-900"}`}
-                strokeWidth={1.5}
-              />
-              {item.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+    // Extend menu items here with paths if not present in constants.
+    const extendedMenuItems = MENU_ITEMS.map(item => ({
+        ...item,
+        path: `/e/${item.id}`,
+        label: item.label === 'Dashboard' ? 'Overview' : item.label,
+    })).concat([
+        { id: 'certificate', label: 'Certificate', icon: Award, path: '/e/certificate' },
+        { id: 'payments', label: 'Payments', icon: CreditCard, path: '/e/payments' },
+    ]);
 
-      {/* Bottom Menu - additional navigation items (Help, Settings, etc.) */}
-      <div className="px-3 py-6">
-        {BOTTOM_MENU_ITEMS.map((item) => (
-          <a
-            key={item.label}
-            href="#"
-            className="
-        flex items-center gap-3
-        px-4 rounded-lg
-        font-inter text-[16px] font-normal
-        leading-tight tracking-[0]
-        text-black align-middle
-        hover:bg-gray-100 transition-colors
-      "
-          >
-            <item.icon className="w-5 h-5" strokeWidth={1.5} />
-            {item.label}
-          </a>
-        ))}
-      </div>
-    </aside>
-  );
+    const bottomItems = [
+        { label: 'Settings', icon: Settings },
+        { label: 'Support', icon: HeadphonesIcon },
+    ];
+
+    return (
+        <aside
+            className={`w-64 h-screen flex flex-col justify-between fixed left-0 top-0 z-50 transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"
+                } bg-[#1D4ED8] text-white`}
+        >
+            <div>
+                {/* Header / Logo text */}
+                <div className="h-[72px] px-6 flex items-center justify-between mb-4 mt-2">
+                    <Link href="/e/dashboard" className="flex items-center">
+                        <span className="text-[20px] font-bold tracking-wide">Educator Portal</span>
+                    </Link>
+                    <button
+                        onClick={onClose}
+                        className="lg:hidden p-2 rounded-lg hover:bg-white/10 transition-colors"
+                    >
+                        <X size={20} className="text-white" />
+                    </button>
+                </div>
+
+                <nav className="px-3 space-y-1">
+                    {extendedMenuItems.map((item) => {
+                        const isActive = pathname?.includes(`/${item.id}`) || (item.id === 'dashboard' && pathname === '/e');
+                        return (
+                            <Link
+                                key={item.id}
+                                href={item.path}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-[14px] font-medium transition-colors ${isActive
+                                        ? "bg-white/10 text-white"
+                                        : "text-white/70 hover:bg-white/5 hover:text-white"
+                                    }`}
+                            >
+                                <item.icon
+                                    className={`w-5 h-5 ${isActive ? "text-white" : "text-white/70"}`}
+                                    strokeWidth={isActive ? 2 : 1.5}
+                                />
+                                {item.label}
+                            </Link>
+                        );
+                    })}
+                </nav>
+            </div>
+
+            <div className="px-3 py-6 space-y-1">
+                {bottomItems.map((item) => (
+                    <Link
+                        key={item.label}
+                        href="#"
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-[14px] font-medium text-white/70 hover:bg-white/5 hover:text-white transition-colors"
+                    >
+                        <item.icon className="w-5 h-5" strokeWidth={1.5} />
+                        {item.label}
+                    </Link>
+                ))}
+            </div>
+        </aside>
+    );
 };
 
 export default Sidebar;

@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { Search, Link as LinkIcon, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { StudentAPI } from "@/lib/api"; // Adjust this import to where your api.ts is located
 
 // Mock data to match the exact screenshots provided
 const MOCK_ASSIGNMENTS = [
@@ -122,11 +121,11 @@ export default function AssignmentPage() {
     const fetchAssignments = async () => {
       try {
         setIsLoading(true);
-        const response = await StudentAPI.getAssignments();
-        
+        // const response = await StudentAPI.getAssignments();
+
         // Check if response has valid data array (adjust 'response.data' based on actual API payload)
         const apiData = response?.data || response?.assignments || response;
-        
+
         if (Array.isArray(apiData) && apiData.length > 0) {
           // Map backend data to match UI structure
           const formattedData = apiData.map((item: any, index: number) => ({
@@ -135,7 +134,7 @@ export default function AssignmentPage() {
             sessionName: item.courseName || item.sessionName || "General Session",
             mentorImage: item.mentorImage || `https://ui-avatars.com/api/?name=${item.mentorName || 'Mentor'}&background=random`,
             mentorName: item.mentorName || item.educatorName || "Educator",
-            status: item.status === "completed" ? "SUBMITTED ON" : "DUE", 
+            status: item.status === "completed" ? "SUBMITTED ON" : "DUE",
             date: item.dueDate || item.createdAt || "TBD", // Format this with date-fns/moment if needed
             type: item.status === "completed" ? "completed" : "pending",
             colorScheme: item.status === "completed" ? "green" : "orange", // Modify logic based on overdue/pending
@@ -167,7 +166,7 @@ export default function AssignmentPage() {
 
   return (
     <div className="w-full min-h-screen bg-[#F8F9FA] font-sans">
-      
+
       {/* --- FULL WIDTH HEADER --- */}
       <div className="sticky top-0 z-20 bg-white px-4 md:px-10 pt-6 md:pt-8 border-b border-gray-200 md:static md:z-auto">
         <h1 className="text-[22px]  font-semibold text-gray-900 mb-3">Assignments</h1>
@@ -188,11 +187,10 @@ export default function AssignmentPage() {
         <div className="flex items-center gap-8">
           <button
             onClick={() => setActiveTab("pending")}
-            className={`pb-3.5 flex items-center gap-2 border-b-2 transition-all -mb-[2px] ${
-              activeTab === "pending"
-                ? "border-[#042BFD] text-gray-900 font-semibold"
-                : "border-transparent text-gray-500 hover:text-gray-700 font-medium"
-            }`}
+            className={`pb-3.5 flex items-center gap-2 border-b-2 transition-all -mb-[2px] ${activeTab === "pending"
+              ? "border-[#042BFD] text-gray-900 font-semibold"
+              : "border-transparent text-gray-500 hover:text-gray-700 font-medium"
+              }`}
           >
             Pending
             {activeTab === "pending" ? (
@@ -203,14 +201,13 @@ export default function AssignmentPage() {
               <span className="text-gray-400 text-xs font-medium">{pendingCount}</span>
             )}
           </button>
-          
+
           <button
             onClick={() => setActiveTab("completed")}
-            className={`pb-3.5 flex items-center gap-2 border-b-2 transition-all -mb-[2px] ${
-              activeTab === "completed"
-                ? "border-[#042BFD] text-gray-900 font-semibold"
-                : "border-transparent text-gray-500 hover:text-gray-700 font-medium"
-            }`}
+            className={`pb-3.5 flex items-center gap-2 border-b-2 transition-all -mb-[2px] ${activeTab === "completed"
+              ? "border-[#042BFD] text-gray-900 font-semibold"
+              : "border-transparent text-gray-500 hover:text-gray-700 font-medium"
+              }`}
           >
             Completed
             {activeTab === "completed" ? (
@@ -226,16 +223,16 @@ export default function AssignmentPage() {
 
       {/* --- MAIN CONTENT AREA --- */}
       <div className="p-4 md:px-10 max-w-[1600px] mx-auto mt-2">
-        
+
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-[40vh]">
             <Loader2 className="h-8 w-8 text-[#042BFD] animate-spin mb-4" />
             <p className="text-gray-500 font-medium text-sm">Loading assignments...</p>
           </div>
         ) : filteredAssignments.length === 0 ? (
-           <div className="flex flex-col items-center justify-center h-[40vh] bg-white rounded-xl border border-gray-200">
-             <p className="text-gray-500 font-medium">No {activeTab} assignments found.</p>
-           </div>
+          <div className="flex flex-col items-center justify-center h-[40vh] bg-white rounded-xl border border-gray-200">
+            <p className="text-gray-500 font-medium">No {activeTab} assignments found.</p>
+          </div>
         ) : (
           /* Grid of Cards */
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-20 md:mb-20">
@@ -248,16 +245,16 @@ export default function AssignmentPage() {
                   className={`relative rounded-[20px] p-[1px] bg-gradient-to-br ${styles.wrapperBorder} flex flex-col min-h-[280px]`}
                 >
                   <div className="relative flex-1 flex flex-col bg-white rounded-[18px] p-6 overflow-hidden h-full shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-gray-100/50">
-                    
+
                     {/* Smooth Background Gradient inside card */}
                     <div className={`absolute inset-0 bg-gradient-to-b ${styles.bgGradient} pointer-events-none z-0 opacity-60`}></div>
-                    
+
                     {/* Top Row: Icon & Badge */}
                     <div className="flex justify-between items-start mb-6 relative z-10">
-                      <img 
+                      <img
                         src={styles.image}
-                        alt="Icon" 
-                        className="w-[54px] h-[54px] object-contain opacity-90" 
+                        alt="Icon"
+                        className="w-[54px] h-[54px] object-contain opacity-90"
                       />
                       <span className={`${styles.badgeBg} ${styles.badgeText} text-[11px] font-medium px-3.5 py-1.5 rounded-full tracking-wide uppercase`}>
                         {item.status}: {item.date}
@@ -278,15 +275,15 @@ export default function AssignmentPage() {
                             {item.sessionName}
                           </span>
                         </div>
-                        
+
                         {/* Avatar with Custom Tooltip */}
                         <div className="relative group shrink-0">
-                          <img 
-                            src={item.mentorImage} 
-                            alt={item.mentorName} 
-                            className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-gray-200 transition-all" 
+                          <img
+                            src={item.mentorImage}
+                            alt={item.mentorName}
+                            className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-gray-200 transition-all"
                           />
-                          
+
                           {/* Tooltip Content (Below Avatar, Pointing Up) */}
                           <div className="absolute top-[calc(100%+12px)] right-[-6px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 w-max">
                             <div className="bg-[#262626] text-white text-[14px] font-medium px-4 py-2 rounded-[8px] shadow-xl relative">
@@ -313,7 +310,7 @@ export default function AssignmentPage() {
             })}
           </div>
         )}
-        
+
       </div>
     </div>
   );

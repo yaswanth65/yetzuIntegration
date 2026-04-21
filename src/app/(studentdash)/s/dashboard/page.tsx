@@ -9,7 +9,6 @@
 //   Paperclip,
 //   ExternalLink
 // } from "lucide-react";
-// import { StudentAPI } from "@/lib/api"; // Importing your new API file
 
 // // --- HELPER COMPONENTS & STYLES ---
 // const ViewDetailsButton = ({ variant = "outline" }: { variant?: "solid" | "outline" }) => {
@@ -432,7 +431,6 @@
 //   Paperclip,
 //   ExternalLink
 // } from "lucide-react";
-// import { StudentAPI } from "@/lib/api";
 
 // const MOCK_DASHBOARD_DATA = {
 //   userInfo: {
@@ -878,7 +876,6 @@ import {
   Paperclip,
   ExternalLink
 } from "lucide-react";
-import { StudentAPI } from "@/lib/api"; 
 
 // --- HELPER COMPONENTS & STYLES ---
 const ViewDetailsButton = ({ variant = "outline" }: { variant?: "solid" | "outline" }) => {

@@ -35,16 +35,18 @@ export const metadata = {
     // Path to the favicon/logo shown in browser tabs
     icon: "/logo.svg",
   },
-  viewport: {
-    // Make the layout responsive to device width
-    width: "device-width",
-    // Initial zoom level when page loads (1 = no zoom)
-    initialScale: 1,
-    // Maximum zoom level users can zoom in to
-    maximumScale: 5,
-    // Allow users to zoom/scale the page
-    userScalable: true,
-  },
+};
+
+// Export viewport configuration separately
+export const viewport = {
+  // Make the layout responsive to device width
+  width: "device-width",
+  // Initial zoom level when page loads (1 = no zoom)
+  initialScale: 1,
+  // Maximum zoom level users can zoom in to
+  maximumScale: 5,
+  // Allow users to zoom/scale the page
+  userScalable: true,
 };
 
 // Root layout component - wraps all pages in the application
