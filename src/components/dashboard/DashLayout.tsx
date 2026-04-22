@@ -4,7 +4,7 @@
 import { useState } from "react";
 import DashSidebar from "./DashSidebar";
 import DashNavbar from "./DashNavbar";
-import ChatWidget from "@/app/(educatordash)/components/ChatWidget";
+// import ChatWidget from "@/app/(educatordash)/components/ChatWidget";
 
 interface DashLayoutProps {
     children: React.ReactNode;
@@ -47,7 +47,7 @@ export default function DashLayout({ children, role }: DashLayoutProps) {
                 <main className="lg:pl-57 pt-18 h-full overflow-hidden rounded-2xl transition-all duration-300">
                     {isChatOpen ? (
                         <div className="h-[calc(100vh-80px)] w-full">
-                            <ChatWidget onClose={() => setIsChatOpen(false)} />
+                            {/* <ChatWidget onClose={() => setIsChatOpen(false)} /> */}
                         </div>
                     ) : (
                         <div className="px-4 h-[calc(100vh-80px)] overflow-y-auto">

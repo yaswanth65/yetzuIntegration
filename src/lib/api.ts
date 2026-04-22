@@ -1,3 +1,18 @@
+import Cookies from "js-cookie";
+import { getApiBaseUrl } from "./getApiBaseUrl";
+
+const BASE_URL = getApiBaseUrl();
+
+const getHeaders = () => {
+  const token = Cookies.get("jwtToken");
+  const userId = Cookies.get("userId");
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(userId ? { "x-user-id": userId } : {}),
+  };
+};
+
 export const CourseAPI = {
   getAllCourses: async () => {
     const response = await fetch(`${BASE_URL}/api/course/v1/courselist`, {

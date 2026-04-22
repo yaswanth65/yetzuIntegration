@@ -876,6 +876,7 @@ import {
   Paperclip,
   ExternalLink
 } from "lucide-react";
+import { StudentAPI } from "@/lib/api";
 
 // --- HELPER COMPONENTS & STYLES ---
 const ViewDetailsButton = ({ variant = "outline" }: { variant?: "solid" | "outline" }) => {

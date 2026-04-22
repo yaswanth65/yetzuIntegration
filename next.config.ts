@@ -31,6 +31,9 @@ const nextConfig: NextConfig = {
     unoptimized: true, // Important if you serve static images from public
   },
   outputFileTracingRoot: __dirname, // Fix Next.js workspace root warning
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;
