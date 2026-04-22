@@ -122,6 +122,7 @@ export default function AssignmentPage() {
       try {
         setIsLoading(true);
         // const response = await StudentAPI.getAssignments();
+        const response: any = { data: [] }; // Dummy response
 
         // Check if response has valid data array (adjust 'response.data' based on actual API payload)
         const apiData = response?.data || response?.assignments || response;

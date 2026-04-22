@@ -635,7 +635,13 @@
 "use client";
 import { usePathname } from "next/navigation";
 import useSession from "@/hooks/useSession";
-import { StudentAPI } from "@/lib/api";
+
+const StudentAPI = {
+  getOverview: async () => ({ success: false }),
+  getNotifications: async () => ({ success: false }),
+  editProfile: async (data: any) => ({ success: false })
+};
+
 import { 
   Bell, 
   Menu, 

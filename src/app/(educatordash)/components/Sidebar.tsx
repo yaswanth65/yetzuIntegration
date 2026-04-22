@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X, Home, Monitor, BookOpen, MessageCircle, Settings, HeadphonesIcon } from "lucide-react";
+import { X, Home, Monitor, BookOpen, MessageCircle } from "lucide-react";
 
 const menuItems = [
     { name: "Overview", path: "/e/dashboard", icon: Home },
@@ -12,17 +12,12 @@ const menuItems = [
     { name: "Chat", path: "/e/chat", icon: MessageCircle },
 ];
 
-const bottomItems = [
-    { label: 'Settings', icon: Settings },
-    { label: 'Support', icon: HeadphonesIcon },
-];
-
 interface SidebarProps {
-    isOpen?: boolean;
-    onClose?: () => void;
+    isOpen: boolean;
+    onClose: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
+export default function EducatorSidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
 
     return (
@@ -30,43 +25,55 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
             {/* Mobile Overlay */}
             {isOpen && (
                 <div
-                    className="lg:hidden fixed inset-0 bg-black/40 z-40 transition-opacity"
+                    className="md:hidden fixed inset-0 bg-black/40 z-40 transition-opacity"
                     onClick={onClose}
                 />
             )}
 
-            <aside
-                className={`w-64 h-screen flex flex-col justify-between fixed left-0 top-0 z-50 transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"
-                    } bg-[#1D4ED8] text-white`}
+            {/* Sidebar */}
+            <div
+                className={`
+          fixed md:static inset-y-0 left-0 z-50
+          w-[260px] h-screen bg-white border-r border-gray-200
+          flex flex-col justify-between
+          transform transition-transform duration-300 ease-in-out
+          ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        `}
             >
-                <div className='p-6 overflow-y-auto flex-1'>
-                    {/* Header / Logo text */}
-                    <div className="flex items-center justify-between mb-4">
-                        <Link href="/e/dashboard" className="flex items-center">
-                            <span className="text-[20px] font-bold tracking-wide">Educator Portal</span>
-                        </Link>
+                <div className="p-6 overflow-y-auto flex-1">
+
+                    {/* Mobile Header */}
+                    <div className="flex items-center justify-between md:hidden mb-6">
+                        <h2 className="font-bold text-lg text-slate-800">
+                            Educator Panel
+                        </h2>
                         <button
                             onClick={onClose}
-                            className="lg:hidden p-2 rounded-lg hover:bg-white/10 transition-colors"
+                            className="p-2 -mr-2 text-gray-500 hover:bg-gray-100 rounded-md"
                         >
-                            <X size={20} className="text-white" />
+                            <X className="w-5 h-5" />
                         </button>
                     </div>
 
-                    <div className='flex flex-col items-start gap-2'>
+                    {/* Menu */}
+                    <div className="flex flex-col items-start gap-2">
                         {menuItems.map((item) => {
-                            const isActive = pathname?.startsWith(item.path);
+                            const isActive = pathname.startsWith(item.path);
 
                             return (
                                 <Link
-                                    onClick={onClose}
-                                    className={`flex items-center gap-3 px-4 py-3 text-[14px] ${isActive ? "bg-white/10 text-white w-full font-medium rounded-lg" : "text-white/70 hover:bg-white/5 hover:text-white w-full rounded-lg transition-colors"} `}
-                                    href={item.path}
                                     key={item.name}
+                                    href={item.path}
+                                    onClick={onClose}
+                                    className={`flex items-center gap-3 px-4 py-3 md:py-2.5 text-[14px] ${isActive
+                                        ? "bg-slate-100 text-slate-900 w-full font-medium rounded-lg"
+                                        : "text-[#404040] hover:bg-gray-50 hover:text-slate-900 w-full rounded-lg transition-colors"
+                                        }`}
                                 >
                                     <div className="w-5 flex justify-center shrink-0">
                                         <item.icon
-                                            className={`w-5 h-5 ${isActive ? "text-white" : "text-white/70"}`}
+                                            className={`w-5 h-5 ${isActive ? "text-slate-900" : "text-gray-500"
+                                                }`}
                                             strokeWidth={isActive ? 2 : 1.5}
                                         />
                                     </div>
@@ -77,21 +84,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => {
                     </div>
                 </div>
 
-                <div className="px-3 py-6 space-y-1">
-                    {bottomItems.map((item) => (
-                        <Link
-                            key={item.label}
-                            href="#"
-                            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-[14px] font-medium text-white/70 hover:bg-white/5 hover:text-white transition-colors"
-                        >
-                            <item.icon className="w-5 h-5" strokeWidth={1.5} />
-                            {item.label}
-                        </Link>
-                    ))}
+                {/* Mobile Profile */}
+                <div className="md:hidden p-5 border-t border-gray-100 bg-slate-50 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-gray-300" />
+                    <div>
+                        <h1 className="text-sm font-semibold text-slate-900">
+                            Educator Name
+                        </h1>
+                        <p className="text-xs text-slate-500 truncate max-w-[120px]">
+                            educator@email.com
+                        </p>
+                    </div>
                 </div>
-            </aside>
+            </div>
         </>
     );
-};
-
-export default Sidebar;
+}

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-
 import Sidebar from "./components/Sidebar";
+import Header from "./components/Header";
 
 export default function AdminDashLayout({
   children,
@@ -12,12 +12,19 @@ export default function AdminDashLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex flex-1 overflow-hidden relative">
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+    <div className="h-screen flex flex-col font-sans">
+      <Header onMenuClick={() => setIsSidebarOpen(true)} />
 
-      <main className="flex-1 h-screen overflow-y-auto w-full lg:pl-64">
-        {children}
-      </main>
+      <div className="flex flex-1 overflow-hidden relative">
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
+
+        <main className="flex-1 h-full overflow-y-auto w-full">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

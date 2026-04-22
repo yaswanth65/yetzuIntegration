@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 
-export default function EducatorAssignmentDetailsPage({ params }: { params: { id: string } }) {
+export default function EducatorAssignmentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   // We simulate 3 states matching the 3 images provided by user:
   // 1: initial empty state
   // 2: file selected but not submitted

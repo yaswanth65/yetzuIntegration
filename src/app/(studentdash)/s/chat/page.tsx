@@ -1162,13 +1162,12 @@
 //         </div>
 //       </div>
 //     </div>
-//   );
-// } 
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { Link2, Send, MessageSquareMore, ArrowLeft } from "lucide-react";
 import Cookies from "js-cookie";
+import { StudentAPI } from "@/lib/api";
 
 export default function ChatPage() {
   // Application States
@@ -1210,7 +1209,8 @@ export default function ChatPage() {
   // 2. Fetch Messages when activeContactId changes
   const fetchMessages = async (educatorId: string) => {
     try {
-      const res = // await StudentAPI.getChatMessages(educatorId);
+      // const res = await StudentAPI.getChatMessages(educatorId);
+      const res: any = { data: [] };
       console.log( "Chat MEssages : " ,res);
       const msgs = Array.isArray(res) ? res : (res.data || res.messages || []);
       setMessages(msgs);

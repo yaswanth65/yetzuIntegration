@@ -4,9 +4,10 @@ import { Eye, Users } from 'lucide-react';
 
 interface SessionsListProps {
   sessions: Session[];
+  onViewDetails?: (session: Session) => void;
 }
 
-export default function SessionsList({ sessions }: SessionsListProps) {
+export default function SessionsList({ sessions, onViewDetails }: SessionsListProps) {
   return (
     <div className="bg-white rounded-[20px] shadow-sm overflow-hidden border border-gray-100 p-2 md:p-6 mt-6">
       <div className="overflow-x-auto">
@@ -74,7 +75,10 @@ export default function SessionsList({ sessions }: SessionsListProps) {
                   </td>
                   <td className="py-4 px-4 whitespace-nowrap">
                     <div className="flex items-center justify-end gap-4 min-w-[120px]">
-                      <button className="text-gray-400 hover:text-gray-600 transition-colors">
+                      <button 
+                        onClick={() => onViewDetails?.(session)}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                      >
                         <Eye size={18} />
                       </button>
                       {session.status === 'Live' && (

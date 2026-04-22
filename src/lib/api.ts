@@ -173,3 +173,11 @@ export const AdminAPI = {
     return response.json();
   },
 };
+
+export const StudentAPI = {
+  getOverview: async () => ({ success: false, data: {} } as any),
+  getNotifications: async () => ({ success: false, data: {} } as any),
+  editProfile: async (data: any) => ({ success: false, data: {} } as any),
+  getAssignments: async () => ({ data: [] } as any),
+  getChatEducators: async () => ({ data: [], educators: [] } as any),
+};
