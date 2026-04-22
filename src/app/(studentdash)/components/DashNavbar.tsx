@@ -21,7 +21,6 @@
 //   Send
 // } from "lucide-react";
 // import { useState, useRef, useEffect } from "react";
-// import { StudentAPI } from "@/lib/api"; 
 // import Link from "next/link";
 // import Image from "next/image";
 
@@ -109,7 +108,7 @@
 //         const userId = localStorage.getItem("userId") || "b8b0aa53-f79a-41d5-87ff-9a374bf9fc6f";
 
 //         if (token && userId) {
-//           const overviewRes = await StudentAPI.getOverview(token, userId);
+//           // const overviewRes = await StudentAPI.getOverview(token, userId);
 //           if (overviewRes?.success && overviewRes?.data?.userInfo) {
 //             const userInfo = overviewRes.data.userInfo;
 //             setFormData({
@@ -120,7 +119,7 @@
 //             setPaymentData(prev => ({ ...prev, cardHolder: userInfo.name || "" }));
 //           }
 
-//           const notifRes = await StudentAPI.getNotifications(token, userId);
+//           // const notifRes = await StudentAPI.getNotifications(token, userId);
 //           if (notifRes?.success) {
 //             setNotifications(notifRes.data.notifications || []);
 //             setUnreadCount(notifRes.data.summary?.newMessages || 0);
@@ -141,7 +140,7 @@
 //       const token = localStorage.getItem("token") || "";
 //       const userId = localStorage.getItem("userId") || "";
 
-//       const response = await StudentAPI.editProfile(token, userId, {
+//       // const response = await StudentAPI.editProfile(token, userId, {
 //         name: formData.fullName,
 //         email: formData.email,
 //         mobileno: formData.phone
@@ -636,6 +635,13 @@
 "use client";
 import { usePathname } from "next/navigation";
 import useSession from "@/hooks/useSession";
+
+const StudentAPI = {
+  getOverview: async () => ({ success: false }),
+  getNotifications: async () => ({ success: false }),
+  editProfile: async (data: any) => ({ success: false })
+};
+
 import { 
   Bell, 
   Menu, 
@@ -656,7 +662,6 @@ import {
   Send
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { StudentAPI } from "@/lib/api"; 
 import Link from "next/link";
 import Image from "next/image";
 
@@ -812,7 +817,7 @@ export default function DashNavbar({
         const userId = localStorage.getItem("userId") || "b8b0aa53-f79a-41d5-87ff-9a374bf9fc6f";
 
         if (token && userId) {
-          const overviewRes = await StudentAPI.getOverview( );
+          const overviewRes: any = await StudentAPI.getOverview();
           if (overviewRes?.success && overviewRes?.data?.userInfo) {
             const userInfo = overviewRes.data.userInfo;
             setFormData({
@@ -823,7 +828,7 @@ export default function DashNavbar({
             setPaymentData(prev => ({ ...prev, cardHolder: userInfo.name || "" }));
           }
 
-          const notifRes = await StudentAPI.getNotifications( );
+          const notifRes: any = await StudentAPI.getNotifications();
           if (notifRes?.success) {
             setNotifications(notifRes.data.notifications || []);
             setUnreadCount(notifRes.data.summary?.newMessages || 0);
@@ -842,13 +847,13 @@ export default function DashNavbar({
     try {
       const token = localStorage.getItem("token") || "";
       const userId = localStorage.getItem("userId") || "";
-      const response = await StudentAPI.editProfile(  {
+      const response: any = await StudentAPI.editProfile({
         name: formData.fullName,
         email: formData.email,
         mobileno: formData.phone
       });
-      if (response.success) setIsEditing(false);
-      else console.error("Failed to update profile details:", response.message);
+      if (response?.success) setIsEditing(false);
+      else console.error("Failed to update profile details:", response?.message);
     } catch (error) {
       console.error("Error saving profile:", error);
     } finally {

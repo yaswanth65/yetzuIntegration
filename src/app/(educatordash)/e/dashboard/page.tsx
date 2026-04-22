@@ -1,5 +1,16 @@
+import React from 'react';
+import StatCards from './components/StatCards';
+import FocusWeekly from './components/FocusWeekly';
+import AssignmentsTable from './components/AssignmentsTable';
+
 export default function EducatorDashboardPage() {
-  // The layout handles all the dashboard rendering
-  // This page component is now just a placeholder for the route
-  return null;
+  return (
+    <div className="min-h-screen bg-[#FAFAFA] p-6 lg:p-8 font-sans">
+      <div className="max-w-[1400px] mx-auto">
+        <StatCards />
+        <FocusWeekly />
+        <AssignmentsTable />
+      </div>
+    </div>
+  );
 }

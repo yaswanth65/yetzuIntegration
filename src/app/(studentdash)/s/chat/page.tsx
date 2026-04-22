@@ -2,7 +2,6 @@
 
 // import React, { useState, useEffect } from "react";
 // import { Link2, Send, MessageSquareMore } from "lucide-react";
-// import { StudentAPI } from "@/lib/api"; // Make sure this path is correct
 
 // export default function ChatPage() {
 //   // Application States
@@ -23,7 +22,7 @@
 //         setUserId(uid);
 
 //         if (token && uid) {
-//           const res = await StudentAPI.getChatEducators(token, uid);
+//           const res = // await StudentAPI.getChatEducators(token, uid);
 //           // Safely extract the array whether it's directly the response or wrapped in `data`
 //           const educatorList = Array.isArray(res) ? res : (res.data || []);
 //           setEducators(educatorList);
@@ -48,7 +47,7 @@
 //       const uid = localStorage.getItem("userId") || "";
       
 //       if (token && uid) {
-//         const res = await StudentAPI.getChatMessages(token, uid, educatorId);
+//         const res = // await StudentAPI.getChatMessages(token, uid, educatorId);
 //         const msgs = Array.isArray(res) ? res : (res.data || []);
 //         setMessages(msgs);
 //       }
@@ -72,7 +71,7 @@
 //       const uid = localStorage.getItem("userId") || "";
 
 //       if (token && uid) {
-//         await StudentAPI.sendChatMessage(token, uid, activeContactId, inputText);
+//         // await StudentAPI.sendChatMessage(token, uid, activeContactId, inputText);
 //         setInputText(""); // Clear input
 //         fetchMessages(activeContactId); // Refresh messages
 //       }
@@ -345,7 +344,6 @@
 
 // import React, { useState, useEffect } from "react";
 // import { Link2, Send, MessageSquareMore, ArrowLeft } from "lucide-react";
-// import { StudentAPI } from "@/lib/api"; // Make sure this path is correct
 
 // export default function ChatPage() {
 //   // Application States
@@ -369,7 +367,7 @@
 //         setUserId(uid);
 
 //         if (token && uid) {
-//           const res = await StudentAPI.getChatEducators(token, uid);
+//           const res = // await StudentAPI.getChatEducators(token, uid);
 //           // Safely extract the array whether it's directly the response or wrapped in `data`
 //           const educatorList = Array.isArray(res) ? res : (res.data || []);
 //           setEducators(educatorList);
@@ -396,7 +394,7 @@
 //       const uid = localStorage.getItem("userId") || "";
       
 //       if (token && uid) {
-//         const res = await StudentAPI.getChatMessages(token, uid, educatorId);
+//         const res = // await StudentAPI.getChatMessages(token, uid, educatorId);
 //         const msgs = Array.isArray(res) ? res : (res.data || []);
 //         setMessages(msgs);
 //       }
@@ -420,7 +418,7 @@
 //       const uid = localStorage.getItem("userId") || "";
 
 //       if (token && uid) {
-//         await StudentAPI.sendChatMessage(token, uid, activeContactId, inputText);
+//         // await StudentAPI.sendChatMessage(token, uid, activeContactId, inputText);
 //         setInputText(""); // Clear input
 //         fetchMessages(activeContactId); // Refresh messages
 //       }
@@ -700,7 +698,6 @@
 
 // import React, { useState, useEffect } from "react";
 // import { Link2, Send, MessageSquareMore, ArrowLeft } from "lucide-react";
-// import { StudentAPI } from "@/lib/api"; 
 
 // // --- MOCK DATA ---
 // const MOCK_EDUCATORS = [
@@ -782,7 +779,7 @@
 //         // --- API INTEGRATION (Commented out for mock testing) ---
      
         
-//           const res = await StudentAPI.getChatEducators( );
+//           const res = // await StudentAPI.getChatEducators( );
 //           const educatorList = Array.isArray(res) ? res : (res.data || []);
 //           setEducators(educatorList);
 
@@ -815,7 +812,7 @@
 //       const uid = localStorage.getItem("userId") || "";
       
        
-//         const res = await StudentAPI.getChatMessages(  educatorId);
+//         const res = // await StudentAPI.getChatMessages(  educatorId);
 //         const msgs = Array.isArray(res) ? res : (res.data || []);
 //         setMessages(msgs);
       
@@ -847,7 +844,7 @@
 //       const uid = localStorage.getItem("userId") || "";
 
 //       if (token && uid) {
-//         await StudentAPI.sendChatMessage(token, uid, activeContactId, inputText);
+//         // await StudentAPI.sendChatMessage(token, uid, activeContactId, inputText);
 //         setInputText(""); 
 //         fetchMessages(activeContactId); 
 //       }
@@ -1165,14 +1162,12 @@
 //         </div>
 //       </div>
 //     </div>
-//   );
-// } 
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { Link2, Send, MessageSquareMore, ArrowLeft } from "lucide-react";
-import { StudentAPI } from "@/lib/api";
 import Cookies from "js-cookie";
+import { StudentAPI } from "@/lib/api";
 
 export default function ChatPage() {
   // Application States
@@ -1214,7 +1209,8 @@ export default function ChatPage() {
   // 2. Fetch Messages when activeContactId changes
   const fetchMessages = async (educatorId: string) => {
     try {
-      const res = await StudentAPI.getChatMessages(educatorId);
+      // const res = await StudentAPI.getChatMessages(educatorId);
+      const res: any = { data: [] };
       console.log( "Chat MEssages : " ,res);
       const msgs = Array.isArray(res) ? res : (res.data || res.messages || []);
       setMessages(msgs);
@@ -1234,7 +1230,7 @@ export default function ChatPage() {
     if (!inputText.trim() || !activeContactId) return;
 
     try {
-      await StudentAPI.sendChatMessage(activeContactId, inputText);
+      // await StudentAPI.sendChatMessage(activeContactId, inputText);
       setInputText(""); 
       fetchMessages(activeContactId); 
     } catch (error) {
