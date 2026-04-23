@@ -47,8 +47,8 @@ export default function EducatorSessionsPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-8 font-sans">
-            <div className="max-w-[1400px] mx-auto">
+        <div className="min-h-screen bg-gray-100 p-6 lg:p-6 font-sans">
+            <div className="max-w-[1550px] mx-auto">
                 <h1 className="text-2xl font-bold text-gray-900 mb-8">Sessions</h1>
 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">

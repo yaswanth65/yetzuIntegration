@@ -231,7 +231,7 @@ export default function AddCouponModal({ isOpen, onClose }: AddCouponModalProps)
           </button>
           <button 
             onClick={onClose}
-            className="px-6 py-2 bg-[#00A3FF] hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
+            className="px-6 py-2 bg-[#0F172B] hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
           >
             Create Coupon
           </button>

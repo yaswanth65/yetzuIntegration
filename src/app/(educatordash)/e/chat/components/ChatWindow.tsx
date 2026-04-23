@@ -31,7 +31,7 @@ export default function ChatWindow({ contact, messages, onSendMessage }: ChatWin
   };
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-white h-full relative">
+    <div className="flex-1 flex flex-col bg-white h-full relative">
       
       {/* Chat Header */}
       <div className="px-6 py-4 flex items-center gap-6 shrink-0 bg-white z-10 border-b border-gray-100">
@@ -66,7 +66,7 @@ export default function ChatWindow({ contact, messages, onSendMessage }: ChatWin
       </div>
 
       {/* Chat Messages Area */}
-      <div className="flex-1 overflow-y-auto p-6 flex flex-col">
+      <div className="flex-1 overflow-y-auto flex flex-col">
         {isEmptyChat ? (
           // Empty State
           <div className="flex-1 flex flex-col items-center justify-center text-center">
@@ -79,7 +79,7 @@ export default function ChatWindow({ contact, messages, onSendMessage }: ChatWin
           </div>
         ) : (
           // Active Chat State
-          <div className="flex flex-col max-w-4xl mx-auto w-full pb-4">
+          <div className="flex flex-col w-full pb-4 px-6 pt-2">
             <div className="text-center mb-8 mt-4">
               <span className="text-[11px] font-bold text-gray-900 bg-white px-2">
                 Today
@@ -95,11 +95,11 @@ export default function ChatWindow({ contact, messages, onSendMessage }: ChatWin
                     </div>
                   )}
 
-                  <div className={`flex items-end gap-3 ${msg.sender === "me" ? "justify-end mb-4" : "justify-start mb-1"}`}>
+                  <div className={`flex items-end ${msg.sender === "me" ? "justify-end mb-4" : "justify-start mb-1"}`}>
                     
                     {/* Receiver Avatar */}
                     {msg.sender === "them" && (
-                      <div className="w-8 h-8 shrink-0 flex items-end">
+                      <div className="shrink-0 flex items-end">
                         {msg.showAvatar ? (
                           <div className="relative w-8 h-8 rounded-full overflow-hidden border border-gray-100">
                             <Image

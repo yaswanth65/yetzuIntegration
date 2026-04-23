@@ -114,7 +114,7 @@ export default function AddBlogModal({ isOpen, onClose }: AddBlogModalProps) {
           </button>
           <button 
             onClick={onClose}
-            className="px-6 py-2.5 bg-[#00A3FF] hover:bg-blue-500 text-white rounded-xl text-sm font-medium transition-colors"
+            className="px-6 py-2.5 bg-[#0F172B] hover:bg-blue-500 text-white rounded-xl text-sm font-medium transition-colors"
           >
             Publish
           </button>

@@ -44,7 +44,7 @@ export default function EducatorAssignmentDetailsPage({ params }: { params: Prom
   };
 
   return (
-    <div className="min-h-screen bg-white rounded-tl-[30px] p-6 lg:p-10 font-sans border border-gray-100">
+    <div className="min-h-screen bg-gray-100 p-6 lg:p-10 font-sans">
       <div className="max-w-[1400px] mx-auto">
         
         {/* Breadcrumbs */}
@@ -63,48 +63,50 @@ export default function EducatorAssignmentDetailsPage({ params }: { params: Prom
           {/* Left Column (Title, Description, Upload Area) */}
           <div className="lg:col-span-2 space-y-8">
             
-            {/* Header / Title */}
-            <div>
-              <div className="flex items-center gap-4 mb-4 flex-wrap">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Advanced Insights into Cardiac Arrhythmias
-                </h1>
-                {submissionState === 2 && (
-                  <span className="px-2.5 py-1 bg-orange-50 text-orange-600 outline outline-1 outline-orange-200 text-[10px] font-bold rounded uppercase tracking-wider">
-                    UNDER REVIEW
-                  </span>
-                )}
-                {submissionState === 3 && (
-                  <span className="px-2.5 py-1 bg-red-50 text-red-600 outline outline-1 outline-red-200 text-[10px] font-bold rounded uppercase tracking-wider">
-                    REVIEW DONE
-                  </span>
-                )}
+            <div className="bg-white rounded-xl p-8 border border-gray-100 shadow-sm">
+              {/* Header / Title */}
+              <div>
+                <div className="flex items-center gap-4 mb-4 flex-wrap">
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    Advanced Insights into Cardiac Arrhythmias
+                  </h1>
+                  {submissionState === 2 && (
+                    <span className="px-2.5 py-1 bg-orange-50 text-orange-600 outline outline-1 outline-orange-200 text-[10px] font-bold rounded uppercase tracking-wider">
+                      UNDER REVIEW
+                    </span>
+                  )}
+                  {submissionState === 3 && (
+                    <span className="px-2.5 py-1 bg-red-50 text-red-600 outline outline-1 outline-red-200 text-[10px] font-bold rounded uppercase tracking-wider">
+                      REVIEW DONE
+                    </span>
+                  )}
+                </div>
+
+                {/* Educator Profile */}
+                <div className="flex items-center gap-3 mt-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden relative border border-gray-100">
+                    <Image src="https://i.pravatar.cc/150?img=68" alt="Prashant Oawal" fill className="object-cover" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-900 leading-tight">Prashant Oawal</h3>
+                    <p className="text-[13px] text-gray-500">educator</p>
+                  </div>
+                </div>
               </div>
 
-              {/* Educator Profile */}
-              <div className="flex items-center gap-3 mt-4">
-                <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden relative border border-gray-100">
-                  <Image src="https://i.pravatar.cc/150?img=68" alt="Prashant Oawal" fill className="object-cover" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-gray-900 leading-tight">Prashant Oawal</h3>
-                  <p className="text-[13px] text-gray-500">educator</p>
-                </div>
+              {/* Description */}
+              <div className="pt-6 mt-6 border-t border-gray-100">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+                  DESCRIPTION
+                </h4>
+                <p className="text-[13px] text-gray-700 leading-[1.8] text-justify">
+                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                </p>
               </div>
-            </div>
-
-            {/* Description */}
-            <div className="pt-2">
-              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
-                DESCRIPTION
-              </h4>
-              <p className="text-[13px] text-gray-700 leading-[1.8] max-w-3xl text-justify">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-              </p>
             </div>
 
             {/* Upload Area / States */}
-            <div className="pt-6 border-t border-gray-100 max-w-2xl">
+            <div className="bg-white rounded-xl p-8 border border-gray-100 shadow-sm">
               
               {submissionState === 1 && (
                 <>
@@ -202,7 +204,7 @@ export default function EducatorAssignmentDetailsPage({ params }: { params: Prom
           <div className="lg:col-span-1 space-y-6">
             
             {/* Uploaded Assignments Box */}
-            <div className="bg-[#FAFAFA] border border-gray-100 rounded-[24px] p-6">
+            <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
               <h3 className="text-[13px] font-bold text-gray-900 mb-5 flex items-center justify-between">
                 Uploaded Assignments :
               </h3>
@@ -250,7 +252,7 @@ export default function EducatorAssignmentDetailsPage({ params }: { params: Prom
             </div>
 
             {/* Add Private Comment Box */}
-            <div className="bg-[#FAFAFA] border border-gray-100 rounded-[24px] p-6">
+            <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
               <h3 className="text-[13px] font-bold text-gray-900 mb-5">Add Private Comment</h3>
 
               {submissionState === 3 && comments.map(c => (

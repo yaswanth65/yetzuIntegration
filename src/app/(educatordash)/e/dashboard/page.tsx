@@ -5,8 +5,8 @@ import AssignmentsTable from './components/AssignmentsTable';
 
 export default function EducatorDashboardPage() {
   return (
-    <div className="min-h-screen bg-[#FAFAFA] p-6 lg:p-8 font-sans">
-      <div className="max-w-[1400px] mx-auto">
+    <div className="min-h-screen bg-[#FAFAFA] p-6 lg:p-6 font-sans">
+      <div className="max-w-[1600px] mx-auto">
         <StatCards />
         <FocusWeekly />
         <AssignmentsTable />

@@ -29,7 +29,7 @@ export default function EducatorChatPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh)] bg-white font-sans max-w-[1600px] mx-auto overflow-hidden rounded-tl-[30px] border border-gray-100">
+    <div className="flex flex-col h-[calc(90vh)] bg-white font-sans w-full overflow-hidden rounded-tl-[30px] ">
       
       {/* Top Header */}
       <div className="bg-white px-8 py-5 border-b border-gray-100">
