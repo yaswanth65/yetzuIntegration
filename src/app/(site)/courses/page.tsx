@@ -33,7 +33,7 @@ export default function CoursesPage() {
         <main className="min-h-screen bg-white pb-20">
             <CoursesHero />
 
-            <section className="relative bg-white">
+            <section className="relative bg-[#F7F8FC]">
                 <div className="w-full px-4 sm:px-6 md:px-12 lg:px-20 xl:px-[108px] pb-16 md:pb-24">
 
                     <CourseFilters
@@ -45,9 +45,9 @@ export default function CoursesPage() {
                         setMaxCost={setMaxCost}
                     />
 
-                    <div className="mt-8">
+                    <div className="mt-2">
                         {isLoading && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                                 <CourseCardSkeleton />
                                 <CourseCardSkeleton />
                                 <CourseCardSkeleton />
@@ -55,7 +55,7 @@ export default function CoursesPage() {
                         )}
 
                         {isError && (
-                            <div className="flex flex-col items-center justify-center py-20 bg-white p-8 text-center">
+                            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[32px] border border-[#EEF0FB] p-8 text-center shadow-sm">
                                 <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-4">
                                     <AlertCircle className="w-6 h-6 text-red-500" />
                                 </div>
@@ -73,14 +73,52 @@ export default function CoursesPage() {
                         )}
 
                         {!isLoading && !isError && courses && courses.length === 0 && (
-                            <div className="text-center py-20 bg-white p-8">
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">No courses found</h3>
-                                <p className="text-gray-500">Check back later for new content.</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+                                {[1, 2, 3, 4, 5, 6].map((i) => (
+                                    <div key={i} className="h-full">
+                                        <div
+                                            className="
+                                      bg-white 
+                                      rounded-[32px]
+                                      border border-[#EEF0FB]
+                                      overflow-hidden
+                                      flex flex-col
+                                      h-full
+                                      p-5
+                                      shadow-sm
+                                    "
+                                        >
+                                            <div className="relative rounded-[24px] overflow-hidden w-full h-[220px] mb-6 bg-gray-100">
+                                                <div className="absolute top-3 right-3">
+                                                    <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-bold text-[#021165] border border-[#EEF0FB]">
+                                                        Sat 7:30pm
+                                                    </div>
+                                                </div>
+                                                <div className="absolute bottom-3 left-3">
+                                                    <AvatarStack count={5} size={32} />
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col flex-grow gap-2 px-1">
+                                                <h3 className="text-xl font-bold text-[#1B1B1B]">Loren Ipsum</h3>
+                                                <p className="text-sm text-[#7A7A7A] leading-relaxed mb-2">
+                                                    Loren Ipsum meta description is display here Loren Ipsum meta...
+                                                </p>
+                                                <div className="mb-6">
+                                                    <span className="text-2xl font-bold text-[#252525]">₹500.01</span>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-4 mt-auto">
+                                                    <Button variant="secondary" className="!rounded-xl !h-[44px] !text-sm">Button</Button>
+                                                    <Button className="!rounded-xl !h-[44px] !text-sm">Button</Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         )}
 
                         {!isLoading && !isError && courses && courses.length > 0 && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
                                 {courses.map((course) => (
                                     <div key={course._id} className="h-full">
                                         <CourseCard course={course} />

@@ -1,6 +1,4 @@
-"use client";
-
-import { Search } from "lucide-react";
+import { Search, ChevronDown } from "lucide-react";
 
 interface CourseFiltersProps {
   search: string;
@@ -20,44 +18,32 @@ export default function CourseFilters({
   setMaxCost,
 }: CourseFiltersProps) {
   return (
-    <div className="w-full bg-white py-4 sticky top-[68px] z-30">
+    <div className="w-full py-8">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="relative w-full md:max-w-xs border-1 border-gray-400 rounded-lg">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
+        <div className="relative w-full md:max-w-md">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-[#7A7A7A]" />
           </div>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="block w-full pl-10 pr-3 py-3 px-3 border-none rounded-lg leading-5 bg-[#F5F5F5] text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-            placeholder="Search by title..."
+            className="block w-full pl-12 pr-4 py-3.5 border border-[#EEF0FB] rounded-xl leading-5 bg-[#F5F5F5] text-gray-900 placeholder-[#7A7A7A] focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            placeholder="Search by"
           />
         </div>
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600 whitespace-nowrap">
-              Price Range:
-            </span>
-            <input
-              type="number"
-              placeholder="Min"
-              value={minCost}
-              onChange={(e) =>
-                setMinCost(e.target.value ? Number(e.target.value) : "")
-              }
-              className="w-24 px-3 py-2 bg-[#F5F5F5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <span className="text-gray-400">-</span>
-            <input
-              type="number"
-              placeholder="Max"
-              value={maxCost}
-              onChange={(e) =>
-                setMaxCost(e.target.value ? Number(e.target.value) : "")
-              }
-              className="w-24 px-3 py-2 bg-[#F5F5F5] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+          <div className="relative min-w-[180px]">
+            <div className="flex items-center justify-between w-full px-4 py-3.5 bg-[#F5F5F5] border border-[#EEF0FB] rounded-xl text-[#7A7A7A] text-sm cursor-pointer hover:bg-gray-100 transition-colors">
+              <span>Sort by</span>
+              <ChevronDown className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="relative min-w-[220px]">
+            <div className="flex items-center justify-between w-full px-4 py-3.5 bg-[#F5F5F5] border border-[#EEF0FB] rounded-xl text-[#7A7A7A] text-sm cursor-pointer hover:bg-gray-100 transition-colors">
+              <span>All category</span>
+              <ChevronDown className="h-4 w-4" />
+            </div>
           </div>
         </div>
       </div>
