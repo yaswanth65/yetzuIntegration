@@ -21,7 +21,7 @@ export default function AdminDashLayout({
           onClose={() => setIsSidebarOpen(false)}
         />
 
-        <main className="flex-1 h-full overflow-y-auto w-full">
+        <main className="flex-1 h-full w-full">
           {children}
         </main>
       </div>

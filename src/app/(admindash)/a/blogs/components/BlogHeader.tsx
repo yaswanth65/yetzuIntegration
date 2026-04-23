@@ -22,7 +22,7 @@ export default function BlogHeader({ onNewBlog }: BlogHeaderProps) {
       
       <button 
         onClick={onNewBlog}
-        className="flex items-center gap-2 bg-[#00A3FF] hover:bg-blue-500 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+        className="flex items-center gap-2 bg-[#0F172B] hover:bg-blue-500 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
       >
         <Plus className="w-4 h-4" />
         New Blog Post

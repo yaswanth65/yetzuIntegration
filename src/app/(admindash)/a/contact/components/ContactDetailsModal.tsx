@@ -116,7 +116,7 @@ export default function ContactDetailsModal({ isOpen, onClose, contactData }: Co
           </button>
           <button 
             onClick={onClose}
-            className="flex items-center gap-2 px-6 py-2.5 bg-[#00A3FF] hover:bg-blue-500 text-white rounded-xl text-sm font-bold transition-colors"
+            className="flex items-center gap-2 px-6 py-2.5 bg-[#0F172B] hover:bg-blue-500 text-white rounded-xl text-sm font-bold transition-colors"
           >
             <Mail className="w-4 h-4" />
             Send Reply
