@@ -29,31 +29,36 @@ export default function CourseCard({ course }: CourseCardProps) {
         <div
             className="
       bg-white 
-      rounded-[16px]
+      rounded-[32px]
       border border-[#EEF0FB]
       overflow-hidden
       flex flex-col
       h-full
-      p-3
+      p-5
+      shadow-sm
     "
         >
-            <div className="relative rounded-[12px] overflow-hidden w-full h-[220px] mb-4">
+            <div className="relative rounded-[24px] overflow-hidden w-full h-[220px] mb-6">
                 <Image
                     src={getImageUrl(course.thumbnail)}
                     alt={course.title}
                     fill
                     className="object-cover"
                 />
-                <BadgePill className="absolute top-2 right-2" text={formattedStart(course?.startDateTime)} />
-                <div className="absolute bottom-3 left-3 flex items-center -space-x-2">
-                    <AvatarStack count={course.enrolledCount || 5} size={35} />
+                <div className="absolute top-3 right-3">
+                    <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-bold text-[#021165] border border-[#EEF0FB]">
+                        {formattedStart(course?.startDateTime)}
+                    </div>
+                </div>
+                <div className="absolute bottom-3 left-3">
+                    <AvatarStack count={course.enrolledCount || 5} size={32} />
                 </div>
             </div>
             <div className="flex flex-col flex-grow gap-2 px-1">
                 <h3
                     className="
-          text-2xl
-          font-semibold
+          text-xl
+          font-bold
           text-[#1B1B1B]
           leading-tight
           overflow-hidden
@@ -67,7 +72,7 @@ export default function CourseCard({ course }: CourseCardProps) {
                 </h3>
                 <p
                     className="
-    text-md
+    text-sm
     text-[#7A7A7A]
     leading-relaxed
     overflow-hidden
@@ -75,28 +80,30 @@ export default function CourseCard({ course }: CourseCardProps) {
     display-webkit-box
     webkit-line-clamp-2
     webkit-box-orient-vertical
+    mb-2
   "
                 >
                     {course.description}
                 </p>
-                <div className="mb-5">
+                <div className="mb-6">
                     <span
                         className="
             text-2xl 
-            font-semibold 
+            font-bold 
             text-[#252525]
           "
                     >
                         {course.cost === 0 ? "Free" : `₹${course.cost.toFixed(2)}`}
                     </span>
                 </div>
-                <div className="grid grid-cols-2 gap-6 mt-auto">
+                <div className="grid grid-cols-2 gap-4 mt-auto">
                     <Link
                         href={`/courses/${course._id}`}
+                        className="w-full"
                     >
-                        <Button variant="secondary">View details</Button>
+                        <Button variant="secondary" className="!rounded-xl !h-[44px] !text-sm">Button</Button>
                     </Link>
-                    <Button>Enroll now</Button>
+                    <Button className="!rounded-xl !h-[44px] !text-sm">Button</Button>
                 </div>
             </div>
         </div>
