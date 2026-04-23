@@ -14,6 +14,7 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useState } from "react";
 import AvatarStack from "@/components/ui/AvatarStack";
+import Button from "@/components/ui/Button";
 
 export default function CoursesPage() {
     const [search, setSearch] = useState("");
@@ -108,8 +109,8 @@ export default function CoursesPage() {
                                                     <span className="text-2xl font-bold text-[#252525]">₹500.01</span>
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-4 mt-auto">
-                                                    <button className="!rounded-xl !h-[44px] !text-sm">Button</button>
-                                                    <button className="!rounded-xl !h-[44px] !text-sm">Button</button>
+                                                    <Button variant="secondary" className="!rounded-xl !h-[44px] !text-sm">Button</Button>
+                                                    <Button className="!rounded-xl !h-[44px] !text-sm">Button</Button>
                                                 </div>
                                             </div>
                                         </div>
