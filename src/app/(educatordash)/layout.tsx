@@ -16,16 +16,16 @@ export default function EducatorDashLayout({
       <Header onMenuClick={() => setIsSidebarOpen(true)} />
 
       <div className="flex flex-1 overflow-hidden relative">
-        <main className="flex-1 overflow-y-auto w-full custom-scrollbar order-first">
-          <div className="max-w-[1600px] mx-auto min-h-full">
-            {children}
-          </div>
-        </main>
-
         <Sidebar
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
         />
+
+        <main className="flex-1 overflow-y-auto w-full custom-scrollbar">
+          <div className="max-w-[1600px] mx-auto min-h-full">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );
