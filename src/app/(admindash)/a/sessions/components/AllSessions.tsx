@@ -1,10 +1,12 @@
-"use client"
+"use client";
+
 import React, { useMemo, useState } from "react";
 import SessionTable from "@/app/(admindash)/components/SessionTable";
 import SessionDetailsPanel from "@/app/(admindash)/components/SessionDetailsPanel";
 import { Session, Status, Tab } from "@/app/(admindash)/types/SessionType";
 import CreateSession from "./CreateSession";
 import CalendarView from "./CalendarView";
+import { Plus, Search, List, Calendar as CalendarIcon, Filter } from "lucide-react";
 
 interface Props {
   data: Session[];
@@ -60,105 +62,127 @@ export default function AllSessions({ data }: Props) {
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <h1 className="text-2xl font-bold text-gray-900">Sessions</h1>
+    <div className="flex flex-col gap-8 p-6 md:p-10">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-black text-[#021165] tracking-tight">Sessions</h1>
+          <p className="text-sm text-gray-500 font-medium mt-1">Manage and monitor all platform educational sessions</p>
+        </div>
         <button 
           onClick={() => setIsCreating(true)}
-          className="inline-flex items-center gap-1.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors shadow-sm"
+          className="flex items-center justify-center gap-2 bg-[#042BFD] text-white px-6 py-3 rounded-2xl text-sm font-bold uppercase tracking-widest hover:bg-[#0325D7] transition-all shadow-lg shadow-blue-600/20 active:scale-95"
         >
-          <i className="ri-add-line"></i>
+          <Plus size={18} strokeWidth={3} />
           Create Session
         </button>
       </div>
 
-      <div className="flex flex-col gap-4  border-gray-200 mb-5 md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-wrap gap-7">
+      {/* Filters & Search Section */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        {/* Tabs */}
+        <div className="flex items-center gap-2 bg-gray-100/50 p-1.5 rounded-2xl border border-gray-100 overflow-x-auto no-scrollbar">
           {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={` relative flex items-center gap-2 text-sm font-medium transition-colors ${activeTab === tab
-                  ? "text-gray-900 border-b-2 py-3 border-blue-600"
-                  : "text-gray-500 hover:text-gray-70"
-                }`}
+              className={`px-6 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2.5 ${
+                activeTab === tab
+                  ? "bg-white text-[#021165] shadow-sm ring-1 ring-black/5"
+                  : "text-gray-400 hover:text-gray-600"
+              }`}
             >
               {tab}
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${ activeTab  === tab ? "bg-blue-100 text-blue-800" :"bg-gray-200 text-gray-400"}`}>
+              <span className={`px-2 py-0.5 rounded-md text-[10px] font-black ${
+                activeTab === tab ? "bg-blue-50 text-blue-600" : "bg-gray-200 text-gray-500"
+              }`}>
                 {tabCounts[tab]}
               </span>
             </button>
           ))}
         </div>
 
-        <div className="relative w-full max-w-xs">
-
-          <i className="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
-
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by session ID or educator"
-            className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 placeholder-gray-400 text-gray-700"
-          />
+        {/* Search */}
+        <div className="flex items-center gap-3 w-full lg:max-w-md">
+          <div className="relative flex-1 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#042BFD] transition-colors" size={18} />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by ID or educator..."
+              className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-[#042BFD]/20 transition-all shadow-sm"
+            />
+          </div>
+          <button className="p-3 bg-white border border-gray-100 rounded-2xl text-gray-400 hover:text-[#021165] hover:border-blue-100 transition-all shadow-sm">
+            <Filter size={20} />
+          </button>
         </div>
       </div>
 
-      <div className="mb-6 flex">
-        <div className="flex bg-gray-50/80 p-1 rounded-xl border border-gray-100">
+      {/* View Toggle */}
+      <div className="flex">
+        <div className="inline-flex items-center bg-gray-100/50 p-1.5 rounded-2xl border border-gray-100 shadow-inner">
           <button
             onClick={() => setViewMode('list')}
-            className={`flex items-center gap-2 px-5 py-2 text-sm font-medium rounded-lg transition-colors ${
+            className={`flex items-center gap-2.5 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
               viewMode === 'list'
-                ? 'text-gray-900 bg-white shadow-sm border border-gray-200/50'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-white text-[#021165] shadow-sm'
+                : 'text-gray-400 hover:text-gray-600'
             }`}
           >
-            <i className="ri-list-check"></i> Sessions List
+            <List size={16} />
+            List
           </button>
           <button
             onClick={() => setViewMode('calendar')}
-            className={`flex items-center gap-2 px-5 py-2 text-sm font-medium rounded-lg transition-colors ${
+            className={`flex items-center gap-2.5 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
               viewMode === 'calendar'
-                ? 'text-gray-900 bg-white shadow-sm border border-gray-200/50'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-white text-[#021165] shadow-sm'
+                : 'text-gray-400 hover:text-gray-600'
             }`}
           >
-            <i className="ri-calendar-event-line"></i> Calendar View
+            <CalendarIcon size={16} />
+            Calendar
           </button>
         </div>
       </div>
 
-      <div className="flex gap-6 relative items-start">
-        <div className="transition-all duration-300 w-full">
-          {viewMode === 'list' ? (
+      {/* Content Area */}
+      <div className="w-full">
+        {viewMode === 'list' ? (
+          <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
             <SessionTable 
               data={filteredData} 
-              showHeader={false} 
+              showHeader={true} 
               onRowClick={setSelectedSession}
               selectedSessionId={selectedSession?.id}
             />
-          ) : (
+          </div>
+        ) : (
+          <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 sm:p-8">
             <CalendarView />
-          )}
-        </div>
-        
-        {selectedSession && (
-          <>
-            <div 
-              className="fixed inset-0 bg-gray-900/20 backdrop-blur-sm z-40 transition-opacity" 
-              onClick={() => setSelectedSession(null)} 
-            />
-            <div className="fixed top-0 right-0 bottom-0 w-full max-w-[500px] bg-white z-50 shadow-2xl animate-in slide-in-from-right duration-300">
-              <SessionDetailsPanel 
-                 session={selectedSession} 
-                 onClose={() => setSelectedSession(null)} 
-              />
-            </div>
-          </>
+          </div>
         )}
       </div>
+      
+      {/* Details Panel Overlay */}
+      {selectedSession && (
+        <>
+          <div 
+            className="fixed inset-0 bg-[#021165]/40 backdrop-blur-sm z-[60] transition-opacity" 
+            onClick={() => setSelectedSession(null)} 
+          />
+          <div className="fixed top-0 right-0 bottom-0 w-full max-w-[500px] bg-white z-[70] shadow-2xl animate-in slide-in-from-right duration-500">
+            <SessionDetailsPanel 
+               session={selectedSession} 
+               onClose={() => setSelectedSession(null)} 
+            />
+          </div>
+        </>
+      )}
+
+      <div className="pb-10" />
     </div>
   );
 }

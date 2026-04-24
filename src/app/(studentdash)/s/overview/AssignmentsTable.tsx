@@ -140,7 +140,8 @@ export default function AssignmentsTable({ data = [] }: AssignmentsTableProps) {
   return (
     <>
       <div className="bg-white rounded-xl shadow-none border border-gray-100 overflow-hidden relative min-h-[400px]">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-[#EBF0FF] text-left">
               <tr>
@@ -190,8 +191,8 @@ export default function AssignmentsTable({ data = [] }: AssignmentsTableProps) {
                       <div className="p-2 bg-gray-100 rounded-lg text-gray-500">
                         <FileText size={16} />
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900">
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 truncate">
                           {assignment.title}
                         </p>
                         <p className="text-xs text-gray-400 line-clamp-1">
@@ -226,7 +227,7 @@ export default function AssignmentsTable({ data = [] }: AssignmentsTableProps) {
                     {activeMenuId === assignment._id && (
                       <div
                         ref={menuRef}
-                        className="absolute right-8 top-8 w-56 bg-white rounded-lg shadow-none border border-gray-100 z-50 text-left overflow-hidden ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in-95 duration-100 origin-top-right"
+                        className="absolute right-8 top-8 w-56 bg-white rounded-lg shadow-xl border border-gray-100 z-50 text-left overflow-hidden ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in-95 duration-100 origin-top-right"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="py-1">
@@ -270,6 +271,90 @@ export default function AssignmentsTable({ data = [] }: AssignmentsTableProps) {
           </table>
         </div>
 
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-gray-100">
+          {currentData.map((assignment) => (
+            <div key={assignment._id} className="p-4 bg-white">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="p-2 bg-gray-50 rounded-lg text-gray-400 shrink-0">
+                    <FileText size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold text-gray-900 text-sm truncate">
+                      {assignment.title}
+                    </p>
+                    <p className="text-[11px] text-gray-500 truncate">
+                      {assignment.courseId}
+                    </p>
+                  </div>
+                </div>
+                <div className="relative">
+                  <button
+                    className="text-gray-400 p-1.5 hover:bg-gray-100 rounded-full"
+                    onClick={(e) => toggleMenu(assignment._id, e)}
+                  >
+                    <MoreHorizontal size={18} />
+                  </button>
+                  {/* Dropdown Menu for Mobile */}
+                  {activeMenuId === assignment._id && (
+                    <div
+                      ref={menuRef}
+                      className="absolute right-0 top-8 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 text-left overflow-hidden ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in-95 duration-100 origin-top-right"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="py-1">
+                        {assignment.documentUrl && (
+                          <Link
+                            href={assignment.documentUrl}
+                            target="_blank"
+                            className="flex items-center gap-3 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50"
+                          >
+                            <FileText size={14} />
+                            View Document
+                          </Link>
+                        )}
+                        <button
+                          className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50"
+                          onClick={() => {
+                            setSelectedEducator(assignment.educator);
+                            setActiveMenuId(null);
+                          }}
+                        >
+                          <User size={14} />
+                          Educator Details
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 items-center justify-between mt-4">
+                <span
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${getStatusStyle(assignment.status)}`}
+                >
+                  {getStatusIcon(assignment.status)}
+                  {assignment.status}
+                </span>
+                <p className="text-[11px] text-gray-400 font-medium">
+                  Uploaded: {new Date(assignment.submittedAt).toLocaleDateString()}
+                </p>
+              </div>
+              
+              {assignment.comments && (
+                <div className="mt-3 p-2 bg-gray-50 rounded-lg border border-gray-100">
+                  <p className="text-[11px] text-gray-500 line-clamp-2">
+                    <span className="font-bold text-gray-700">Remarks: </span>
+                    {assignment.comments}
+                  </p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
         {/* Pagination Controls */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50">
           <p className="text-sm text-gray-500">
@@ -302,7 +387,6 @@ export default function AssignmentsTable({ data = [] }: AssignmentsTableProps) {
             </button>
           </div>
         </div>
-      </div>
 
       {/* Educator Details Modal */}
       {selectedEducator && (

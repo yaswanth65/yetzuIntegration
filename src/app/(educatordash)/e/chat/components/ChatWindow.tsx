@@ -7,9 +7,10 @@ interface ChatWindowProps {
   contact: Contact | null;
   messages: Message[];
   onSendMessage: (text: string) => void;
+  onBack?: () => void;
 }
 
-export default function ChatWindow({ contact, messages, onSendMessage }: ChatWindowProps) {
+export default function ChatWindow({ contact, messages, onSendMessage, onBack }: ChatWindowProps) {
   const [inputText, setInputText] = useState('');
 
   if (!contact) {
