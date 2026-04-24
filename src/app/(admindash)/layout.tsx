@@ -16,13 +16,13 @@ export default function AdminDashLayout({
       <AdminHeader onMenuClick={() => setIsSidebarOpen(true)} />
 
       <div className="flex flex-1 overflow-hidden relative">
+        <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+
         <main className="flex-1 overflow-y-auto w-full custom-scrollbar">
           <div className="max-w-[1600px] mx-auto min-h-full">
             {children}
           </div>
         </main>
-
-        <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       </div>
     </div>
   );
