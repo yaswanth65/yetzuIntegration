@@ -1,89 +1,144 @@
+"use client";
+
 import React from 'react';
-import { Building2, CheckCircle, Users, DollarSign, TrendingUp } from 'lucide-react';
+import { Building2, CheckCircle, Users, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
+import dynamic from "next/dynamic";
+
+const AreaChart = dynamic(
+  () => import("recharts").then((mod) => mod.AreaChart),
+  { ssr: false }
+);
+const Area = dynamic(
+  () => import("recharts").then((mod) => mod.Area),
+  { ssr: false }
+);
+const ResponsiveContainer = dynamic(
+  () => import("recharts").then((mod) => mod.ResponsiveContainer),
+  { ssr: false }
+);
 
 const statsData = [
   {
-    title: 'TOTAL ORGANISATIONS',
+    title: 'Total Organisations',
     value: '47',
     change: '+8.2%',
     icon: Building2,
-    iconColor: 'text-purple-600',
-    iconBg: 'bg-purple-100',
-    chartColor: 'bg-purple-500',
-    metrics: [40, 60, 50, 70, 60, 80]
+    color: '#6366F1',
+    iconBg: 'bg-indigo-50',
+    iconColor: 'text-indigo-600',
+    data: [
+      { value: 20 }, { value: 25 }, { value: 30 }, { value: 28 },
+      { value: 35 }, { value: 40 }, { value: 38 }, { value: 47 },
+    ],
   },
   {
-    title: 'ACTIVE ORGANISATIONS',
+    title: 'Active Organisations',
     value: '42',
     change: '+4.1%',
     icon: CheckCircle,
-    iconColor: 'text-green-600',
-    iconBg: 'bg-green-100',
-    chartColor: 'bg-green-500',
-    metrics: [50, 45, 60, 55, 75, 80]
+    color: '#10B981',
+    iconBg: 'bg-emerald-50',
+    iconColor: 'text-emerald-600',
+    data: [
+      { value: 30 }, { value: 32 }, { value: 35 }, { value: 33 },
+      { value: 38 }, { value: 40 }, { value: 41 }, { value: 42 },
+    ],
   },
   {
-    title: 'TOTAL STUDENTS (B2B)',
+    title: 'Total Students (B2B)',
     value: '3,847',
     change: '+12.5%',
     icon: Users,
-    iconColor: 'text-blue-600',
-    iconBg: 'bg-blue-100',
-    chartColor: 'bg-blue-500',
-    metrics: [30, 40, 50, 60, 70, 90]
+    color: '#0EA5E9',
+    iconBg: 'bg-sky-50',
+    iconColor: 'text-sky-600',
+    data: [
+      { value: 1200 }, { value: 1500 }, { value: 1800 }, { value: 2200 },
+      { value: 2800 }, { value: 3100 }, { value: 3500 }, { value: 3847 },
+    ],
   },
   {
-    title: 'REVENUE FROM ORGANISATIONS',
+    title: 'B2B Revenue',
     value: '$127,400',
     change: '+22.1%',
     icon: DollarSign,
-    iconColor: 'text-orange-500',
-    iconBg: 'bg-orange-100',
-    chartColor: 'bg-orange-500',
-    metrics: [40, 50, 60, 50, 70, 95]
+    color: '#F59E0B',
+    iconBg: 'bg-amber-50',
+    iconColor: 'text-amber-600',
+    data: [
+      { value: 40000 }, { value: 60000 }, { value: 55000 }, { value: 80000 },
+      { value: 95000 }, { value: 110000 }, { value: 115000 }, { value: 127400 },
+    ],
   }
 ];
 
 export default function StatCards() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      {statsData.map((stat, i) => (
-        <div key={i} className="bg-white rounded-2xl border  border-gray-100 p-5 flex flex-col justify-between">
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex flex-col">
-              <h3 className="text-[10px] sm:text-xs font-semibold text-gray-400 mb-2 truncate">{stat.title}</h3>
-              <h2 className="text-3xl font-bold text-[#0A0A0A] mb-2">{stat.value}</h2>
-              <div className="flex items-center gap-2 text-[10px] sm:text-xs">
-                <div className="flex items-center gap-1 text-green-600 bg-green-50 px-1.5 py-0.5 rounded font-bold">
-                  <TrendingUp size={12} strokeWidth={3} /> {stat.change}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+      {statsData.map((item, i) => {
+        const isPositive = item.change.startsWith("+");
+        const Icon = item.icon;
+
+        return (
+          <div key={i} className="bg-white rounded-[32px] shadow-sm border border-gray-100 overflow-hidden flex flex-col group hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-500">
+            <div className="p-6 pb-2">
+              <div className="flex items-center justify-between mb-4">
+                <div className={`p-3 rounded-2xl ${item.iconBg} ${item.iconColor} transition-transform group-hover:scale-110 duration-500`}>
+                  <Icon size={24} />
                 </div>
-                <span className="text-gray-400 font-medium">vs last month</span>
+                <div
+                  className={`flex items-center gap-1 text-[11px] font-bold rounded-full px-2.5 py-1 ${
+                    isPositive
+                      ? "bg-emerald-50 text-emerald-600"
+                      : "bg-red-50 text-red-600"
+                  }`}
+                >
+                  {isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                  <span>{item.change}</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                  {item.title}
+                </span>
+                <h2 className="font-bold text-3xl text-gray-900 tracking-tight">
+                  {item.value}
+                </h2>
               </div>
             </div>
-            <div className={`p-1.5 sm:p-2 rounded-lg ${stat.iconBg}`}>
-              <stat.icon size={16} className={stat.iconColor} />
+
+            <div className="h-16 mt-auto overflow-hidden">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={item.data}
+                  margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient
+                      id={`grad-org-${i}`}
+                      x1="0" y1="0"
+                      x2="0" y2="1"
+                    >
+                      <stop offset="0%" stopColor={item.color} stopOpacity={0.2} />
+                      <stop offset="100%" stopColor={item.color} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <Area
+                    type="natural"
+                    dataKey="value"
+                    stroke={item.color}
+                    strokeWidth={3}
+                    fill={`url(#grad-org-${i})`}
+                    dot={false}
+                    animationDuration={1500}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
-          
-          {/* Mini Bar Chart */}
-          <div className="flex items-end justify-between h-10 gap-1 mt-2">
-            {stat.metrics.map((val, idx) => {
-              const isLast = idx === stat.metrics.length - 1;
-              return (
-                <div key={idx} className="w-full flex flex-col justify-end items-center h-full gap-1">
-                  <div 
-                    className={`w-full rounded-[2px] ${isLast ? stat.chartColor : stat.iconBg}`} 
-                    style={{ height: `${val}%`, minHeight: '4px' }}
-                  />
-                  {idx === 0 && <span className="text-[9px] text-gray-300 font-medium leading-none">Oct</span>}
-                  {isLast && <span className="text-[9px] text-gray-300 font-medium leading-none">Mar</span>}
-                  {idx !== 0 && !isLast && <span className="text-[9px] opacity-0 leading-none">-</span>}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

@@ -113,7 +113,7 @@ const getStatusBadge = (status: string) => {
 
 export default function AssignmentsTable() {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden mt-6 mb-8">
+    <div className="bg-white  rounded-xl border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden mt-6 mb-8">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm whitespace-nowrap">
           <thead>

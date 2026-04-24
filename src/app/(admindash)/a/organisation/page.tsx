@@ -7,18 +7,21 @@ import TopOrganizationsTable from './components/TopOrganizationsTable';
 
 export default function OrganizationPage() {
   return (
-    <div className="bg-gray-100 p-4 md:p-6 min-h-[calc(100vh-64px)] w-full">
-      <div className="max-w-[1600px] mx-auto">
-        <OrganizationHeader />
-        <StatCards />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <OrganizationGrowthChart />
-          <AlertsAndIssues />
+    <div className="flex flex-col gap-8 p-6 md:p-10">
+      <OrganizationHeader />
+      
+      <StatCards />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+           <OrganizationGrowthChart />
         </div>
-        
-        <TopOrganizationsTable />
+        <AlertsAndIssues />
       </div>
+      
+      <TopOrganizationsTable />
+      
+      <div className="pb-10" />
     </div>
   );
 }

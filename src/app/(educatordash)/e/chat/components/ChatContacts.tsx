@@ -10,7 +10,7 @@ interface ChatContactsProps {
 
 export default function ChatContacts({ contacts, activeContactId, onSelectContact }: ChatContactsProps) {
   return (
-    <div className="w-[380px] border-r border-gray-100 flex flex-col shrink-0 overflow-y-auto custom-scrollbar h-full bg-white">
+    <div className="w-full md:w-[380px] border-r border-gray-100 flex flex-col shrink-0 overflow-y-auto custom-scrollbar h-full bg-white">
       {contacts.map((contact) => (
         <div
           key={contact.id}

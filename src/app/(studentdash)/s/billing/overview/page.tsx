@@ -125,21 +125,18 @@ const getMetricIconStyles = (colorScheme: string) => {
 export default function PaymentsOverviewPage() {
   return (
     <div className="w-full min-h-screen bg-[#F8F9FA] font-sans flex flex-col">
-      
-      {/* --- FULL WIDTH WHITE HEADER --- */}
-      <div className="bg-white px-6 md:px-10 py-6  border-b border-gray-200 shrink-0">
-        <div className="max-w-[1600px] mx-auto">
-          <h1 className="text-[24px] font-bold text-gray-900">
-            Payments Overview
-          </h1>
-        </div>
+      {/* --- HEADER --- */}
+      <div className="mb-8">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-medium text-[#021165]">
+          Payments Overview
+        </h1>
+        <p className="text-gray-500 text-sm mt-1">Manage your subscriptions and view transaction history</p>
       </div>
 
-      {/* --- MAIN GRAY CONTENT AREA --- */}
-      <div className="flex-1 p-6 md:p-10 max-w-[1600px] mx-auto w-full">
-
+      {/* --- MAIN CONTENT AREA --- */}
+      <div className="flex-1 w-full">
         {/* --- METRICS GRID --- */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
           {METRICS_DATA.map((metric) => {
             const Icon = metric.icon;
             const iconStyles = getMetricIconStyles(metric.colorScheme);
@@ -147,18 +144,18 @@ export default function PaymentsOverviewPage() {
             return (
               <div 
                 key={metric.id} 
-                className="bg-white rounded-[20px] border border-gray-100 shadow-[0_2px_15px_rgba(0,0,0,0.02)] p-6 flex flex-col"
+                className="bg-white rounded-[24px] border border-gray-100 shadow-sm p-6 flex flex-col transition-all hover:shadow-md"
               >
-                <div className={`w-10 h-10 rounded-[12px] flex items-center justify-center mb-5 ${iconStyles}`}>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${iconStyles}`}>
                   <Icon size={20} strokeWidth={2} />
                 </div>
-                <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
                   {metric.title}
                 </h3>
-                <p className="text-[24px] font-bold text-gray-900 mb-1.5 leading-none">
+                <p className="text-2xl font-bold text-gray-900 mb-1 leading-none">
                   {metric.value}
                 </p>
-                <p className="text-[12px] text-gray-400 truncate pr-2">
+                <p className="text-xs text-gray-400 truncate mt-1">
                   {metric.subtitle}
                 </p>
               </div>
@@ -167,117 +164,115 @@ export default function PaymentsOverviewPage() {
         </div>
 
         {/* --- PLAN BANNER --- */}
-        <div className="bg-gradient-to-b from-[#030213] via-[#1A1A4E] to-[#2D2D7E] rounded-[24px] p-6 md:p-8 lg:px-10 flex flex-col lg:flex-row justify-between lg:items-center gap-8 mb-8 shadow-lg">
+        <div className="bg-gradient-to-br from-[#021165] via-[#042BFD] to-[#2D2D7E] rounded-[32px] p-6 md:p-8 lg:p-10 flex flex-col lg:flex-row justify-between lg:items-center gap-8 mb-8 shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-400/10 rounded-full -ml-32 -mb-32 blur-3xl"></div>
           
           {/* Left Side: Plan Info */}
-          <div>
+          <div className="relative z-10">
             <div className="flex items-center gap-3 mb-4">
-              <span className="text-[11px] font-bold text-[#8A88A4] uppercase tracking-wider">
+              <span className="text-[10px] font-bold text-blue-200 uppercase tracking-widest">
                 CURRENT PLAN
               </span>
-              <span className="flex items-center gap-1.5 bg-[#059669]/10 border border-[#059669]/30 text-[#10B981] text-[11px] font-bold px-2.5 py-1 rounded-full">
+              <span className="flex items-center gap-1.5 bg-green-500/20 border border-green-500/30 text-green-300 text-[10px] font-bold px-2.5 py-1 rounded-full">
                 <CheckCircle2 size={12} strokeWidth={2.5} /> Active
               </span>
             </div>
             
-            <h2 className="text-[26px] font-medium text-white mb-1.5 leading-snug">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-2 leading-tight">
               Pro Mentorship Plan
             </h2>
-            <p className="text-[13px] text-[#8A88A4] mb-6">
-              Monthly • 5 services included
+            <p className="text-sm text-blue-100/70 mb-8 max-w-sm">
+              Premium access with 5 mentorship services included per month.
             </p>
             
-            <button className="bg-white text-gray-900 font-bold text-[13px] px-5 py-2.5 rounded-xl flex items-center gap-1.5 hover:bg-gray-100 transition-colors w-fit">
-              Manage Plan <ChevronRight size={16} strokeWidth={2.5} />
+            <button className="bg-white text-[#021165] font-bold text-sm px-6 py-3 rounded-xl flex items-center gap-2 hover:bg-gray-50 transition-all active:scale-95 shadow-lg w-full sm:w-fit justify-center">
+              Manage Subscription <ChevronRight size={18} strokeWidth={2.5} />
             </button>
           </div>
 
           {/* Right Side: Price & Renewal */}
-          <div className="flex flex-row items-center justify-between lg:justify-end gap-8 md:gap-16">
-            <div className="text-left lg:text-right">
-              <p className="text-[10px] font-bold text-[#8A88A4] uppercase tracking-wider mb-1.5">
+          <div className="relative z-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between lg:justify-end gap-6 sm:gap-12 md:gap-16 bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+            <div className="text-left sm:text-right">
+              <p className="text-[10px] font-bold text-blue-200 uppercase tracking-widest mb-2">
                 PLAN AMOUNT
               </p>
-              <h3 className="text-[32px] md:text-[36px] font-bold text-white leading-none mb-1.5 flex items-baseline justify-start lg:justify-end">
+              <h3 className="text-4xl font-bold text-white leading-none mb-1">
                 ₹4,999
               </h3>
-              <p className="text-[12px] text-[#8A88A4]">
+              <p className="text-xs text-blue-200/60">
                 per month
               </p>
             </div>
             
-            {/* Divider Line */}
-            <div className="w-[1px] h-[60px] bg-white/10 hidden md:block"></div>
+            <div className="hidden sm:block w-[1px] h-12 bg-white/20"></div>
             
             <div className="text-left">
-              <p className="text-[10px] font-bold text-[#8A88A4] uppercase tracking-wider mb-1.5">
-                RENEWAL DATE
+              <p className="text-[10px] font-bold text-blue-200 uppercase tracking-widest mb-2">
+                NEXT RENEWAL
               </p>
-              <h3 className="text-[18px] font-bold text-white mb-1.5">
+              <h3 className="text-xl font-bold text-white mb-1">
                 01 May 2024
               </h3>
-              <p className="text-[12px] text-[#8A88A4]">
-                renews automatically
+              <p className="text-xs text-blue-200/60">
+                Renews automatically
               </p>
             </div>
           </div>
-
         </div>
 
         {/* --- RECENT INVOICES --- */}
-        <div className="bg-white rounded-[24px] border border-gray-100 shadow-[0_2px_15px_rgba(0,0,0,0.02)] p-6 md:p-8">
-          
+        <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 md:p-8">
           {/* Section Header */}
-          <div className="flex justify-between items-center border-b border-gray-100 mb-4">
-            <h2 className="text-[18px] font-bold text-gray-900">
-              Recent Invoices
-            </h2>
-            <button className="text-[13px] font-semibold text-[#042BFD] hover:text-blue-800 flex items-center gap-1 transition-colors">
-              View all <ArrowRight size={16} strokeWidth={2} />
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Recent Invoices</h2>
+              <p className="text-xs text-gray-500 mt-0.5">Download and track your payment receipts</p>
+            </div>
+            <button className="text-sm font-bold text-[#042BFD] hover:bg-blue-50 px-4 py-2 rounded-xl flex items-center gap-2 transition-all">
+              View All <ArrowRight size={18} strokeWidth={2} />
             </button>
           </div>
 
           {/* Invoices List */}
-          <div className="flex flex-col">
-            {INVOICES_DATA.map((invoice, index) => (
+          <div className="flex flex-col divide-y divide-gray-50">
+            {INVOICES_DATA.map((invoice) => (
               <div 
                 key={invoice.id} 
-                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3 ${
-                  index !== INVOICES_DATA.length - 1 ? 'border-b border-gray-100' : ''
-                } hover:bg-gray-50/50 transition-colors group`}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 first:pt-0 last:pb-0 hover:bg-gray-50/50 transition-all group px-2 -mx-2 rounded-xl"
               >
-                
                 {/* Left Side: Icon & Details */}
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-[10px] bg-[#F8FAFC] border border-gray-200 flex items-center justify-center shrink-0">
-                    <FileText size={18} className="text-gray-400" strokeWidth={1.5} />
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0 group-hover:bg-white group-hover:shadow-sm transition-all">
+                    <FileText size={20} className="text-gray-400" strokeWidth={1.5} />
                   </div>
-                  <div>
-                    <h4 className="text-[14px] font-semibold text-gray-900 mb-1 line-clamp-1 group-hover:text-[#042BFD] transition-colors cursor-pointer">
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-bold text-gray-900 mb-0.5 truncate group-hover:text-[#042BFD] transition-colors cursor-pointer">
                       {invoice.title}
                     </h4>
-                    <p className="text-[13px] font-medium text-gray-500">
-                      {invoice.id} <span className="mx-1">•</span> {invoice.type} <span className="mx-1">•</span> {invoice.date}
-                    </p>
+                    <div className="flex items-center gap-2 text-xs text-gray-500 font-medium overflow-hidden">
+                      <span className="shrink-0">{invoice.id}</span>
+                      <span className="text-gray-300 shrink-0">•</span>
+                      <span className="truncate">{invoice.type}</span>
+                      <span className="text-gray-300 shrink-0">•</span>
+                      <span className="shrink-0">{invoice.date}</span>
+                    </div>
                   </div>
                 </div>
 
                 {/* Right Side: Status & Amount */}
-                <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-auto w-full pl-14 sm:pl-0">
-                  <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${getStatusStyles(invoice.status)}`}>
+                <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-auto w-full pl-16 sm:pl-0">
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusStyles(invoice.status)}`}>
                     {invoice.status}
                   </span>
-                  <span className="text-[15px] font-bold text-gray-900 min-w-[70px] text-right">
+                  <span className="text-base font-bold text-gray-900 min-w-[80px] text-right">
                     {invoice.amount}
                   </span>
                 </div>
-
               </div>
             ))}
           </div>
-
         </div>
-
       </div>
     </div>
   );

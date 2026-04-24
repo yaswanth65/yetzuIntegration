@@ -43,12 +43,12 @@ export default function EducatorAssignmentsPage() {
       <div className="max-w-[1550px] mx-auto">
         <h1 className="text-2xl font-bold text-gray-900 mb-8">Assignments</h1>
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-gray-200 pb-0 lg:pb-0">
           {/* Tabs */}
-          <div className="flex items-center gap-8 translate-y-[17px]">
+          <div className="flex items-center gap-6 md:gap-8 overflow-x-auto no-scrollbar pt-2">
             <button
               onClick={() => setActiveTab('All')}
-              className={`pb-4 text-sm font-semibold transition-colors relative flex items-center gap-2 ${activeTab === 'All'
+              className={`pb-4 text-sm font-semibold transition-colors relative flex items-center gap-2 whitespace-nowrap ${activeTab === 'All'
                   ? 'text-blue-600 border-b-2 border-blue-600 z-10'
                   : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent'
                 }`}
@@ -61,7 +61,7 @@ export default function EducatorAssignmentsPage() {
             </button>
             <button
               onClick={() => setActiveTab('Pending')}
-              className={`pb-4 text-sm font-semibold transition-colors relative flex items-center gap-2 ${activeTab === 'Pending'
+              className={`pb-4 text-sm font-semibold transition-colors relative flex items-center gap-2 whitespace-nowrap ${activeTab === 'Pending'
                   ? 'text-blue-600 border-b-2 border-blue-600 z-10'
                   : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent'
                 }`}
@@ -74,7 +74,7 @@ export default function EducatorAssignmentsPage() {
             </button>
             <button
               onClick={() => setActiveTab('Completed')}
-              className={`pb-4 text-sm font-semibold transition-colors relative flex items-center gap-2 ${activeTab === 'Completed'
+              className={`pb-4 text-sm font-semibold transition-colors relative flex items-center gap-2 whitespace-nowrap ${activeTab === 'Completed'
                   ? 'text-blue-600 border-b-2 border-blue-600 z-10'
                   : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent'
                 }`}
@@ -87,15 +87,15 @@ export default function EducatorAssignmentsPage() {
             </button>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-4 lg:mb-0">
             {/* Search */}
-            <div className="relative w-full md:w-80">
+            <div className="relative w-full sm:w-80">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search size={18} className="text-gray-400" />
               </div>
               <input
                 type="text"
-                placeholder="Search by assignment, session or student"
+                placeholder="Search assignments..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full h-[42px] pl-10 pr-4 rounded-[12px] border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
@@ -103,7 +103,7 @@ export default function EducatorAssignmentsPage() {
             </div>
 
             {/* New Assignment Button */}
-            <button className="flex items-center gap-2 bg-[#000520] hover:bg-gray-900 text-white px-5 h-[42px] rounded-[12px] text-sm font-medium transition-colors shadow-sm whitespace-nowrap">
+            <button className="flex items-center justify-center gap-2 bg-[#000520] hover:bg-gray-900 text-white px-5 h-[42px] rounded-[12px] text-sm font-medium transition-colors shadow-sm whitespace-nowrap">
               <Plus size={18} />
               New Assignment
             </button>
