@@ -2,7 +2,7 @@
 
 // import React, { useState } from "react";
 // import Link from "next/link";
-// import { usePathname, useRouter } from "next/navigation";
+// import { usePathname } from "next/compat/router";
 // import {
 //     LayoutGrid,
 //     Users,
@@ -206,7 +206,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
     LayoutGrid,
     Users,
@@ -221,7 +221,8 @@ import {
     ChevronDown,
     Headphones,
     Menu,
-    RefreshCw
+    RefreshCw,
+    LogOut
 } from "lucide-react";
 import Image from "next/image";
 import { useLogoutMutation } from "@/lib/queries/identityService/useIdentityService";
@@ -262,10 +263,20 @@ const getEducatorNav = (basePath: string): NavItem[] => [
 ];
 
 export default function DashSidebar({ role, isOpen, onClose }: DashSidebarProps) {
-    const router = useRouter();
     const pathname = usePathname();
     const { mutateAsync: logout } = useLogoutMutation();
     const { user } = useSession();
+
+    const handleLogout = async () => {
+        try {
+            if (user?.id) {
+                await logout({ userId: user.id });
+                window.location.href = "/";
+            }
+        } catch {
+            window.location.href = "/";
+        }
+    };
 
     // State to handle the Billing Sub-menu toggle
     const [isBillingOpen, setIsBillingOpen] = useState(false);
@@ -384,11 +395,11 @@ export default function DashSidebar({ role, isOpen, onClose }: DashSidebarProps)
                                 />
                             </button>
 
-                            {/* Sub-menu items */}
+{/* Sub-menu items */}
                             {isBillingOpen && (
                                 <div className="ml-[27px] pl-3 border-l border-gray-300 flex flex-col gap-1 mt-1 mb-2">
-                                    <Link 
-                                        href={`${basePath}/billing/overview`} 
+                                    <Link  
+                                        href={`${basePath}/billing/overview`}  
                                         onClick={() => window.innerWidth < 1024 && onClose()}
                                         className="flex items-center gap-3 px-3 py-2.5 bg-[#F3F4F6] lg:bg-gray-100 text-black font-medium rounded-xl transition-colors"
                                     >
@@ -396,8 +407,8 @@ export default function DashSidebar({ role, isOpen, onClose }: DashSidebarProps)
                                         <span className="text-[14px]">Overview</span>
                                     </Link>
                                     
-                                    <Link 
-                                        href={`${basePath}/billing/invoices`} 
+                                    <Link  
+                                        href={`${basePath}/billing/invoices`}  
                                         onClick={() => window.innerWidth < 1024 && onClose()}
                                         className="flex items-center gap-3 px-3 py-2.5 text-[#4B5563] hover:text-black hover:bg-gray-100 rounded-xl transition-colors"
                                     >
@@ -405,8 +416,8 @@ export default function DashSidebar({ role, isOpen, onClose }: DashSidebarProps)
                                         <span className="text-[14px]">Invoices</span>
                                     </Link>
 
-                                    <Link 
-                                        href={`${basePath}/billing/subscriptions`} 
+                                    <Link  
+                                        href={`${basePath}/billing/subscriptions`}  
                                         onClick={() => window.innerWidth < 1024 && onClose()}
                                         className="flex items-center gap-3 px-3 py-2.5 text-[#4B5563] hover:text-black hover:bg-gray-100 rounded-xl transition-colors"
                                     >
@@ -417,15 +428,23 @@ export default function DashSidebar({ role, isOpen, onClose }: DashSidebarProps)
                             )}
                         </div>
 
-                        <Link 
-                            href={`${basePath}/help`}  
+<button
+                            onClick={handleLogout}
+                            className="flex whitespace-nowrap items-center gap-4 px-4 py-3.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors w-full"
+                        >
+                            <LogOut size={22} strokeWidth={1.5} />
+                            <span className="text-[15px]">Sign Out</span>
+                        </button>
+
+                        <Link
+                            href={`${basePath}/help`}
                             onClick={() => window.innerWidth < 1024 && onClose()}
                             className="flex whitespace-nowrap items-center gap-4 px-4 py-3.5 text-[#4B5563] hover:text-black hover:bg-gray-100 rounded-xl transition-colors w-full"
                         >
                             <Headphones size={22} strokeWidth={1.5} />
                             <span className="text-[15px]">Help & Support</span>
                         </Link>
- 
+
                     </div>
                 </div>
             </aside>

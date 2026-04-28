@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { AlertCircle, AlertTriangle, Info, ChevronRight } from "lucide-react";
+import { AdminAPI, asArray } from "@/lib/api";
 
 type AlertType = "error" | "warning" | "info"
 
@@ -11,13 +12,6 @@ interface AlertItems {
     type: AlertType;
     time: string;
 }
-
-const AlertData: AlertItems[] = [
-    { id: "1", alertName: "Payment failure for student ID #4821", type: "error", time: "5m ago" },
-    { id: "2", alertName: "Session conflict: WEB-204 & COH-112 overlap", type: "warning", time: "12m ago" },
-    { id: "3", alertName: "3 assignments overdue in Cohort Batch 11", type: "warning", time: "45m ago" },
-    { id: "4", alertName: "Educator Dr. Patel unavailable on Mar 17", type: "info", time: "2h ago" },
-];
 
 const getAlertStyles = (type: AlertType) => {
   switch (type) {
@@ -42,10 +36,38 @@ const getAlertStyles = (type: AlertType) => {
       border: 'border-blue-100',
       shadow: 'shadow-blue-900/5'
     };
+    default: return {
+      icon: Info,
+      bg: 'bg-blue-50',
+      text: 'text-blue-600',
+      border: 'border-blue-100',
+      shadow: 'shadow-blue-900/5'
+    };
   }
 };
 
 export default function AlertIssues() {
+    const [alerts, setAlerts] = useState<AlertItems[]>([]);
+
+    useEffect(() => {
+        const fetchAlerts = async () => {
+            try {
+                const response = await AdminAPI.getOverview();
+                const data = response?.data || response;
+                const rawAlerts = asArray(data?.alerts || data?.issues || data?.alertIssues);
+                setAlerts(rawAlerts.map((item: any, index: number) => ({
+                    id: item.id || String(index),
+                    alertName: item.title || item.alertName || item.message || item.description || "Alert",
+                    type: String(item.type || item.severity || "info").toLowerCase() as AlertType,
+                    time: item.timeAgo || item.time || item.createdAt || "",
+                })));
+            } catch {
+                setAlerts([]);
+            }
+        };
+        fetchAlerts();
+    }, []);
+
     return (
         <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 sm:p-8 w-full group hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-500">
             <div className="flex items-center justify-between mb-8">
@@ -59,12 +81,14 @@ export default function AlertIssues() {
                     </div>
                 </div>
                 <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-xs font-black text-[#021165] border border-gray-100">
-                    4
+                    {alerts.length}
                 </div>
             </div>
 
             <div className="space-y-4">
-                {AlertData.map((data) => {
+                {alerts.length === 0 ? (
+                    <p className="text-sm text-gray-500">No alerts or issues.</p>
+                ) : alerts.map((data) => {
                     const styles = getAlertStyles(data.type);
                     const Icon = styles.icon;
 

@@ -414,21 +414,18 @@ import {
   Users, 
   Download, 
   MoreVertical,
-  Monitor,
-  X,
   ArrowLeft
 } from "lucide-react";
 import { CourseAPI } from "@/lib/api"; 
 import RescheduleModal from "@/app/(studentdash)/components/Reschedule"; // Adjust path as needed
 
-// Fallback Mock Data for the specific session (Used for layout and missing API fields)
 const FALLBACK_SESSION_DATA = {
   type: "Webinar",
   title: "Loading...",
   mentor: {
-    name: "Dr. Sophia Tyler",
-    role: "Associate Professor, Cambridge Institute",
-    avatar: "https://ui-avatars.com/api/?name=Sophia+Tyler&background=random",
+    name: "Educator",
+    role: "",
+    avatar: "https://ui-avatars.com/api/?name=Educator&background=random",
   },
   stats: {
     date: "--",
@@ -436,37 +433,9 @@ const FALLBACK_SESSION_DATA = {
     duration: "--",
     attendees: "--", 
   },
-  assignments: [
-    {
-      id: 1,
-      title: "Obstetric Case- Third Trimester Bleeding",
-      due: "26 FEB, 2026",
-    },
-    {
-      id: 2,
-      title: "Managing Obstetric: Addressing Trimester",
-      due: "31 MAR, 2026",
-    }
-  ],
-  resources: [
-    {
-      id: 1,
-      title: "Pre-Session Reading Material.pdf",
-    },
-    {
-      id: 2,
-      title: "Additional Reference Article.pdf",
-    }
-  ]
+  assignments: [] as Array<{ id: string | number; title: string; due: string }>,
+  resources: [] as Array<{ id: string | number; title: string }>
 };
-
-const MOCK_TIME_SLOTS = [
-  { id: 1, date: "Feb 13, 2026", time: "10:00 AM - 11:00 AM" },
-  { id: 2, date: "Feb 13, 2026", time: "02:00 PM - 03:00 PM" },
-  { id: 3, date: "Feb 14, 2026", time: "11:00 AM - 12:00 PM" },
-  { id: 4, date: "Feb 13, 2026", time: "03:30 PM - 04:30 PM" },
-  { id: 5, date: "Feb 14, 2026", time: "10:30 AM - 11:30 PM" },
-];
 
 export default function SessionSlugPage() {
   const params = useParams();
@@ -476,7 +445,6 @@ export default function SessionSlugPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false); 
-  const [selectedSlots, setSelectedSlots] = useState<number[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // --- FETCH DATA FROM API ---
@@ -517,8 +485,8 @@ export default function SessionSlugPage() {
             },
           });
         }
-      } catch (error) {
-        console.error("Failed to fetch course details:", error);
+      } catch {
+        setSessionData(FALLBACK_SESSION_DATA);
       } finally {
         setIsLoading(false);
       }
@@ -537,12 +505,6 @@ export default function SessionSlugPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const toggleSlot = (id: number) => {
-    setSelectedSlots(prev => 
-      prev.includes(id) ? prev.filter(slotId => slotId !== id) : [...prev, id]
-    );
-  };
 
   if (isLoading) {
     return (

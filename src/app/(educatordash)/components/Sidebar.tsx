@@ -3,8 +3,10 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { X, LayoutDashboard, Calendar, FileText, MessageSquare, LogOut } from "lucide-react";
+import { useLogoutMutation } from "@/lib/queries/identityService/useIdentityService";
+import useSession from "@/hooks/useSession";
 
 const menuItems = [
   { name: "Overview", path: "/e/dashboard", icon: LayoutDashboard },
@@ -20,6 +22,20 @@ interface SidebarProps {
 
 export default function EducatorSidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user } = useSession();
+  const { mutateAsync: logout } = useLogoutMutation();
+
+  const handleLogout = async () => {
+    try {
+      if (user?.id) {
+        await logout({ userId: user.id });
+        router.push("/");
+        window.location.reload();
+      }
+    } catch {
+    }
+  };
 
   return (
     <>
@@ -72,7 +88,10 @@ export default function EducatorSidebar({ isOpen, onClose }: SidebarProps) {
 
           {/* Sidebar Footer */}
           <div className="p-4 border-t border-gray-50">
-            <button className="w-full flex items-center gap-3.5 px-4 py-3 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all font-medium text-[15px]">
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3.5 px-4 py-3 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all font-medium text-[15px]"
+            >
               <LogOut size={20} />
               <span>Sign Out</span>
             </button>

@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import SessionsList from './components/SessionsList';
 import CalendarView from './components/CalendarView';
 import SessionDetailsDrawer from './components/SessionDetailsDrawer';
-import { sessionData } from './dummyData';
 import { Session } from './types';
+import { EducatorAPI, asArray } from '@/lib/api';
 
 export default function EducatorSessionsPage() {
     const [activeTab, setActiveTab] = useState<'All' | 'Upcoming' | 'Completed' | 'Missed'>('All');
@@ -14,6 +14,7 @@ export default function EducatorSessionsPage() {
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+    const [sessions, setSessions] = useState<Session[]>([]);
 
     const handleViewDetails = (session: Session) => {
         setSelectedSession(session);
@@ -21,8 +22,40 @@ export default function EducatorSessionsPage() {
     };
     const [searchQuery, setSearchQuery] = useState('');
 
+    useEffect(() => {
+        const fetchSessions = async () => {
+            try {
+                const response = await EducatorAPI.getMySessions();
+                const apiSessions = asArray(response).map((item: any, index: number) => {
+                    const rawDate = item.date || item.scheduledDate || item.startDateTime || item.createdAt;
+                    const dateTime = rawDate ? new Date(rawDate) : new Date();
+                    return {
+                        id: item.id || item._id || item.sessionId || String(index),
+                        title: item.title || item.sessionTitle || item.courseTitle || "Session",
+                        type: item.type || item.sessionType || "Webinar",
+                        attendees: item.attendees || item.students || item.enrolledCount || 0,
+                        date: item.date || dateTime.toLocaleDateString(),
+                        dateTime,
+                        startTime: item.startTime || item.time || dateTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                        endTime: item.endTime || "",
+                        status: item.status || "Scheduled",
+                        educator: item.educator || item.educatorName || "Educator",
+                    };
+                });
+                if (apiSessions.length > 0) {
+                  setSessions(apiSessions as Session[]);
+                } else {
+                  setSessions([]);
+                }
+            } catch {
+                setSessions([]);
+            }
+        };
+        fetchSessions();
+    }, []);
+
     const filteredSessions = useMemo(() => {
-        return sessionData.filter(session => {
+        return sessions.filter(session => {
             // 1. Filter by Tab
             if (activeTab === 'Upcoming' && session.status !== 'Scheduled' && session.status !== 'Live') return false;
             if (activeTab === 'Completed' && session.status !== 'Completed') return false;
@@ -37,13 +70,13 @@ export default function EducatorSessionsPage() {
             }
             return true;
         });
-    }, [activeTab, searchQuery]);
+    }, [activeTab, searchQuery, sessions]);
 
     const tabs = [
-        { name: 'All', count: sessionData.length },
-        { name: 'Upcoming', count: sessionData.filter(s => s.status === 'Scheduled' || s.status === 'Live').length },
-        { name: 'Completed', count: sessionData.filter(s => s.status === 'Completed').length },
-        { name: 'Missed', count: sessionData.filter(s => s.status === 'Missed').length },
+        { name: 'All', count: sessions.length },
+        { name: 'Upcoming', count: sessions.filter(s => s.status === 'Scheduled' || s.status === 'Live').length },
+        { name: 'Completed', count: sessions.filter(s => s.status === 'Completed').length },
+        { name: 'Missed', count: sessions.filter(s => s.status === 'Missed').length },
     ];
 
     return (

@@ -4,9 +4,10 @@ import { X, Check, ChevronDown, Mail, Key, Info } from "lucide-react";
 interface AddUserModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSubmit?: (user: { name: string; email: string; role: string; password?: string }) => Promise<void> | void;
 }
 
-export function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
+export function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModalProps) {
   const [addUserStep, setAddUserStep] = useState(1);
   const [newUser, setNewUser] = useState({
     name: "",
@@ -415,10 +416,15 @@ export function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
               </button>
             ) : (
               <button
-                onClick={() => {
+                onClick={async () => {
+                  await onSubmit?.({
+                    name: newUser.name,
+                    email: newUser.email,
+                    role: newUser.role.toLowerCase(),
+                    password: newUser.inviteMethod === "temp" ? "SecurePass123" : undefined,
+                  });
                   setAddUserStep(1);
                   onClose();
-                  // In a real app, form submission happens here
                 }}
                 className="px-6 py-2 text-sm font-medium text-white bg-[#0f172a] rounded-md hover:bg-slate-800 transition-colors shadow-sm"
               >

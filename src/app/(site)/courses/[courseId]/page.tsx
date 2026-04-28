@@ -31,7 +31,7 @@ import CourseTopicsAccordion, {
 import CourseCard, {
   CourseCardSkeleton,
 } from "@/app/(site)/courses/components/CourseCard";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import FAQSection from "@/components/shared/FAQSection";
 import MentorCard from "@/components/MentorCard";
@@ -40,6 +40,7 @@ import Button from "@/components/ui/Button";
 import MainHeading from "@/components/Typography/MainHeading";
 import AvatarStack from "@/components/ui/AvatarStack";
 import SubHeading from "@/components/Typography/SubHeading";
+import { PaymentAPI } from "@/lib/api";
 
 export default function CourseDetailPage() {
   const params = useParams();
@@ -47,6 +48,7 @@ export default function CourseDetailPage() {
 
   const { data: course, isLoading, isError } = useGetCourseById(courseId);
   const { data: allCourses, isLoading: isCoursesLoading } = useGetCourses();
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
 
   const randomCourses = useMemo(() => {
     if (!allCourses || !courseId) return [];
@@ -54,6 +56,29 @@ export default function CourseDetailPage() {
     const shuffled = [...otherCourses].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, 3);
   }, [allCourses, courseId, Math.random()]);
+
+  const handleBuyNow = async () => {
+    if (!course || isCreatingOrder) return;
+    setIsCreatingOrder(true);
+    try {
+      const response = await PaymentAPI.createOrder({
+        amount: course.cost,
+        courseId,
+      });
+      const order = response?.data || response?.order || response;
+      if (order?.checkoutUrl) {
+        window.location.href = order.checkoutUrl;
+      } else if (order?.short_url) {
+        window.location.href = order.short_url;
+      } else {
+        alert("Order created successfully. Please continue payment from your dashboard.");
+      }
+    } catch {
+      alert("Unable to create the payment order. Please try again.");
+    } finally {
+      setIsCreatingOrder(false);
+    }
+  };
 
   if (isLoading) {
     return <CoursePageSkeleton />;
@@ -301,8 +326,8 @@ export default function CourseDetailPage() {
                     <span>Duration: {course.duration}</span>
                   </div>
                 </div>
-                <Button className="w-full" disabled={!course.isActive}>
-                  Buy Now
+                <Button className="w-full" disabled={!course.isActive || isCreatingOrder} onClick={handleBuyNow}>
+                  {isCreatingOrder ? "Creating Order..." : "Buy Now"}
                 </Button>
               </div>
             </div>

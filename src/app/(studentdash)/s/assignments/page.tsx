@@ -3,76 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Search, Link as LinkIcon, Loader2 } from "lucide-react";
 import Link from "next/link";
-
-// Mock data to match the exact screenshots provided
-const MOCK_ASSIGNMENTS = [
-  {
-    id: 1,
-    title: "Advanced Insights into Cardiac Arrhythmias",
-    sessionName: "Webinar: Breakthroughs in Cognitive Neurosciencebinar:",
-    mentorImage: "https://ui-avatars.com/api/?name=Dr+Sophia&background=random",
-    mentorName: "Dr. Sophia Tyler",
-    status: "OVERDUE",
-    date: "26 FEB, 2026",
-    type: "pending",
-    colorScheme: "red",
-  },
-  {
-    id: 2,
-    title: "Breaking Down the Latest Trends in Machine Learning",
-    sessionName: "Cohort: The Rise of Edge Computing",
-    mentorImage: "https://ui-avatars.com/api/?name=John+Doe&background=random",
-    mentorName: "John Doe",
-    status: "DUE",
-    date: "1 MAR, 2026",
-    type: "pending",
-    colorScheme: "orange",
-  },
-  {
-    id: 3,
-    title: "Understanding Blockchain's Impact on Finance",
-    sessionName: "1:1 Mentorship: The Rise of Edge Computing",
-    mentorImage: "https://ui-avatars.com/api/?name=Jane+Smith&background=random",
-    mentorName: "Jane Smith",
-    status: "DUE",
-    date: "13 APR, 2026",
-    type: "pending",
-    colorScheme: "gray",
-  },
-  {
-    id: 4,
-    title: "Sustainable Energy Solutions for Tomorrow",
-    sessionName: "1:1 Mentorship: The Rise of Edge Computing",
-    mentorImage: "https://ui-avatars.com/api/?name=Dr+Sophia&background=random",
-    mentorName: "Dr. Sophia Tyler",
-    status: "DUE",
-    date: "10 JULY, 2026",
-    type: "pending",
-    colorScheme: "gray",
-  },
-  {
-    id: 5,
-    title: "Advanced Insights into Cardiac Arrhythmias",
-    sessionName: "Webinar: Breakthroughs in Cognitive Neurosciencebinar:",
-    mentorImage: "https://ui-avatars.com/api/?name=Dr+Sophia&background=random",
-    mentorName: "Dr. Sophia Tyler",
-    status: "SUBMITTED ON",
-    date: "09 FEB, 2026",
-    type: "completed",
-    colorScheme: "green",
-  },
-  {
-    id: 6,
-    title: "Understanding Blockchain's Impact on Finance",
-    sessionName: "Webinar: Breakthroughs in Cognitive Neurosciencebinar:",
-    mentorImage: "https://ui-avatars.com/api/?name=Jane+Smith&background=random",
-    mentorName: "Jane Smith",
-    status: "SUBMITTED ON",
-    date: "02 FEB, 2026",
-    type: "completed",
-    colorScheme: "green",
-  },
-];
+import { StudentAPI, asArray } from "@/lib/api";
 
 const getColorStyles = (colorScheme: string) => {
   switch (colorScheme) {
@@ -121,11 +52,10 @@ export default function AssignmentPage() {
     const fetchAssignments = async () => {
       try {
         setIsLoading(true);
-        // const response = await StudentAPI.getAssignments();
-        const response: any = { data: [] }; // Dummy response
+        const response: any = await StudentAPI.getAssignments();
 
         // Check if response has valid data array (adjust 'response.data' based on actual API payload)
-        const apiData = response?.data || response?.assignments || response;
+        const apiData = asArray(response?.data || response?.assignments || response);
 
         if (Array.isArray(apiData) && apiData.length > 0) {
           // Map backend data to match UI structure
@@ -135,20 +65,17 @@ export default function AssignmentPage() {
             sessionName: item.courseName || item.sessionName || "General Session",
             mentorImage: item.mentorImage || `https://ui-avatars.com/api/?name=${item.mentorName || 'Mentor'}&background=random`,
             mentorName: item.mentorName || item.educatorName || "Educator",
-            status: item.status === "completed" ? "SUBMITTED ON" : "DUE",
+            status: String(item.status).toLowerCase() === "completed" || String(item.status).toLowerCase() === "submitted" ? "SUBMITTED ON" : "DUE",
             date: item.dueDate || item.createdAt || "TBD", // Format this with date-fns/moment if needed
-            type: item.status === "completed" ? "completed" : "pending",
-            colorScheme: item.status === "completed" ? "green" : "orange", // Modify logic based on overdue/pending
+            type: String(item.status).toLowerCase() === "completed" || String(item.status).toLowerCase() === "submitted" ? "completed" : "pending",
+            colorScheme: String(item.status).toLowerCase() === "completed" || String(item.status).toLowerCase() === "submitted" ? "green" : "orange", // Modify logic based on overdue/pending
           }));
           setAssignments(formattedData);
         } else {
-          // Fallback to mock if array is empty
-          console.log("API returned empty array, falling back to mock data");
-          setAssignments(MOCK_ASSIGNMENTS);
+          setAssignments([]);
         }
-      } catch (error) {
-        console.error("Failed to fetch assignments, falling back to mock data", error);
-        setAssignments(MOCK_ASSIGNMENTS);
+      } catch {
+        setAssignments([]);
       } finally {
         setIsLoading(false);
       }

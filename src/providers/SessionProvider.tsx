@@ -75,11 +75,9 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
                 setIsUserLoggedIn(false);
             } else {
                 toast.error(`Logout failed: ${data.message || data?.success}`);
-                console.error("Logout failed:", data.message);
             }
         } catch (error: any) {
             toast.error(`Logout error: ${error?.message || "Something went wrong"}`);
-            console.error("Logout error:", error);
         }
     };
 

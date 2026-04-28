@@ -5,37 +5,9 @@ interface ContactTableProps {
   onViewClick: (contactData: any) => void;
 }
 
-const mockData = [
-  {
-    id: 1,
-    submittedDate: '9/4/2026, 9:13:39 pm',
-    user: {
-      name: 'Yaswanth Kancharla',
-      email: 'yaswanth.kancharla65@gmail.com',
-      phone: '9059540117',
-      institution: 'VIT'
-    },
-    inquiry: 'Technical Support',
-    message: 'hello i need fixing',
-    status: 'Pending'
-  },
-  {
-    id: 2,
-    submittedDate: '9/2/2026, 5:21:00 pm',
-    user: {
-      name: 'Asha R',
-      email: 'asha.research@email.com',
-      phone: '9988776655',
-      institution: 'IIT Madras'
-    },
-    inquiry: 'General Inquiry',
-    message: 'Need pricing details for journal form...',
-    status: 'Resolved'
-  }
-];
-
 export default function ContactTable({ onViewClick }: ContactTableProps) {
   const [activeTab, setActiveTab] = useState('Contact');
+  const contactData: any[] = [];
 
   return (
     <div className="bg-white rounded-[20px] border border-gray-200 mt-8 w-full shadow-sm overflow-hidden p-6 pb-12">
@@ -100,7 +72,13 @@ export default function ContactTable({ onViewClick }: ContactTableProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {mockData.map((item) => (
+            {contactData.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="py-10 px-6 text-center text-sm text-gray-500">
+                  No contact submissions found
+                </td>
+              </tr>
+            ) : contactData.map((item) => (
               <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group">
                 <td className="py-5 px-6 text-sm text-slate-600 font-medium">
                   {item.submittedDate}

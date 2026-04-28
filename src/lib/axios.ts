@@ -6,6 +6,31 @@ import { getApiBaseUrl } from "@/lib/getApiBaseUrl";
 
 const BASE_URL = getApiBaseUrl();
 
+const decodeJwtPayload = (token?: string): Record<string, any> | null => {
+  if (!token || typeof window === "undefined") return null;
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(window.atob(normalized));
+  } catch {
+    return null;
+  }
+};
+
+export const getJwtUserId = (token?: string): string => {
+  const payload = decodeJwtPayload(token || Cookies.get("jwtToken"));
+  return payload?.userId || payload?.id || payload?.sub || "";
+};
+
+const getAccessTokenFromResponse = (data: any): string =>
+  data?.userData?.jwtToken ||
+  data?.data?.accessToken ||
+  data?.data?.access_token ||
+  data?.accessToken ||
+  data?.access_token ||
+  "";
+
 export const api = axios.create({
   baseURL: BASE_URL,
   headers: {
@@ -20,30 +45,32 @@ export const authApi = axios.create({
   },
 });
 
- export const fetchAndSetUserProfile = async () => {
+export const fetchAndSetUserProfile = async () => {
   try {
     const { data } = await authApi.get('/api/identityapi/v1/auth/me');
-    if (data?.user?.id) {
-      Cookies.set("userId", data.user.id, { secure: true, sameSite: "strict" });
+    const userId = data?.user?.id || data?.data?.user?.id || getJwtUserId();
+    if (userId) {
+      Cookies.set("userId", userId, { secure: true, sameSite: "strict" });
     }
     return data;
   } catch (error) {
-    console.error("Failed to fetch user profile", error);
     throw error;
   }
 };
 
 authApi.interceptors.request.use(async (config) => {
   const jwtToken = Cookies.get("jwtToken");
-  const userId = Cookies.get("userId");
-
+  const tokenUserId = getJwtUserId(jwtToken);
+  const userId = tokenUserId || Cookies.get("userId");
+  
   if (jwtToken && config.headers) {
     config.headers.Authorization = `Bearer ${jwtToken}`;
   }
   
-  // if (userId && config.headers) {
-  //   config.headers['x-user-id'] = userId;
-  // }
+  if (userId && config.headers) {
+    config.headers["x-user-id"] = userId;
+    config.headers.userid = userId;
+  }
 
   return config;
 });
@@ -65,20 +92,22 @@ authApi.interceptors.response.use(
           refreshToken,
         });
 
-        const newAccessToken = data?.data?.access_token;
+        const newAccessToken = getAccessTokenFromResponse(data);
         if (!newAccessToken) throw new Error("No new access token received");
 
         Cookies.set("jwtToken", newAccessToken, {
           secure: true,
           sameSite: "strict",
         });
+        const refreshedUserId = getJwtUserId(newAccessToken);
+        if (refreshedUserId) {
+          Cookies.set("userId", refreshedUserId, { secure: true, sameSite: "strict" });
+        }
         Cookies.set("isUserLoggedIn", "true", { expires: 1 });
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return authApi(originalRequest);
-      } catch (err) {
-        console.error("Token refresh failed → redirecting to login", err);
-
+      } catch {
         Cookies.remove("jwtToken");
         Cookies.remove("refreshToken");
         Cookies.remove("isUserLoggedIn");

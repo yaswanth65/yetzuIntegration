@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Eye, Clock, MessageSquare, AlertCircle, CheckCircle2, XCircle, MoreVertical } from "lucide-react";
+import { AdminAPI, asArray } from "@/lib/api";
 
 type Priority = "High" | "Medium" | "Low";
 type Status = "In Review" | "Submitted" | "Completed" | "Rejected";
@@ -13,44 +14,6 @@ interface SupportItem {
   raisedOn: string;
   status: Status;
 }
-
-const supportItems: SupportItem[] = [
-  {
-    id: "TK-1024",
-    description: "Unable to open the cards section of session",
-    priority: "High",
-    raisedOn: "Mar 16, 2026",
-    status: "In Review",
-  },
-  {
-    id: "TK-1232",
-    description: "Assignment submission failing with error message",
-    priority: "Medium",
-    raisedOn: "Mar 16, 2026",
-    status: "Submitted",
-  },
-  {
-    id: "TK-1344",
-    description: "Video playback buffering excessively in Course",
-    priority: "Low",
-    raisedOn: "Mar 15, 2026",
-    status: "Completed",
-  },
-  {
-    id: "TK-1234",
-    description: "Grade sync discrepancy between LMS and gradebook",
-    priority: "High",
-    raisedOn: "Mar 15, 2026",
-    status: "Rejected",
-  },
-  {
-    id: "TK-4522",
-    description: "Student unable to join scheduled live session",
-    priority: "Low",
-    raisedOn: "Mar 14, 2026",
-    status: "Completed",
-  },
-];
 
 const getPriorityStyles = (priority: Priority) => {
   switch (priority) {
@@ -70,6 +33,32 @@ const getStatusStyles = (status: Status) => {
 };
 
 export default function SupportTickets() {
+  const [supportItems, setSupportItems] = useState<SupportItem[]>([]);
+
+  useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        const response = await AdminAPI.getTickets({ page: 1, limit: 5 });
+        setSupportItems(asArray(response).map((item: any, index: number) => ({
+          id: item.ticketId || item.id || `TK-${index + 1}`,
+          description: item.subject || item.description || "Support ticket",
+          priority: String(item.priority || "Low").toLowerCase() === "high" ? "High" : String(item.priority || "").toLowerCase() === "medium" ? "Medium" : "Low",
+          raisedOn: item.raisedOn || item.createdAt || item.created || "-",
+          status: String(item.status || "").toLowerCase() === "completed" || String(item.status || "").toLowerCase() === "closed"
+            ? "Completed"
+            : String(item.status || "").toLowerCase() === "rejected"
+              ? "Rejected"
+              : String(item.status || "").toLowerCase() === "open"
+                ? "Submitted"
+                : "In Review",
+        })));
+      } catch {
+        setSupportItems([]);
+      }
+    };
+    fetchTickets();
+  }, []);
+
   return (
     <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden group hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-500">
       <div className="flex items-center justify-between p-6 sm:p-8">
@@ -95,7 +84,11 @@ export default function SupportTickets() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {supportItems.map((item) => {
+            {supportItems.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-8 py-8 text-center text-sm text-gray-500">No support tickets.</td>
+              </tr>
+            ) : supportItems.map((item) => {
               const status = getStatusStyles(item.status);
               const StatusIcon = status.icon;
               return (
@@ -135,7 +128,9 @@ export default function SupportTickets() {
 
       {/* Mobile Card View */}
       <div className="md:hidden divide-y divide-gray-50">
-        {supportItems.map((item) => {
+        {supportItems.length === 0 ? (
+          <div className="p-6 text-center text-sm text-gray-500">No support tickets.</div>
+        ) : supportItems.map((item) => {
           const status = getStatusStyles(item.status);
           const StatusIcon = status.icon;
           return (

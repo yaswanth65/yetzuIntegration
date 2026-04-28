@@ -470,6 +470,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Calendar, Clock, X, Monitor } from "lucide-react";
+import { StudentAPI } from "@/lib/api";
 
 interface RescheduleModalProps {
   isOpen: boolean;
@@ -481,7 +482,7 @@ interface RescheduleModalProps {
   mentorName?: string;
 }
 
-const MOCK_TIME_SLOTS = [
+const SUGGESTED_TIME_SLOTS = [
   { id: 1, date: "Feb 13, 2026", time: "10:00 AM - 11:00 AM" },
   { id: 2, date: "Feb 13, 2026", time: "02:00 PM - 03:00 PM" },
   { id: 3, date: "Feb 14, 2026", time: "11:00 AM - 12:00 PM" },
@@ -574,14 +575,25 @@ export default function RescheduleModal({
     }
     setIsSubmitting(true);
     try {
-      // Your API call here
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // mock delay
+      const targetCourseId = courseId || "a21abe85-019f-426e-ba37-a942c2d39849";
+      const selectedSlot = SUGGESTED_TIME_SLOTS.find((slot) => slot.id === selectedSlots[0]);
+      const proposedDate = selectedSlot
+        ? new Date(`${selectedSlot.date} ${selectedSlot.time.split(" - ")[0]}`).toISOString()
+        : new Date().toISOString();
+      const combinedReason = additionalMessage.trim()
+        ? `${reason}\n\nAdditional Message: ${additionalMessage}`
+        : reason;
+
+      await StudentAPI.rescheduleCourse({
+        courseId: targetCourseId,
+        reason: combinedReason,
+        proposedDate,
+      });
       setReason("");
       setAdditionalMessage("");
       setSelectedSlots([]);
       onClose();
-    } catch (error) {
-      console.error("Failed to submit reschedule request:", error);
+    } catch {
       alert("An error occurred while submitting your request. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -679,7 +691,7 @@ export default function RescheduleModal({
               Suggest Alternative Times <span className="text-red-500">*</span>
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 mb-2">
-              {MOCK_TIME_SLOTS.map((slot) => {
+              {SUGGESTED_TIME_SLOTS.map((slot) => {
                 const isSelected = selectedSlots.includes(slot.id);
                 return (
                   <div

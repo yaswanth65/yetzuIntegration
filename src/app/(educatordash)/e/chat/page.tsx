@@ -1,25 +1,99 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ChatContacts from './components/ChatContacts';
 import ChatWindow from './components/ChatWindow';
-import { MOCK_STUDENTS, MOCK_MESSAGES } from './mockData';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Search, Loader2, X } from 'lucide-react';
+import { EducatorChatAPI, asArray } from '@/lib/api';
+import { Contact, Message } from './types';
 
 export default function EducatorChatPage() {
-  const [activeContactId, setActiveContactId] = useState<string | null>(MOCK_STUDENTS[0].id);
-  const [messages, setMessages] = useState<Record<string, any[]>>(MOCK_MESSAGES);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
+  const [activeContactId, setActiveContactId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [showContacts, setShowContacts] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sending, setSending] = useState(false);
 
-  const activeContact = MOCK_STUDENTS.find(c => c.id === activeContactId) || null;
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        setLoading(true);
+        const response = await EducatorChatAPI.getStudents();
+        const apiStudents = asArray(response).map((item: any, index: number) => {
+          const id = item.id || item._id || item.userId || item.studentId || String(index);
+          const name = item.name || item.Name || item.studentName || "Student";
+          return {
+            id,
+            name,
+            studentId: item.studentId || item.userId || id,
+            avatar: item.avatar || item.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=042BFD&color=fff`,
+            lastMessage: item.lastMessage || item.message || "Start a conversation",
+            time: item.time || item.updatedAt || "",
+            unread: Boolean(item.unread || item.isUnread),
+            sessionName: item.sessionName || item.courseTitle || "",
+          };
+        });
+        
+        if (apiStudents.length > 0) {
+          setContacts(apiStudents);
+          setFilteredContacts(apiStudents);
+          setActiveContactId(apiStudents[0].id);
+        }
+      } catch {
+        setContacts([]);
+        setFilteredContacts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStudents();
+  }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredContacts(contacts);
+    } else {
+      const query = searchQuery.toLowerCase();
+      setFilteredContacts(contacts.filter(c => 
+        c.name.toLowerCase().includes(query) ||
+        c.lastMessage.toLowerCase().includes(query)
+      ));
+    }
+  }, [searchQuery, contacts]);
+
+  useEffect(() => {
+    if (!activeContactId) return;
+    const fetchMessages = async () => {
+      try {
+        const response = await EducatorChatAPI.getMessages(activeContactId);
+        const apiMessages: Message[] = asArray(response).map((item: any, index: number) => ({
+          id: item.id || item._id || `msg-${index}`,
+          sender: item.sender === "me" || item.from === "me" || item.isMine ? "me" as const : "them" as const,
+          content: item.content || item.message || item.text || "",
+          time: item.time || item.createdAt || "",
+          showAvatar: item.showAvatar ?? true,
+        }));
+        setMessages((prev) => ({ ...prev, [activeContactId]: apiMessages }));
+      } catch {
+        setMessages((prev) => ({ ...prev, [activeContactId]: [] }));
+      }
+    };
+    fetchMessages();
+  }, [activeContactId]);
+
+  const activeContact = contacts.find(c => c.id === activeContactId) || null;
   const activeMessages = activeContactId ? messages[activeContactId] || [] : [];
 
-  const handleSendMessage = (text: string) => {
-    if (!activeContactId) return;
+  const handleSendMessage = async (text: string) => {
+    if (!activeContactId || !text.trim() || sending) return;
     
-    const newMessage = {
+    setSending(true);
+    const newMessage: Message = {
       id: `m${Date.now()}`,
-      sender: "me",
+      sender: "me" as const,
       content: text,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
@@ -28,6 +102,17 @@ export default function EducatorChatPage() {
       ...messages,
       [activeContactId]: [...(messages[activeContactId] || []), newMessage]
     });
+    
+    try {
+      await EducatorChatAPI.sendMessage(activeContactId, text);
+    } catch {
+      setMessages((prev) => ({
+        ...prev,
+        [activeContactId]: (prev[activeContactId] || []).filter((message) => message.id !== newMessage.id),
+      }));
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleSelectContact = (id: string) => {
@@ -37,8 +122,6 @@ export default function EducatorChatPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-100px)] md:h-[calc(90vh)] bg-white font-sans w-full overflow-hidden md:rounded-tl-[30px] ">
-      
-      {/* Top Header */}
       <div className="bg-white px-4 md:px-8 py-4 md:py-5 border-b border-gray-100 flex items-center gap-3">
         {!showContacts && (
           <button 
@@ -58,28 +141,47 @@ export default function EducatorChatPage() {
         </div>
       </div>
       
-      {/* Main Chat Container */}
       <div className="flex flex-1 overflow-hidden relative">
-        
-        {/* Left Sidebar (Contact List) */}
         <div className={`${showContacts ? 'flex' : 'hidden'} md:flex w-full md:w-[380px] shrink-0 border-r border-gray-100`}>
-          <ChatContacts 
-            contacts={MOCK_STUDENTS} 
-            activeContactId={activeContactId} 
-            onSelectContact={handleSelectContact} 
-          />
+          <div className="w-full flex flex-col h-full bg-white">
+            <div className="p-4 border-b border-gray-100">
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search contacts..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-8 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+            <ChatContacts 
+              contacts={filteredContacts} 
+              activeContactId={activeContactId} 
+              onSelectContact={handleSelectContact}
+              loading={loading}
+            />
+          </div>
         </div>
 
-        {/* Right Area (Chat Window) */}
         <div className={`${!showContacts ? 'flex' : 'hidden'} md:flex flex-1 h-full`}>
           <ChatWindow 
             contact={activeContact} 
             messages={activeMessages} 
             onSendMessage={handleSendMessage}
+            sending={sending}
             onBack={() => setShowContacts(true)}
           />
         </div>
-        
       </div>
     </div>
   );

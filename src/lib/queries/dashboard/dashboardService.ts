@@ -1,28 +1,29 @@
 import { authApi } from "@/lib/axios";
+import { getApiBaseUrl } from "@/lib/getApiBaseUrl";
 import { StudentOverviewResponse } from "./types";
+
+const BASE_URL = getApiBaseUrl();
 
 export const dashboardService = {
     getStudentOverview: async () => {
-        const res = await authApi.get("/api/dashboard/studentOverview");
-        console.log("Student Overview API Response:", res);
+        const res = await authApi.post("/api/student/dashboard/overview", {});
         const data = res.data?.data || {};
 
-        // Transform recentSessions to match Webinar interface partially
-        const mappedWebinars = (data.recentSessions || []).map((session: any) => ({
-            id: session.id,
-            title: session.title,
-            educatorName: "Educator", // Placeholder
-            description: "Live Session - " + session.status,
-            scheduledDate: session.attendedAt,
-            time: new Date(session.attendedAt).toLocaleTimeString(),
-            thumbnail: "/images/placeholder.png"
+        const mappedWebinars = (data.upcomingSessions || []).map((session: any) => ({
+            id: session.courseId,
+            title: session.courseTitle,
+            educatorName: session.educator?.name || "Educator",
+            description: session.description,
+            scheduledDate: session.sessionTime,
+            time: new Date(session.sessionTime).toLocaleTimeString(),
+            thumbnail: session.thumbnail
         }));
 
         return {
             webinars: mappedWebinars,
-            assignments: data.dueAssignments || [],
-            dueAssignments: data.dueAssignments || [],
-            submittedAssignments: []
+            assignments: data.dueAssignments || data.pendingAssignments || [],
+            dueAssignments: data.dueAssignments || data.pendingAssignments || [],
+            submittedAssignments: data.completedAssignments || []
         } as StudentOverviewResponse;
     },
 };

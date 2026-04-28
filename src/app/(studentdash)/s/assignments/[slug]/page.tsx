@@ -359,6 +359,7 @@
 
 import React, { useState, useRef } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { 
   ChevronRight, 
   Download, 
@@ -368,6 +369,7 @@ import {
   ArrowLeft,
   File
 } from "lucide-react";
+import { StudentAPI } from "@/lib/api";
 
 // --- MOCK DATA ---
 const ASSIGNMENT_DATA = {
@@ -410,9 +412,13 @@ const getBadgeDetails = (dueDateStr: string) => {
 };
 
 export default function AssignmentSlugPage() {
+  const params = useParams();
+  const assignmentId = String(params?.slug || "");
   const [uploadedFiles, setUploadedFiles] = useState<{id: string, file: File}[]>([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [comment, setComment] = useState("");
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -455,9 +461,27 @@ export default function AssignmentSlugPage() {
     setUploadedFiles(prev => prev.filter(f => f.id !== id));
   };
 
-  const handleSubmit = () => {
-    if (uploadedFiles.length > 0) {
-      setIsSubmitted(true);
+  const handleSubmit = async () => {
+    if (uploadedFiles.length > 0 && assignmentId) {
+      setIsSubmitting(true);
+      try {
+        await StudentAPI.submitAssignment(assignmentId, uploadedFiles[0].file);
+        setIsSubmitted(true);
+      } catch {
+        alert("Unable to submit assignment. Please try again.");
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  const handleSendComment = async () => {
+    if (!comment.trim() || !assignmentId) return;
+    try {
+      await StudentAPI.addAssignmentComment({ assignmentId, comment });
+      setComment("");
+    } catch {
+      alert("Unable to add comment. Please try again.");
     }
   };
 
@@ -658,9 +682,10 @@ export default function AssignmentSlugPage() {
                     <div className="hidden md:flex justify-end mt-2">
                       <button 
                         onClick={handleSubmit}
+                        disabled={isSubmitting}
                         className="bg-[#111111] hover:bg-black text-white text-[14px] font-semibold px-8 py-3 rounded-xl transition-colors shadow-md"
                       >
-                        Submit Assignment
+                        {isSubmitting ? "Submitting..." : "Submit Assignment"}
                       </button>
                     </div>
                   </div>
@@ -715,9 +740,12 @@ export default function AssignmentSlugPage() {
                 <input 
                   type="text" 
                   placeholder="Enter here" 
+                  value={comment}
+                  onChange={(event) => setComment(event.target.value)}
+                  onKeyDown={(event) => event.key === "Enter" && handleSendComment()}
                   className="w-full border border-gray-200 rounded-[14px] pl-4 pr-12 py-3 md:py-3.5 text-[13px] md:text-[14px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#042BFD] transition-all"
                 />
-                <button className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-[#042BFD] transition-colors rounded-lg">
+                <button onClick={handleSendComment} className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-[#042BFD] transition-colors rounded-lg">
                   <Send size={18} strokeWidth={2} />
                 </button>
               </div>
@@ -731,9 +759,10 @@ export default function AssignmentSlugPage() {
               <div className="md:hidden mt-6 w-full">
                 <button 
                   onClick={handleSubmit} 
+                  disabled={isSubmitting}
                   className="w-full bg-[#111111] hover:bg-black text-white text-[18px] font-normal py-3.5 rounded-xl transition-colors shadow-md"
                 >
-                  Submit Assignment
+                  {isSubmitting ? "Submitting..." : "Submit Assignment"}
                 </button>
               </div>
             )}

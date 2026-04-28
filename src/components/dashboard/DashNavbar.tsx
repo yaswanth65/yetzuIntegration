@@ -20,6 +20,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { StudentAPI, asArray } from "@/lib/api";
 
 interface DashNavbarProps {
   role: string | null;
@@ -30,41 +31,13 @@ interface DashNavbarProps {
   isNotificationActive: boolean;
 }
 
-// Mock Data for Notifications
-const MOCK_NOTIFICATIONS = [
-  {
-    id: 1,
-    icon: Video,
-    title: "Your session with Dr. Rao starts in 30 minutes",
-    subtitle: "Webinar: Major Insights on Human Nervous System",
-    time: "30m ago",
-    unread: true,
-  },
-  {
-    id: 2,
-    icon: FileText,
-    title: "Assignment feedback has been added by Dr. Nikhil",
-    subtitle: "Obstetric Case- Third Trimester Bleeding",
-    time: "2h ago",
-    unread: true,
-  },
-  {
-    id: 3,
-    icon: Calendar,
-    title: "A new mentorship session is available",
-    subtitle: "1:1 Mentorship with Dr. Nikhitha Vimal",
-    time: "5h ago",
-    unread: true,
-  },
-  {
-    id: 4,
-    icon: Award,
-    title: "Your certificate is ready to download",
-    subtitle: "Data Science Fundamentals Course Completion",
-    time: "1d ago",
-    unread: false,
-  }
-];
+const notificationIconFor = (type?: string) => {
+  const normalized = String(type || "").toLowerCase();
+  if (normalized.includes("assignment")) return FileText;
+  if (normalized.includes("session")) return Video;
+  if (normalized.includes("certificate")) return Award;
+  return Calendar;
+};
 
 export default function DashNavbar({
   onMenuClick,
@@ -79,21 +52,21 @@ export default function DashNavbar({
   
   // Notification State
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const unreadCount = notifications.filter(n => n.unread).length;
   
   // Form States
   const [autoPayout, setAutoPayout] = useState(true);
   const [notifyPayments, setNotifyPayments] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: "Natalia Sam",
-    email: "natalia@gmail.com",
-    phone: "9834122562"
+    fullName: "",
+    email: "",
+    phone: ""
   });
   const [paymentData, setPaymentData] = useState({
-    cardNumber: "9978 1128 1558 1978",
-    cardHolder: "Natalia Sam",
-    country: "United Kingdom"
+    cardNumber: "",
+    cardHolder: "",
+    country: ""
   });
 
   const profileRef = useRef<HTMLDivElement>(null);
@@ -111,6 +84,33 @@ export default function DashNavbar({
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    setFormData({
+      fullName: user?.name || "",
+      email: user?.email || "",
+      phone: (user as any)?.mobileno || "",
+    });
+  }, [user]);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await StudentAPI.getNotifications();
+        setNotifications(asArray(response).map((item: any, index: number) => ({
+          id: item.id || index,
+          icon: notificationIconFor(item.type || item.category),
+          title: item.title || item.message || "Notification",
+          subtitle: item.subtitle || item.description || "",
+          time: item.timeAgo || item.createdAt || item.time || "",
+          unread: Boolean(item.unread || item.isUnread || item.status === "unread"),
+        })));
+      } catch {
+        setNotifications([]);
+      }
+    };
+    fetchNotifications();
   }, []);
 
   const markAllAsRead = () => {

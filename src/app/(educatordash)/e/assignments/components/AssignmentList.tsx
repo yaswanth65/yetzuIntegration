@@ -1,13 +1,34 @@
-import React from 'react';
+"use client";
+
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Assignment } from '../types';
-import { DownloadCloud, Eye, CheckCircle2, Clock } from 'lucide-react';
+import { DownloadCloud, Eye, CheckCircle2, Clock, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 
 interface AssignmentListProps {
   assignments: Assignment[];
+  loading?: boolean;
 }
 
-export default function AssignmentList({ assignments }: AssignmentListProps) {
+const ITEMS_PER_PAGE = 10;
+
+export default function AssignmentList({ assignments, loading: externalLoading }: AssignmentListProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [internalLoading] = useState(false);
+
+  const totalPages = Math.ceil(assignments.length / ITEMS_PER_PAGE);
+  
+  const paginatedAssignments = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return assignments.slice(start, start + ITEMS_PER_PAGE);
+  }, [currentPage, assignments]);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
   const getStatusDisplay = (status: string) => {
     switch (status) {
       case 'Submitted':
@@ -44,11 +65,24 @@ export default function AssignmentList({ assignments }: AssignmentListProps) {
     );
   };
 
+  const loading = internalLoading || externalLoading;
+
+  if (loading && assignments.length === 0) {
+    return (
+      <div className="bg-white rounded-[20px] shadow-sm overflow-hidden border border-gray-100 p-2 md:p-6 mt-6">
+        <div className="flex items-center justify-center h-48">
+          <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+          <span className="ml-2 text-sm text-gray-500">Loading assignments...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-[20px] shadow-sm overflow-hidden border border-gray-100 p-2 md:p-6 mt-6">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
-          <thead>
+          <thead className="sticky top-0 bg-white z-10">
             <tr className="text-xs text-gray-500 border-b border-gray-100 uppercase tracking-wider">
               <th className="font-semibold py-4 px-4 whitespace-nowrap">Assignment ID</th>
               <th className="font-semibold py-4 px-4 whitespace-nowrap">Session</th>
@@ -63,16 +97,17 @@ export default function AssignmentList({ assignments }: AssignmentListProps) {
           <tbody>
             {assignments.length === 0 ? (
               <tr>
-                <td colSpan={8} className="text-center py-8 text-gray-500">
-                  No assignments found
+                <td colSpan={8} className="text-center py-12 text-gray-500">
+                  <p className="text-lg font-medium">No assignments found</p>
+                  <p className="text-sm text-gray-400 mt-1">Create your first assignment to get started</p>
                 </td>
               </tr>
             ) : (
-              assignments.map((assignment, index) => (
+              paginatedAssignments.map((assignment, index) => (
                 <tr
                   key={assignment.id}
                   className={`border-b border-gray-50 hover:bg-gray-50 transition-colors ${
-                    index === assignments.length - 1 ? 'border-none' : ''
+                    index === paginatedAssignments.length - 1 ? 'border-none' : ''
                   }`}
                 >
                   <td className="py-4 px-4 text-sm font-medium text-blue-600 whitespace-nowrap">
@@ -115,25 +150,42 @@ export default function AssignmentList({ assignments }: AssignmentListProps) {
         </table>
       </div>
 
-      <div className="flex items-center justify-between mt-6 text-sm text-gray-500">
-        <span>
-          Showing 1–8 of 15 invoices
-        </span>
-        <div className="flex items-center gap-2">
-          <button className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors">
-            {'<'}
-          </button>
-          <button className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-900 text-white font-medium transition-colors">
-            1
-          </button>
-          <button className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-600 font-medium transition-colors">
-            2
-          </button>
-          <button className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors">
-            {'>'}
-          </button>
+      {assignments.length > 0 && (
+        <div className="flex items-center justify-between mt-6 text-sm text-gray-500">
+          <span>
+            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, assignments.length)} of {assignments.length}
+          </span>
+          <div className="flex items-center gap-1.5">
+            <button 
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                className={`w-8 h-8 flex items-center justify-center rounded-xl font-medium transition-colors ${
+                  currentPage === page 
+                    ? 'bg-[#111827] text-white' 
+                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button 
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

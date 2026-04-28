@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-query";
 import { identityService } from "./identityService";
 import Cookies from "js-cookie";
+import { getJwtUserId } from "@/lib/axios";
 import {
   BaseSuccessResponse,
   GetUserProfileResponse,
@@ -42,8 +43,13 @@ const useRenewAccessTokenMutation = (): UseMutationResult<
   return useMutation<LoginResponse, unknown, void>({
     mutationFn: identityService.getAccessToken,
     onSuccess: (data) => {
-      Cookies.set("jwtToken", data.userData.jwtToken, { expires: 1 });
-      Cookies.set("refreshToken", data.userData.refresh_token, { expires: 7 });
+      const jwtToken = data?.userData?.jwtToken;
+      if (jwtToken) {
+        Cookies.set("jwtToken", jwtToken, { expires: 1 });
+        const userId = getJwtUserId(jwtToken);
+        if (userId) Cookies.set("userId", userId, { expires: 1 });
+      }
+      if (data?.userData?.refresh_token) Cookies.set("refreshToken", data.userData.refresh_token, { expires: 7 });
     },
   });
 };
@@ -59,6 +65,8 @@ const useLoginMutation = (): UseMutationResult<
     onSuccess: (data, variables) => {
       if (data?.userData?.jwtToken) {
         Cookies.set("jwtToken", data.userData.jwtToken, { expires: 1 });
+        const userId = getJwtUserId(data.userData.jwtToken);
+        if (userId) Cookies.set("userId", userId, { expires: 1 });
         if (variables?.rememberMe) {
           Cookies.set("refreshToken", data.userData.refresh_token, {
             expires: 7,
@@ -81,6 +89,8 @@ const useGoogleLoginMutation = (): UseMutationResult<
     onSuccess: (data) => {
       if (data?.userData?.jwtToken) {
         Cookies.set("jwtToken", data.userData.jwtToken, { expires: 1 });
+        const userId = getJwtUserId(data.userData.jwtToken);
+        if (userId) Cookies.set("userId", userId, { expires: 1 });
         Cookies.set("refreshToken", data.userData.refresh_token, { expires: 7 });
       }
       queryClient.invalidateQueries({ queryKey: ["getUserProfile"] });
@@ -100,6 +110,7 @@ const useLogoutMutation = (): UseMutationResult<
       Cookies.remove("jwtToken");
       Cookies.remove("refreshToken");
       Cookies.remove("isUserLoggedIn");
+      Cookies.remove("userId");
       queryClient.invalidateQueries({ queryKey: ["getUserProfile"] });
     },
   });

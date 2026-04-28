@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Search,
   Filter,
@@ -13,16 +13,42 @@ import {
 import { UsersTable } from "./components/UsersTable";
 import { PermissionsDrawer } from "./components/PermissionsDrawer";
 import { AddUserModal } from "./components/AddUserModal";
-import { usersData } from "./components/data";
-import { TabType } from "./components/types";
+import { TabType, User } from "./components/types";
+import { AdminAPI, asArray } from "@/lib/api";
 
 export default function UserManagementPage() {
   const [activeTab, setActiveTab] = useState<TabType>("All Users");
   const [searchQuery, setSearchQuery] = useState("");
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
 
-  const filteredUsers = usersData.filter((user) => {
+  const fetchUsers = async () => {
+    try {
+      const response = await AdminAPI.getUsers({
+        search: searchQuery || undefined,
+        role: activeTab === "Students" ? "student" : activeTab === "Educators" ? "educator" : undefined,
+      });
+      const apiUsers = asArray(response).map((item: any) => ({
+        id: item.userId || item.id || item._id || "-",
+        name: item.Name || item.name || "-",
+        email: item.Email || item.email || "-",
+        role: item.Role === "student" ? "Student" : item.Role === "educator" ? "Educator" : item.role || item.Role || "Student",
+        status: String(item.Status || item.status || "active").toLowerCase() === "active" ? "Active" : "Suspended",
+        joined: item.created || item.createdAt || item.joined || "-",
+        sessions: item.sessions || item.sessionCount || 0,
+      }));
+      if (apiUsers.length > 0) setUsers(apiUsers as User[]);
+    } catch {
+      setUsers([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, [activeTab]);
+
+  const filteredUsers = users.filter((user) => {
     // Filter by Tab
     const matchesTab =
       activeTab === "All Users"
@@ -145,6 +171,10 @@ export default function UserManagementPage() {
       <AddUserModal 
         isOpen={isAddUserOpen} 
         onClose={() => setIsAddUserOpen(false)} 
+        onSubmit={async (user) => {
+          await AdminAPI.createUser(user);
+          await fetchUsers();
+        }}
       />
     </div>
   );

@@ -69,7 +69,6 @@ export default function SignupForm() {
       }
     } catch (error) {
       toast.error("Google sign-in failed");
-      console.error("Google sign-in error:", error);
     }
   };
 
@@ -93,7 +92,6 @@ export default function SignupForm() {
               toast.error(data.message || "Something went wrong!");
             }
           } catch (error: any) {
-            console.error("Signup error:", error);
             toast.error(error.response?.data?.message || "Signup failed.");
           }
         }}

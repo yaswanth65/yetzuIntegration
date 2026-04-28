@@ -93,9 +93,9 @@ export default function SessionsPage() {
               title: course.title || "Untitled Session",
               type: course.title?.toLowerCase().includes('cohort') ? 'cohort' : 'webinar',
               mentor: {
-                name: "Dr. Sophia Tyler", 
-                role: course.subtitle || "Associate Professor, XYZ Institute",
-                avatar: `https://ui-avatars.com/api/?name=Sophia+Tyler&background=random`,
+                name: course.educator?.name || course.educatorName || "Educator", 
+                role: course.subtitle || course.educator?.role || "",
+                avatar: course.educator?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(course.educator?.name || course.educatorName || "Educator")}&background=random`,
               },
               date: dateStr,
               time: timeStr,
@@ -108,8 +108,8 @@ export default function SessionsPage() {
 
           setSessions(mappedCourses);
         }
-      } catch (error) {
-        console.error("Failed to fetch sessions/courses:", error);
+      } catch {
+        setSessions([]);
       } finally {
         setIsLoading(false);
       }

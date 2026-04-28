@@ -635,12 +635,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 import useSession from "@/hooks/useSession";
-
-const StudentAPI = {
-  getOverview: async () => ({ success: false }),
-  getNotifications: async () => ({ success: false }),
-  editProfile: async (data: any) => ({ success: false })
-};
+import { StudentAPI, asArray } from "@/lib/api";
 
 import { 
   Bell, 
@@ -813,29 +808,30 @@ export default function DashNavbar({
   useEffect(() => {
     const fetchNavbarData = async () => {
       try {
-        const token = localStorage.getItem("token") || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiOGIwYWE1My1mNzlhLTQxZDUtODdmZi05YTM3NGJmOWZjNmYiLCJlbWFpbCI6ImFiaGlyYW10ZW1wQGdtYWlsLmNvbSIsInJvbGUiOiJzdHVkZW50IiwiaWF0IjoxNzczNTcyOTM4LCJleHAiOjE3NzM2MTYxMzh9.3MdH1osbDpAVbSrj7PNOp35Fvp1v-JnsgJ0L-4fN9TI";
-        const userId = localStorage.getItem("userId") || "b8b0aa53-f79a-41d5-87ff-9a374bf9fc6f";
-
-        if (token && userId) {
-          const overviewRes: any = await StudentAPI.getOverview();
-          if (overviewRes?.success && overviewRes?.data?.userInfo) {
-            const userInfo = overviewRes.data.userInfo;
-            setFormData({
-              fullName: userInfo.name || "",
-              email: userInfo.email || "",
-              phone: userInfo.mobileno || ""
-            });
-            setPaymentData(prev => ({ ...prev, cardHolder: userInfo.name || "" }));
-          }
-
-          const notifRes: any = await StudentAPI.getNotifications();
-          if (notifRes?.success) {
-            setNotifications(notifRes.data.notifications || []);
-            setUnreadCount(notifRes.data.summary?.newMessages || 0);
-          }
+        const [overviewRes, notifRes]: any[] = await Promise.all([
+          StudentAPI.getOverview(),
+          StudentAPI.getNotifications(),
+        ]);
+        const userInfo = overviewRes?.data?.userInfo || overviewRes?.userInfo || overviewRes?.data?.user || overviewRes?.user;
+        if (userInfo) {
+          setFormData({
+            fullName: userInfo.name || "",
+            email: userInfo.email || "",
+            phone: userInfo.mobileno || userInfo.phone || ""
+          });
+          setPaymentData(prev => ({ ...prev, cardHolder: userInfo.name || "" }));
         }
-      } catch (error) {
-        console.error("Failed to fetch navbar data:", error);
+
+        const apiNotifications = asArray(notifRes?.data?.notifications || notifRes?.notifications || notifRes?.data || notifRes);
+        setNotifications(apiNotifications);
+        setUnreadCount(
+          notifRes?.data?.summary?.newMessages ??
+          notifRes?.summary?.newMessages ??
+          apiNotifications.filter((item: any) => item.unread || item.isUnread || !item.read).length
+        );
+      } catch {
+        setNotifications([]);
+        setUnreadCount(0);
       }
     };
     fetchNavbarData();
@@ -845,17 +841,13 @@ export default function DashNavbar({
   const handleSaveProfile = async () => {
     setIsSaving(true);
     try {
-      const token = localStorage.getItem("token") || "";
-      const userId = localStorage.getItem("userId") || "";
       const response: any = await StudentAPI.editProfile({
         name: formData.fullName,
         email: formData.email,
         mobileno: formData.phone
       });
-      if (response?.success) setIsEditing(false);
-      else console.error("Failed to update profile details:", response?.message);
-    } catch (error) {
-      console.error("Error saving profile:", error);
+      if (response?.success !== false) setIsEditing(false);
+    } catch {
     } finally {
       setIsSaving(false);
     }

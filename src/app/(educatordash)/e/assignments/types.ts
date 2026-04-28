@@ -1,5 +1,5 @@
 export type AssignmentStatus = 'Submitted' | 'Pending' | 'Review Done';
-export type SessionType = 'Webinar' | 'Cohort' | 'Mentorship';
+export type SessionType = 'Webinar' | 'Cohort' | 'Mentorship' | 'Workshop';
 
 export interface Assignment {
   id: string;

@@ -2,78 +2,68 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Link2, Send, MessageSquareMore, ArrowLeft, Search, Mic, MoreVertical } from "lucide-react";
-import Cookies from "js-cookie";
-import { StudentAPI } from "@/lib/api";
-import Image from "next/image";
-
-// --- MOCK DATA ---
-const MOCK_EDUCATORS = [
-  {
-    id: "1",
-    name: "Dr. Sophia Tyler",
-    avatar: "https://ui-avatars.com/api/?name=Sophia+Tyler&background=021165&color=fff",
-    lastMessage: "We can reschedule to anytime that work...",
-    time: "2m",
-    unread: true,
-    title: "Associate Professor, Cambridge Institute",
-    sessionName: "Webinar: Management of Acute Coronary Syndromes"
-  },
-  {
-    id: "2",
-    name: "Dr. Michael Chen",
-    avatar: "https://ui-avatars.com/api/?name=Michael+Chen&background=042BFD&color=fff",
-    lastMessage: "Looking forward to our session!",
-    time: "1h",
-    unread: false,
-    title: "Senior Research Fellow, MIT",
-    sessionName: "Cohort: Advanced AI Models"
-  },
-  {
-    id: "3",
-    name: "Dr. Marygold Nuer",
-    avatar: "https://ui-avatars.com/api/?name=Marygold+Nuer&background=7C3AED&color=fff",
-    lastMessage: "Can we plan this once I'm done with...",
-    time: "41m",
-    unread: false,
-    title: "Director of Research, Stanford",
-    sessionName: ""
-  }
-];
-
-const MOCK_MESSAGES: Record<string, any[]> = {
-  "1": [
-    { id: "m1", from: "educator", content: "Hi Joy!", timestamp: new Date(Date.now() - 3600000).toISOString() },
-    { id: "m2", from: "educator", content: "I was thinking of rescheduling our session to anytime on monday...", timestamp: new Date(Date.now() - 3500000).toISOString() },
-    { id: "m3", from: "educator", content: "Can you please share your availability?", timestamp: new Date(Date.now() - 3400000).toISOString() },
-    { id: "m4", from: "me", content: "We can reschedule to any time that works for you, I'm available all day on monday.", timestamp: new Date(Date.now() - 3000000).toISOString() }
-  ],
-  "2": [
-    { id: "m5", from: "educator", content: "Hello! Did you review the materials I sent?", timestamp: new Date(Date.now() - 7200000).toISOString() }
-  ],
-  "3": []
-};
+import { StudentAPI, asArray } from "@/lib/api";
 
 export default function ChatPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
   const [inputText, setInputText] = useState("");
   const [showMobileList, setShowMobileList] = useState(true);
-  const [educators, setEducators] = useState<any[]>(MOCK_EDUCATORS);
+  const [educators, setEducators] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setUserId(Cookies.get("userId") || "me");
-    if (MOCK_EDUCATORS.length > 0) {
-      setActiveContactId(MOCK_EDUCATORS[0].id);
-    }
+    const fetchEducators = async () => {
+      try {
+        const response = await StudentAPI.getChatEducators();
+        const apiEducators = asArray(response).map((item: any, index: number) => {
+          const id = item.id || item._id || item.userId || item.educatorId || String(index);
+          const name = item.name || item.Name || item.educatorName || "Educator";
+          return {
+            id,
+            name,
+            avatar: item.avatar || item.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=042BFD&color=fff`,
+            lastMessage: item.lastMessage || item.message || "Start a conversation",
+            time: item.time || item.updatedAt || item.createdAt || "",
+            unread: Boolean(item.unread || item.isUnread),
+            title: item.title || item.designation || item.role || "Educator",
+            sessionName: item.sessionName || item.courseTitle || "",
+          };
+        });
+        if (apiEducators.length > 0) {
+          setEducators(apiEducators);
+          setActiveContactId(apiEducators[0].id);
+          return;
+        }
+      } catch {
+        setEducators([]);
+      }
+      setUserId("me");
+    };
+
+    fetchEducators();
   }, []);
 
   useEffect(() => {
-    if (activeContactId) {
-      const msgs = MOCK_MESSAGES[activeContactId] || [];
-      setMessages(msgs);
-    }
+    if (!activeContactId) return;
+
+    const fetchMessages = async () => {
+      try {
+        const response = await StudentAPI.getChatMessages(activeContactId);
+        const apiMessages = asArray(response).map((item: any, index: number) => ({
+          id: item.id || item._id || `msg-${index}`,
+          from: item.from || item.sender || (item.senderId === userId ? "me" : "educator"),
+          content: item.content || item.message || item.text || "",
+          timestamp: item.timestamp || item.createdAt || item.time || new Date().toISOString(),
+        }));
+        setMessages(apiMessages);
+      } catch {
+        setMessages([]);
+      }
+    };
+
+    fetchMessages();
   }, [activeContactId]);
 
   useEffect(() => {
@@ -82,7 +72,7 @@ export default function ChatPage() {
     }
   }, [messages]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputText.trim() || !activeContactId) return;
     
     const newMessage = {
@@ -94,6 +84,11 @@ export default function ChatPage() {
     
     setMessages([...messages, newMessage]);
     setInputText("");
+    try {
+      await StudentAPI.sendChatMessage(activeContactId, newMessage.content);
+    } catch {
+      setMessages((current) => current.filter((message) => message.id !== newMessage.id));
+    }
   };
 
   const activeContact = educators.find((e) => e.id === activeContactId);

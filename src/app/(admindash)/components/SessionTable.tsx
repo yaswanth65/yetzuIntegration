@@ -78,16 +78,23 @@ export default function SessionTable({data,showHeader = true, title, onRowClick,
                     </thead>
 
                     <tbody className="divide-y divide-gray-200">
-                        {data.map((item, idx) => (
+                        {data.map((item, idx) => {
+                            const renderSafe = (value: any) => {
+                              if (typeof value === 'object' && value !== null) {
+                                return JSON.stringify(value);
+                              }
+                              return value;
+                            };
+                            return (
                             <tr 
                               key={idx} 
                               className={`transition-colors hover:bg-gray-50 ${selectedSessionId === item.id ? "bg-blue-50/50" : ""}`}
                             >
-                                <td className="px-7 py-4 font-semibold">{item.id}</td>
-                                <td className="px-7 py-4 text-gray-500">{item.type}</td>
-                                <td className="px-7 py-4">{item.educator}</td>
-                                <td className="px-7 py-4 text-gray-500">{item.students}</td>
-                                <td className="px-7 py-4 text-gray-500">{item.date}</td>
+                                <td className="px-7 py-4 font-semibold">{renderSafe(item.id)}</td>
+                                <td className="px-7 py-4 text-gray-500">{renderSafe(item.type)}</td>
+                                <td className="px-7 py-4">{renderSafe(item.educator)}</td>
+                                <td className="px-7 py-4 text-gray-500">{renderSafe(item.students)}</td>
+                                <td className="px-7 py-4 text-gray-500">{renderSafe(item.date)}</td>
                                 <td className="px-7 py-4"><StatusBadge status={item.status} /></td>
                                 <td className="px-7 py-4">
                                   <button 
@@ -98,7 +105,7 @@ export default function SessionTable({data,showHeader = true, title, onRowClick,
                                   </button>
                                 </td>
                             </tr>
-                        ))}
+                        )})};
                     </tbody>
 
                 </table>

@@ -916,53 +916,21 @@ const getUpcomingTheme = (theme: string) => {
 export default function OverviewPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [apiData, setApiData] = useState<any>(null);
-  
-  const MOCK_DASHBOARD_DATA = {
-      userInfo: {
-        name: "Natalia",
-        totalEnrolledCourses: 1, 
-        totalCertificates: 0,
-        progress: { percentage: 25 },
-        enrolledCourses: [{ title: "Data Science" }]
-      },
-      focusThisWeek: {
-        contactThisWeek: {
-          upcomingSessions: [
-            { title: "Webinar: Major Insights on Human Nervous System with Dr. Rao", date: "22 Feb, 2026", time: "3:00 PM" }
-          ]
-        },
-        assignmentsDueThisWeek: [
-          { title: "Assignment: Obstetric Case- Third Trimester Bleeding", dueDate: "24 Feb, 2026" }
-        ]
-      },
-      upcomingSessions: [
-        { id: 1, title: "Cohort: Major Insights on Human Nervous System with Dr. Rao", date: "21 Feb, 2026", time: "3:00 PM" },
-        { id: 2, title: "Cohort: Major Insights on Human Nervous System with Dr. Rao", date: "23 Feb, 2026", time: "3:00 PM" }
-      ],
-      pendingAssignments: [
-        { id: 1, title: "Obstetric Case- Third Trimester Bleeding", sessionName: "Drug Dose Calculation Exercise with Dr. Rao", dueDate: "24 Feb, 2026" },
-        { id: 2, title: "Obstetric Case- Second Trimester Bleeding", sessionName: "Drug Dose Calculation Exercise with Dr. Rao", dueDate: "28 Feb, 2026" }
-      ],
-      feedbacks: [
-        { id: 1, mentorName: "Dr. Nikhil Nath", sessionName: "Drug Dose Calculation Exercise with Dr. Nikhil Nath", comment: "Great effort, but remember to double-check your calculations for pediatric dosages. See attached notes for areas to improve." },
-        { id: 2, mentorName: "Dr. Rao", sessionName: "Deep Dive in Human Nervous System with Dr. Rao", comment: "Great understanding of the core concepts! Keep up the excellent work in the next modules." }
-      ]
-    };
 
   // --- FETCH DASHBOARD DATA ---
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
          
-        const response = await StudentAPI.getOverview( );
-        if (response.success) {
-          setApiData(response.data);
+        const response = await StudentAPI.getOverview();
+        const data = response?.data || response;
+        if (response?.success !== false && data && Object.keys(data).length > 0) {
+          setApiData(data);
         } else {
-          setApiData(MOCK_DASHBOARD_DATA);
+          setApiData({});
         }       
-      } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
-        setApiData(MOCK_DASHBOARD_DATA);
+      } catch {
+        setApiData({});
       } finally {
         setIsLoading(false);
       }
