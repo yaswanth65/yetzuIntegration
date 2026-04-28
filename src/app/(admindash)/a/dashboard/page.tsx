@@ -13,7 +13,7 @@ import { AdminAPI, asArray } from "@/lib/api";
 export default function AdminDashboardPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
 
-  useEffect(() => {
+useEffect(() => {
     const fetchSessions = async () => {
       try {
         const response = await AdminAPI.getSessions({ page: 1, limit: 5 });
@@ -22,10 +22,15 @@ export default function AdminDashboardPage() {
           const status = item.status || item.Status || "Scheduled";
           return {
             id: item.sessionCode || item.id || item._id || `SESSION-${index + 1}`,
+            title: item.title || item.sessionType || "Session",
             type: item.sessionType || item.type || "Webinar",
             educator: item.educator?.name || item.educatorName || item.mentorName || "Educator",
             students: item.students || item.attendees || item.enrolledCount || 0,
+            attendees: item.attendees || item.students || item.enrolledCount || 0,
             date: rawDate ? new Date(rawDate).toLocaleDateString() : "TBD",
+            dateTime: rawDate || undefined,
+            startTime: item.startTime || "09:00 AM",
+            endTime: item.endTime || "10:00 AM",
             status: status === "Upcoming" || status === "upcoming" ? "Scheduled" : status,
           };
         }) as Session[]);

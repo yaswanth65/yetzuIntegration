@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   Calendar,
@@ -12,7 +12,7 @@ import {
   Upload,
 } from "lucide-react";
 import useSession from "@/hooks/useSession";
-import { useGetStudentOverview } from "@/lib/queries/dashboard/useDashboard";
+import { StudentAPI, asArray } from "@/lib/api";
 import {
   Webinar,
   Assignment,
@@ -25,7 +25,8 @@ import UploadAssignmentModal from "./UploadAssignmentModal";
 
 export default function StudentDashboardPage() {
   const { user } = useSession();
-  const { data: overviewData, isLoading } = useGetStudentOverview();
+  const [overviewData, setOverviewData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { data: assignmentsData, isLoading: assignmentsLoading } =
     useGetStudentAssignments();
 
@@ -33,9 +34,23 @@ export default function StudentDashboardPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
+  useEffect(() => {
+    const fetchOverview = async () => {
+      try {
+        const response = await StudentAPI.getOverview();
+        setOverviewData(response?.data || response);
+      } catch (error) {
+        console.error("Overview fetch error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchOverview();
+  }, []);
+
   // Use correct types and data sources
-  const webinars = overviewData?.webinars || [];
-  const dueAssignments = overviewData?.dueAssignments || [];
+  const webinars = asArray(overviewData?.upcomingSessions || overviewData?.recentSessions || []);
+  const dueAssignments = asArray(overviewData?.pendingAssignments || overviewData?.dueAssignments || []);
 
   return (
     <div className="bg-[#F9FAFB] min-h-screen font-['Inter']">

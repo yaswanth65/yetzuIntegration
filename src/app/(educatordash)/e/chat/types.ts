@@ -12,6 +12,7 @@ export interface Contact {
 export interface Message {
   id: string;
   sender: 'me' | 'them';
+  senderId?: string;
   content: string;
   time?: string;
   showAvatar?: boolean;

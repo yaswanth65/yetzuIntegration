@@ -6,6 +6,7 @@ import ChatWindow from './components/ChatWindow';
 import { ChevronLeft, Search, Loader2, X } from 'lucide-react';
 import { EducatorChatAPI, asArray } from '@/lib/api';
 import { Contact, Message } from './types';
+import Cookies from 'js-cookie';
 
 export default function EducatorChatPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -16,6 +17,11 @@ export default function EducatorChatPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sending, setSending] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+
+  useEffect(() => {
+    setCurrentUserId(Cookies.get("userId") || "");
+  }, []);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -69,20 +75,25 @@ export default function EducatorChatPage() {
     const fetchMessages = async () => {
       try {
         const response = await EducatorChatAPI.getMessages(activeContactId);
-        const apiMessages: Message[] = asArray(response).map((item: any, index: number) => ({
-          id: item.id || item._id || `msg-${index}`,
-          sender: item.sender === "me" || item.from === "me" || item.isMine ? "me" as const : "them" as const,
-          content: item.content || item.message || item.text || "",
-          time: item.time || item.createdAt || "",
-          showAvatar: item.showAvatar ?? true,
-        }));
+        const rawMessages = asArray(response);
+        const apiMessages: Message[] = rawMessages.map((item: any, index: number) => {
+          const messageFrom = item.from || "";
+          const isFromMe = messageFrom === currentUserId;
+          return {
+            id: item.id || item._id || "msg-" + index,
+            sender: isFromMe ? "me" as const : "them" as const,
+            content: item.content || item.message || item.text || "",
+            time: item.time || item.createdAt || "",
+            showAvatar: true,
+          };
+        });
         setMessages((prev) => ({ ...prev, [activeContactId]: apiMessages }));
       } catch {
         setMessages((prev) => ({ ...prev, [activeContactId]: [] }));
       }
     };
     fetchMessages();
-  }, [activeContactId]);
+  }, [activeContactId, currentUserId]);
 
   const activeContact = contacts.find(c => c.id === activeContactId) || null;
   const activeMessages = activeContactId ? messages[activeContactId] || [] : [];

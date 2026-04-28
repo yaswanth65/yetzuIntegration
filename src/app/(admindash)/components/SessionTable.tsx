@@ -1,6 +1,6 @@
 "use client";
 
-import { Session, Status as SessionStatus } from "@/app/(admindash)/types/SessionType";
+import { Session } from "@/app/(admindash)/types/SessionType";
 
 interface Props {
   data: Session[];
@@ -11,7 +11,7 @@ interface Props {
   className?: string;
 }
 
-const statusStyles: Record<SessionStatus, string> = {
+const statusStyles: Record<string, string> = {
     Live: "text-green-600 bg-green-50",
     Scheduled: "text-blue-600 bg-blue-50",
     Completed: "text-gray-500 bg-gray-100",
@@ -40,9 +40,15 @@ function EyeIcon() {
   );
 }
 
-function StatusBadge({ status }: { status: SessionStatus }) {
+function StatusBadge({ status }: { status: string }) {
+  const statusStyles: Record<string, string> = {
+    Live: "bg-green-100 text-green-800",
+    Scheduled: "bg-blue-100 text-blue-800",
+    Completed: "bg-gray-100 text-gray-800",
+    Missed: "bg-red-100 text-red-800",
+  };
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium ${statusStyles[status]}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium ${statusStyles[status] || "bg-gray-100 text-gray-800"}`}>
       {status === "Live" && (
         <span className="relative flex h-1.5 w-1.5 mr-1.5">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
@@ -78,7 +84,13 @@ export default function SessionTable({data,showHeader = true, title, onRowClick,
                     </thead>
 
                     <tbody className="divide-y divide-gray-200">
-                        {data.map((item, idx) => {
+                        {(!data || data.length === 0) ? (
+                          <tr>
+                            <td colSpan={7} className="px-7 py-8 text-center text-gray-500">
+                              No sessions found
+                            </td>
+                          </tr>
+                        ) : data.map((item, idx) => {
                             const renderSafe = (value: any) => {
                               if (typeof value === 'object' && value !== null) {
                                 return JSON.stringify(value);

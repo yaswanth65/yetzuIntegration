@@ -1,17 +1,51 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Session } from "@/app/(admindash)/types/SessionType";
+import { AdminAPI } from "@/lib/api";
+import { toast } from "react-hot-toast";
 
 interface Props {
   session: Session | null;
   onClose: () => void;
+  onUpdate?: () => void;
 }
 
 type TabName = "Overview" | "Assignments" | "Files" | "Notes" | "Activity Logs";
 
-export default function SessionDetailsPanel({ session, onClose }: Props) {
+export default function SessionDetailsPanel({ session, onClose, onUpdate }: Props) {
   const [activeTab, setActiveTab] = useState<TabName>("Overview");
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editData, setEditData] = useState<any>({});
+
+  useEffect(() => {
+    if (session) {
+      setEditData({
+        title: session.title,
+        status: session.status,
+        type: session.type,
+        date: session.date,
+        startTime: session.startTime,
+        endTime: session.endTime,
+      });
+    }
+  }, [session]);
 
   if (!session) return null;
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await AdminAPI.updateSession(session.id, editData);
+      toast.success("Session updated successfully");
+      setIsEditing(false);
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error("Failed to update session:", error);
+      toast.error("Failed to update session");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const tabs: TabName[] = ["Overview", "Assignments", "Files", "Notes", "Activity Logs"];
 
@@ -27,7 +61,38 @@ export default function SessionDetailsPanel({ session, onClose }: Props) {
         </button>
 
         <div className="text-xs font-semibold text-gray-500 mb-2">Session ID: {session.id}</div>
-        <h2 className="text-xl font-bold text-gray-900 pr-8">Academic Writing Fundamentals</h2>
+        <div className="flex items-center justify-between pr-8">
+          {isEditing ? (
+            <input
+              type="text"
+              value={editData.title}
+              onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+              className="text-xl font-bold text-gray-900 border-b-2 border-blue-500 focus:outline-none w-full"
+            />
+          ) : (
+            <h2 className="text-xl font-bold text-gray-900">{session.title || "Academic Writing Fundamentals"}</h2>
+          )}
+          
+          <button 
+            onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+            disabled={isSaving}
+            className={`ml-4 px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+              isEditing 
+                ? "bg-green-600 text-white hover:bg-green-700" 
+                : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+            }`}
+          >
+            {isSaving ? "Saving..." : (isEditing ? "Save" : "Edit")}
+          </button>
+          {isEditing && (
+            <button 
+              onClick={() => setIsEditing(false)}
+              className="ml-2 px-4 py-1.5 bg-gray-50 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
@@ -53,10 +118,50 @@ export default function SessionDetailsPanel({ session, onClose }: Props) {
             {/* Session Details */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-1 divide-y divide-gray-50">
               {[
-                { label: "Status", value: <span className={`inline-block px-2.5 py-0.5 rounded text-xs font-semibold ${session.status === "Live" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>{session.status}</span> },
-                { label: "Date", value: session.date || "02-12-2024" },
+                { 
+                  label: "Status", 
+                  value: isEditing ? (
+                    <select 
+                      value={editData.status} 
+                      onChange={(e) => setEditData({ ...editData, status: e.target.value })}
+                      className="border rounded px-2 py-1 text-sm w-full"
+                    >
+                      <option value="Scheduled">Scheduled</option>
+                      <option value="Live">Live</option>
+                      <option value="Completed">Completed</option>
+                      <option value="Missed">Missed</option>
+                    </select>
+                  ) : (
+                    <span className={`inline-block px-2.5 py-0.5 rounded text-xs font-semibold ${session.status === "Live" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>{session.status}</span> 
+                  )
+                },
+                { 
+                  label: "Date", 
+                  value: isEditing ? (
+                    <input 
+                      type="text" 
+                      value={editData.date} 
+                      onChange={(e) => setEditData({ ...editData, date: e.target.value })}
+                      className="border rounded px-2 py-1 text-sm w-full"
+                    />
+                  ) : (
+                    session.date || "02-12-2024" 
+                  )
+                },
                 { label: "Duration", value: "1hr 30m" },
-                { label: "Type", value: session.type },
+                { 
+                  label: "Type", 
+                  value: isEditing ? (
+                    <input 
+                      type="text" 
+                      value={editData.type} 
+                      onChange={(e) => setEditData({ ...editData, type: e.target.value })}
+                      className="border rounded px-2 py-1 text-sm w-full"
+                    />
+                  ) : (
+                    session.type 
+                  )
+                },
                 { label: "Delivery Method", value: "Online" },
                 { label: "Recording Link", value: <a href="#" className="text-blue-600 hover:underline flex items-center gap-1">https://zoom.us/rec/play/123 <i className="ri-external-link-line text-xs"></i></a> },
               ].map((item, idx) => (

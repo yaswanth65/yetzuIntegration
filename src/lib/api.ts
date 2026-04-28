@@ -288,6 +288,34 @@ export const AdminAPI = {
     return dataOf(response);
   },
 
+  createSession: async (sessionData: any) => {
+    // Evidence from Postman and test scripts shows the API expects multipart/form-data
+    const formData = new FormData();
+    Object.entries(sessionData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
+    });
+    
+    // Explicitly using multipart/form-data but letting Axios set the boundary
+    const response = await authApi.post("/api/admin/sessions", formData, {
+      headers: {
+        "Content-Type": undefined,
+      },
+    } as any);
+    return dataOf(response);
+  },
+
+  updateSession: async (sessionId: string, sessionData: any) => {
+    const response = await authApi.put(`/api/admin/sessions/${sessionId}`, sessionData);
+    return dataOf(response);
+  },
+
+  deleteSession: async (sessionId: string) => {
+    const response = await authApi.delete(`/api/admin/sessions/${sessionId}`);
+    return dataOf(response);
+  },
+
   getActivity: async (params?: { page?: number; limit?: number }) => {
     const response = await authApi.get("/api/admin/activity", { params });
     return dataOf(response);

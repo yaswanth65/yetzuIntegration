@@ -1,54 +1,210 @@
-import React, { useState } from "react";
-import AssignmentStep from "./AssignmentStep";
-import ReviewConfirmStep from "./ReviewConfirmStep";
+import React, { useState, useEffect } from "react";
+import { AdminAPI, asArray } from "@/lib/api";
+import toast from "react-hot-toast";
 
 interface CreateSessionProps {
   onBack: () => void;
 }
 
+interface Educator {
+  id: string;
+  name: string;
+  qualification: string;
+  specialization: string;
+  rating: number;
+  availabilityStatus: string;
+}
+
 const stepsList = [
   "Session Type",
-  "Session Details",
+  "Schedule",
   "Pricing",
-  "Assign Educator",
-  "Assignments",
-  "Review & Confirm",
+  "Educator",
+  "Review",
 ];
 
-const educators = [
-  { id: '1', name: "Dr. Sarah Chen", qualification: "PhD, Academic Writing", sessions: 124, rating: 4.9, status: "Available" },
-  { id: '2', name: "Prof. James Wilson", qualification: "PhD, Research Methods", sessions: 98, rating: 4.8, status: "Available" },
-  { id: '3', name: "Dr. Anita Roy", qualification: "PhD, Publication Ethics", sessions: 87, rating: 4.7, status: "Available" },
-  { id: '4', name: "Dr. Liu Wei", qualification: "PhD, Data Science", sessions: 65, rating: 4.0, status: "Unavailable" },
-  { id: '5', name: "Prof. Raj Patel", qualification: "PhD, Statistics", sessions: 112, rating: 4.8, status: "Available" },
-];
+const generateSessionCode = (type: string) => {
+  const prefix = type === "Webinar" ? "WEB" : type === "Cohort" ? "COH" : "1NA";
+  const num = Math.floor(Math.random() * 900) + 100;
+  return `${prefix}-${num}`;
+};
 
 export default function CreateSession({ onBack }: CreateSessionProps) {
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [educators, setEducators] = useState<Educator[]>([]);
 
-  // Step 1 States
+  // Form State
+  const [sessionTitle, setSessionTitle] = useState("");
+  const [sessionCode, setSessionCode] = useState("");
+  const [description, setDescription] = useState("");
   const [sessionType, setSessionType] = useState("Webinar");
-  const [category, setCategory] = useState("Research");
-  const [deliveryMode, setDeliveryMode] = useState("Online");
+  const [category, setCategory] = useState("Writing");
+  
+  const [sessionDate, setSessionDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [maxStudents, setMaxStudents] = useState(50);
+  const [minStudents, setMinStudents] = useState(5);
+  const [sessionPlatform, setSessionPlatform] = useState("Zoom");
+  const [mode, setMode] = useState("online");
+  
+  const [selectedEducator, setSelectedEducator] = useState("");
+  
+  const [pricingType, setPricingType] = useState("");
+  const [priceAmount, setPriceAmount] = useState("");
+  const [currency, setCurrency] = useState("USD");
+  
   const [assignmentEnabled, setAssignmentEnabled] = useState(true);
   const [certificateEnabled, setCertificateEnabled] = useState(false);
+  
+  const [selectedBundleSessions, setSelectedBundleSessions] = useState<string[]>([]);
+  const [paidSessions, setPaidSessions] = useState<any[]>([]);
 
-  // Step 2 States
-  const [sessionPlatform, setSessionPlatform] = useState("Zoom");
-  const [status, setStatus] = useState("Draft");
+  useEffect(() => {
+    const fetchEducators = async () => {
+      try {
+        const response = await AdminAPI.getUsers({ role: "educator" });
+        const users = asArray(response).map((u: any) => ({
+          id: u.id || u.userId,
+          name: u.name || u.Name,
+          qualification: u.qualification || "",
+          specialization: u.specialization || "",
+          rating: u.rating || 0,
+          availabilityStatus: u.availabilityStatus || u.Status || "available",
+        }));
+        setEducators(users);
+      } catch (error) {
+        console.error("Error fetching educators:", error);
+      }
+    };
+    fetchEducators();
+  }, []);
 
-  // Step 3 States
-  const [pricingType, setPricingType] = useState("Free");
+  useEffect(() => {
+    setSessionCode(generateSessionCode(sessionType));
+  }, [sessionType]);
 
-  // Step 4 States
-  const [selectedEducator, setSelectedEducator] = useState("");
+  useEffect(() => {
+    const fetchPaidSessions = async () => {
+      if (pricingType.toLowerCase() !== "bundle") return;
+      try {
+        const response = await AdminAPI.getSessions({ limit: 100 });
+        const sessions = asArray(response).filter((s: any) => 
+          s.pricingType?.toLowerCase() === "paid" || s.price > 0
+        );
+        setPaidSessions(sessions);
+      } catch (error) {
+        console.error("Error fetching sessions:", error);
+      }
+    };
+    fetchPaidSessions();
+  }, [pricingType]);
+
+  const toggleBundleSession = (sessionId: string) => {
+    setSelectedBundleSessions(prev => 
+      prev.includes(sessionId) 
+        ? prev.filter(id => id !== sessionId)
+        : [...prev, sessionId]
+    );
+  };
 
   const handleNext = () => {
+    if (currentStep === 1 && !sessionType) {
+      toast.error("Please select a session type");
+      return;
+    }
+    if (currentStep === 2) {
+      if (!sessionTitle.trim()) {
+        toast.error("Please enter a session title");
+        return;
+      }
+      if (!description.trim()) {
+        toast.error("Please enter a session description");
+        return;
+      }
+      if (!sessionDate) {
+        toast.error("Please select a date");
+        return;
+      }
+      if (!startTime || !endTime) {
+        toast.error("Please select start and end times");
+        return;
+      }
+    }
+    if (currentStep === 3) {
+      if (!pricingType) {
+        toast.error("Please select a pricing type");
+        return;
+      }
+      if (pricingType.toLowerCase() === "paid" && !priceAmount) {
+        toast.error("Please enter a price");
+        return;
+      }
+      if (pricingType.toLowerCase() === "bundle" && selectedBundleSessions.length === 0) {
+        toast.error("Please select at least one session for bundle");
+        return;
+      }
+    }
+    if (currentStep === 4 && !selectedEducator) {
+      toast.error("Please select an educator");
+      return;
+    }
     if (currentStep < stepsList.length) setCurrentStep(currentStep + 1);
   };
 
   const handlePrev = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
+  };
+
+  const handleSubmit = async () => {
+    if (!sessionTitle.trim()) {
+      toast.error("Title is required");
+      return;
+    }
+    if (!description.trim()) {
+      toast.error("Description is required");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Ensure organizationId is provided if possible, else use a placeholder or empty string
+      // Based on Postman, organizationId might be required
+      const sessionData = {
+        title: sessionTitle.trim(),
+        description: description.trim(),
+        sessionCode: sessionCode || generateSessionCode(sessionType),
+        sessionType: sessionType.toLowerCase(),
+        category: category.toLowerCase(),
+        assignmentEnabled: assignmentEnabled ? "true" : "false",
+        certificateEnabled: certificateEnabled ? "true" : "false",
+        date: sessionDate,
+        startTime,
+        endTime,
+        capacity: Number(maxStudents),
+        maxStudents: Number(maxStudents),
+        minStudents: Number(minStudents),
+        pricingType: pricingType.toLowerCase(),
+        price: pricingType.toLowerCase() === "paid" ? Number(priceAmount) : 0,
+        billingInterval: "one_time",
+        educatorId: selectedEducator,
+        organizationId: "", // Should be fetched from context if available
+      };
+      
+      const response = await AdminAPI.createSession(sessionData);
+      if (response.success || response.id || response.sessionCode || response.message?.includes("success")) {
+        toast.success("Session created successfully!");
+        onBack();
+      } else {
+        toast.error(response.message || "Failed to create session");
+      }
+    } catch (error: any) {
+      console.error("Create session error:", error);
+      toast.error(error?.response?.data?.message || error?.message || "Error creating session");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -186,23 +342,23 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                   Delivery Mode
                 </label>
                 <div className="flex gap-3">
-                  {["Online", "Hybrid"].map((mode) => (
+                  {["Online", "Hybrid"].map((opt) => (
                     <button
-                      key={mode}
-                      onClick={() => setDeliveryMode(mode)}
+                      key={opt}
+                      onClick={() => setMode(opt.toLowerCase())}
                       className={`px-5 py-2 text-sm font-medium rounded-lg border transition-colors ${
-                        deliveryMode === mode
+                        mode === opt.toLowerCase()
                           ? "border-blue-600 text-blue-700 bg-white"
                           : "border-gray-200 text-gray-700 hover:bg-gray-50"
                       }`}
                     >
-                      {mode}
+                      {opt}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Toggles */}
+              {/* Interactive Toggles */}
               <div className="flex flex-col gap-5 border-t border-gray-100 pt-8 mb-12">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-900">
@@ -262,6 +418,8 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                   </label>
                   <input
                     type="text"
+                    value={sessionTitle}
+                    onChange={(e) => setSessionTitle(e.target.value)}
                     placeholder="Enter session title"
                     className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 placeholder-gray-400"
                   />
@@ -273,9 +431,9 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                   </label>
                   <input
                     type="text"
-                    defaultValue="WEB-500"
+                    value={sessionCode}
+                    onChange={(e) => setSessionCode(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-200 bg-gray-50 rounded-lg text-sm focus:outline-none"
-                    readOnly
                   />
                 </div>
 
@@ -306,6 +464,8 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                     Description
                   </label>
                   <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                     placeholder="Session description..."
                     rows={4}
                     className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 placeholder-gray-400 resize-none"
@@ -323,11 +483,11 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                   </label>
                   <div className="relative">
                     <input
-                      type="text"
-                      placeholder="DD/MM/YYYY"
+                      type="date"
+                      value={sessionDate}
+                      onChange={(e) => setSessionDate(e.target.value)}
                       className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
                     />
-                    <i className="ri-calendar-line absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                   </div>
                 </div>
                 <div>
@@ -336,8 +496,9 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                   </label>
                   <div className="relative">
                     <input
-                       type="text"
-                       placeholder="--:--"
+                       type="time"
+                       value={startTime}
+                       onChange={(e) => setStartTime(e.target.value)}
                        className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
                     />
                   </div>
@@ -348,8 +509,9 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                   </label>
                   <div className="relative">
                     <input
-                       type="text"
-                       placeholder="--:--"
+                       type="time"
+                       value={endTime}
+                       onChange={(e) => setEndTime(e.target.value)}
                        className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
                     />
                   </div>
@@ -366,7 +528,8 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                   </label>
                   <input
                     type="number"
-                    defaultValue={50}
+                    value={maxStudents}
+                    onChange={(e) => setMaxStudents(Number(e.target.value))}
                     className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
                   />
                 </div>
@@ -376,46 +539,28 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                   </label>
                   <input
                     type="number"
-                    defaultValue={5}
+                    value={minStudents}
+                    onChange={(e) => setMinStudents(Number(e.target.value))}
                     className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
                   />
                 </div>
               </div>
 
               <div className="text-xs font-semibold text-gray-500 mb-4 tracking-wider uppercase">
-                Session Platform
+                Max Students
               </div>
               <div className="flex gap-3 mb-8">
-                {["Zoom", "Google Meet", "Custom"].map((platform) => (
+                {[25, 50, 100, 200].map((num) => (
                   <button
-                    key={platform}
-                    onClick={() => setSessionPlatform(platform)}
+                    key={num}
+                    onClick={() => setMaxStudents(num)}
                     className={`px-5 py-2 text-sm font-medium rounded-lg border transition-colors ${
-                      sessionPlatform === platform
+                      maxStudents === num
                         ? "border-blue-600 text-blue-700 bg-white"
                         : "border-gray-200 text-gray-700 hover:bg-gray-50"
                     }`}
                   >
-                    {platform}
-                  </button>
-                ))}
-              </div>
-
-              <div className="text-xs font-semibold text-gray-500 mb-4 tracking-wider uppercase">
-                Status
-              </div>
-              <div className="flex gap-3 mb-10">
-                {["Draft", "Private"].map((stat) => (
-                  <button
-                    key={stat}
-                    onClick={() => setStatus(stat)}
-                    className={`px-5 py-2 text-sm font-medium rounded-lg border transition-colors ${
-                      status === stat
-                        ? "border-blue-600 text-blue-700 bg-white"
-                        : "border-gray-200 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    {stat}
+                    {num}
                   </button>
                 ))}
               </div>
@@ -454,6 +599,76 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
             </div>
           )}
 
+          {currentStep === 3 && pricingType === "Free" && (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-300 max-w-3xl">
+              <div className="mb-8">
+                <h2 className="text-lg font-bold text-gray-900 mb-1">Free Session</h2>
+                <p className="text-sm text-gray-500">This session will be free for all students.</p>
+              </div>
+              <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="ri-check-line text-2xl text-green-600"></i>
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-1">Free Access</h3>
+                <p className="text-sm text-gray-500">All students can access this session for free</p>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 3 && pricingType === "Paid" && (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-300 max-w-3xl">
+              <div className="mb-8">
+                <h2 className="text-lg font-bold text-gray-900 mb-1">Paid Session</h2>
+                <p className="text-sm text-gray-500">Set a one-time price for this session.</p>
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-900 mb-3">Price</label>
+                <div className="flex gap-3 items-center">
+                  <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-24 px-4 py-2 border border-gray-200 rounded-lg text-sm">
+                    <option value="USD">USD</option>
+                    <option value="INR">INR</option>
+                    <option value="EUR">EUR</option>
+                  </select>
+                  <input type="number" value={priceAmount} onChange={(e) => setPriceAmount(e.target.value)} placeholder="0.00" className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 3 && pricingType === "Bundle" && (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-300 max-w-3xl">
+              <div className="mb-8">
+                <h2 className="text-lg font-bold text-gray-900 mb-1">Bundle</h2>
+                <p className="text-sm text-gray-500">Select sessions to include in this bundle.</p>
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-900 mb-3">Select Sessions</label>
+                {paidSessions.length === 0 ? (
+                  <div className="border border-gray-200 rounded-xl p-6 text-center">
+                    <p className="text-sm text-gray-500">No paid sessions available. Create paid sessions first.</p>
+                  </div>
+                ) : (
+                  <div className="border border-gray-200 rounded-xl overflow-hidden max-h-80 overflow-y-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr><th className="px-4 py-3 w-12"></th><th className="px-4 py-3 font-medium">Session</th><th className="px-4 py-3 font-medium">Price</th></tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {paidSessions.map((session) => (
+                          <tr key={session.id} className={`cursor-pointer ${selectedBundleSessions.includes(session.id) ? "bg-blue-50" : "hover:bg-gray-50"}`} onClick={() => toggleBundleSession(session.id)}>
+                            <td className="px-4 py-3"><input type="checkbox" checked={selectedBundleSessions.includes(session.id)} onChange={() => {}} className="w-4 h-4" /></td>
+                            <td className="px-4 py-3 font-medium">{session.title || session.type || "Session"}</td>
+                            <td className="px-4 py-3 text-gray-500">${session.price || 0}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {currentStep === 4 && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="mb-8">
@@ -469,10 +684,9 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                     <tr className="border-b border-gray-200">
                       <th className="px-4 py-3 w-12 text-center"></th>
                       <th className="px-4 py-3 font-medium">Name</th>
-                      <th className="px-4 py-3 font-medium">Qualification</th>
-                      <th className="px-4 py-3 font-medium text-center">Sessions</th>
+                      <th className="px-4 py-3 font-medium">Specialization</th>
                       <th className="px-4 py-3 font-medium text-center">Rating</th>
-                      <th className="px-4 py-3 font-medium">Availability</th>
+                      <th className="px-4 py-3 font-medium">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -497,10 +711,7 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                           {edu.name}
                         </td>
                         <td className="px-4 py-4 text-gray-500">
-                          {edu.qualification}
-                        </td>
-                        <td className="px-4 py-4 text-gray-500 text-center">
-                          {edu.sessions}
+                          {edu.specialization}
                         </td>
                         <td className="px-4 py-4 text-gray-500 text-center">
                           <span className="text-orange-400 mr-1">★</span>{edu.rating}
@@ -508,12 +719,12 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                         <td className="px-4 py-4">
                           <span
                             className={`text-sm font-medium ${
-                              edu.status === "Available"
+                              edu.availabilityStatus === "available"
                                 ? "text-green-500"
                                 : "text-red-400"
                             }`}
                           >
-                            {edu.status}
+                            {edu.availabilityStatus}
                           </span>
                         </td>
                       </tr>
@@ -525,11 +736,51 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
           )}
 
           {currentStep === 5 && (
-            <AssignmentStep />
-          )}
+            <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="mb-8">
+                <h2 className="text-lg font-bold text-gray-900 mb-1">Review & Create</h2>
+                <p className="text-sm text-gray-500">
+                  Review session details before creating.
+                </p>
+              </div>
 
-          {currentStep === 6 && (
-            <ReviewConfirmStep />
+              <div className="bg-gray-50 rounded-xl p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Title</p>
+                    <p className="font-medium">{sessionTitle}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Session Code</p>
+                    <p className="font-medium">{sessionCode}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Type</p>
+                    <p className="font-medium">{sessionType}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Category</p>
+                    <p className="font-medium">{category}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Date</p>
+                    <p className="font-medium">{sessionDate}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Time</p>
+                    <p className="font-medium">{startTime} - {endTime}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Capacity</p>
+                    <p className="font-medium">{maxStudents} students</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Pricing</p>
+                    <p className="font-medium">{pricingType} {pricingType === "Paid" && `$${priceAmount}`}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Footer Actions */}
@@ -537,24 +788,23 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
             <button
               onClick={handlePrev}
               disabled={currentStep === 1}
-              className={`text-sm font-semibold text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed hover:text-gray-800 transition-colors ${currentStep === 6 ? "invisible" : ""}`}
+              className={`text-sm font-semibold text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed hover:text-gray-800 transition-colors`}
             >
               &lt; Back
             </button>
-            <div className={`flex items-center gap-3 ${currentStep === 6 ? "w-full justify-end" : ""}`}>
+            <div className="flex items-center gap-3">
               <button className="px-5 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 Save Draft
               </button>
-              {currentStep !== 6 && (
-                <button onClick={onBack} className="px-5 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  Cancel
-                </button>
-              )}
+              <button onClick={onBack} className="px-5 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                Cancel
+              </button>
               <button
-                onClick={handleNext}
-                className="px-6 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors"
+                onClick={currentStep === 5 ? handleSubmit : handleNext}
+                disabled={isSubmitting}
+                className="px-6 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
               >
-                {currentStep === 6 ? "Create Session" : "Next"}
+                {isSubmitting ? "Creating..." : currentStep === 5 ? "Create Session" : "Next"}
               </button>
             </div>
           </div>

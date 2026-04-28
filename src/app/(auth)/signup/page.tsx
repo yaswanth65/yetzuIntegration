@@ -57,13 +57,20 @@ export default function SignupForm() {
     initializeGoogleButtons();
   }, [googleClientId]);
 
-  const handleGoogleCredentialResponse = async (response: any) => {
+const handleGoogleCredentialResponse = async (response: any) => {
     try {
       const data = await googleSignIn({ idToken: response.credential });
       if (data?.userData && data?.userProfileData) {
         setIsUserLoggedIn(true);
         toast.success("Google sign-in successful!");
-        router.push("/");
+        const userRole = data.userProfileData.role;
+        if (userRole === "admin") {
+          router.push("/a/dashboard");
+        } else if (userRole === "educator") {
+          router.push("/e/dashboard");
+        } else {
+          router.push("/s/dashboard");
+        }
       } else {
         toast.error("Google sign-in failed!");
       }
@@ -81,13 +88,13 @@ export default function SignupForm() {
       <Formik
         initialValues={{ name: "", email: "", phone: "", password: "", confirmPassword: "" }}
         validationSchema={SignupSchema}
-        onSubmit={async (values) => {
+onSubmit={async (values) => {
           try {
             const payload = { ...values, mobileno: values.phone, role: "student" };
             const data = await signUp(payload);
             if (data.message === "User created") {
               toast.success("Signup successful! Redirecting...");
-              router.push('/')
+              router.push('/s/dashboard')
             } else {
               toast.error(data.message || "Something went wrong!");
             }

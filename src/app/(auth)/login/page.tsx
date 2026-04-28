@@ -76,14 +76,24 @@ export default function LoginForm() {
       <Formik
         initialValues={{ email: "", password: "", rememberMe: false }}
         validationSchema={LoginSchema}
-        onSubmit={async (values) => {
+onSubmit={async (values) => {
           try {
             const data = await login({ email: values.email, password: values.password, rememberMe: values.rememberMe })
             if (data?.userData && data?.userProfileData) {
               setIsUserLoggedIn(true)
               toast.success("Login successful!");
               fetchAndSetUserProfile()
-              router.push("/");
+              
+              const userRole = data.userProfileData.role;
+              if (userRole === "admin") {
+                router.push("/a/dashboard");
+              } else if (userRole === "educator") {
+                router.push("/e/dashboard");
+              } else if (userRole === "student") {
+                router.push("/s/dashboard");
+              } else {
+                router.push("/");
+              }
             } else {
               toast.error("Invalid credentials!");
             }

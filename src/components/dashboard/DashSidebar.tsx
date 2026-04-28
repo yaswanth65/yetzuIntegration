@@ -18,7 +18,8 @@ import {
     ChevronDown,
     Headphones,
     Menu,
-    RefreshCw
+    RefreshCw,
+    LogOut
 } from "lucide-react";
 import Image from "next/image";
 import { useLogoutMutation } from "@/lib/queries/identityService/useIdentityService";
@@ -195,6 +196,24 @@ export default function DashSidebar({ role, isOpen, onClose }: DashSidebarProps)
                             <Headphones size={22} strokeWidth={1.5} />
                             <span className="text-[15px]">Help & Support</span>
                         </Link>
+
+                        <button
+                            onClick={async () => {
+                                try {
+                                    const userId = user?.id;
+                                    if (userId) {
+                                        await logout({ userId });
+                                    }
+                                    router.push("/login");
+                                } catch (error) {
+                                    console.error("Logout failed:", error);
+                                }
+                            }}
+                            className="flex whitespace-nowrap items-center gap-4 px-4 py-3.5 text-[#4B5563] hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors w-full"
+                        >
+                            <LogOut size={22} strokeWidth={1.5} />
+                            <span className="text-[15px]">Logout</span>
+                        </button>
  
                     </div>
                 </div>

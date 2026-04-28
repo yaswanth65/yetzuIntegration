@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import SessionTable from "@/app/(admindash)/components/SessionTable";
 import SessionDetailsPanel from "@/app/(admindash)/components/SessionDetailsPanel";
 import { Session, Status, Tab } from "@/app/(admindash)/types/SessionType";
+import { AdminAPI, asArray } from "@/lib/api";
 import CreateSession from "./CreateSession";
 import CalendarView from "./CalendarView";
 import { Plus, Search, List, Calendar as CalendarIcon, Filter } from "lucide-react";
@@ -26,9 +27,39 @@ export default function AllSessions({ data }: Props) {
   const [isCreating, setIsCreating] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+  const [localData, setLocalData] = useState<Session[]>(data);
+
+  useEffect(() => {
+    setLocalData(data);
+  }, [data]);
+
+  const refreshSessions = async () => {
+    try {
+      const response = await AdminAPI.getSessions();
+      const rawData = asArray(response);
+      const apiSessions = rawData.map((item: any, index: number) => {
+        const rawDate = item.date || item.scheduledDate || item.startDateTime || item.createdAt;
+        return {
+          id: String(item.id || item._id || item.sessionId || `SESSION-${index + 1}`),
+          title: item.title || "Untitled",
+          type: String(item.type || "Webinar"),
+          educator: String(item.educatorName || item.mentorName || "Educator"),
+          students: Number(item.students || item.attendees || item.enrolledCount || 0),
+          attendees: Number(item.students || item.attendees || item.enrolledCount || 0),
+          date: rawDate ? new Date(rawDate).toLocaleDateString() : "TBD",
+          startTime: item.startTime || "09:00 AM",
+          endTime: item.endTime || "10:00 AM",
+          status: String(item.status === "Upcoming" ? "Scheduled" : (item.status || "Scheduled")),
+        };
+      });
+      setLocalData(apiSessions as Session[]);
+    } catch (error) {
+      console.error("Failed to refresh sessions:", error);
+    }
+  };
 
   const filteredData = useMemo(() => {
-    let list = data;
+    let list = localData;
 
     if (activeTab !== "All") {
       const status = tabStatusMap[activeTab];
@@ -161,7 +192,7 @@ export default function AllSessions({ data }: Props) {
           </div>
         ) : (
           <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 sm:p-8">
-            <CalendarView />
+            <CalendarView data={filteredData} />
           </div>
         )}
       </div>

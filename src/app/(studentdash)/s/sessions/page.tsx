@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Search, Calendar, Clock, MoreVertical, ExternalLink } from "lucide-react";
 import Link from "next/link"; 
 import RescheduleModal from "../../components/Reschedule";
-import { CourseAPI } from "@/lib/api"; 
+import { CourseAPI, StudentAPI, asArray } from "@/lib/api"; 
 
 const getThemeStyles = (type: string, badgeType?: string) => {
   let badgeClasses = "";
@@ -62,53 +62,52 @@ export default function SessionsPage() {
   useEffect(() => {
     const fetchSessions = async () => {
       try {
-        const res = await CourseAPI.getAllCourses();
-        if (res.courses && Array.isArray(res.courses)) {
-          const mappedCourses = res.courses.map((course: any) => {
-            const startDate = new Date(course.startDateTime);
-            const durationHours = parseInt(course.duration) || 1; 
-            const endDate = new Date(startDate.getTime() + durationHours * 60 * 60 * 1000);
+        const response = await StudentAPI.getOverview();
+        const data = response?.data || response;
+        
+        const allSessions: any[] = [];
 
-            const dateStr = startDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-            const formatTime = (d: Date) => d.toLocaleTimeString("en-US", { hour: 'numeric', minute: '2-digit', hour12: true });
-            const timeStr = `${formatTime(startDate)} - ${formatTime(endDate)}`;
+        // 1. Process Enrolled Courses (General list) - These are the ONLY ones that should show here
+        const enrolled = asArray(data.enrolledCourses || []);
+        enrolled.forEach((c: any) => {
+          const startDate = c.startDateTime || c.date ? new Date(c.startDateTime || c.date) : new Date();
+          const dateStr = startDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+          const timeStr = c.time || startDate.toLocaleTimeString("en-US", { hour: 'numeric', minute: '2-digit', hour12: true });
 
-            const today = new Date();
-            const isToday = startDate.toDateString() === today.toDateString();
-            const isPast = endDate < today;
-            
-            let tab = "upcoming";
-            if (isPast) tab = "completed";
-
-            let badge = null;
-            let badgeType = "gray";
-            if (isToday && !isPast) {
-              badge = `STARTS IN 12 MINS`;
-              badgeType = "purple";
-            }
-
-            return {
-              id: course._id,
-              slug: course._id, 
-              title: course.title || "Untitled Session",
-              type: course.title?.toLowerCase().includes('cohort') ? 'cohort' : 'webinar',
-              mentor: {
-                name: course.educator?.name || course.educatorName || "Educator", 
-                role: course.subtitle || course.educator?.role || "",
-                avatar: course.educator?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(course.educator?.name || course.educatorName || "Educator")}&background=random`,
-              },
-              date: dateStr,
-              time: timeStr,
-              badge,
-              badgeType,
-              tab,
-              isFocusToday: isToday && !isPast,
-            };
+          allSessions.push({
+            id: c._id || c.id,
+            slug: c._id || c.id,
+            title: c.title || "Untitled Course",
+            type: (c.title || "").toLowerCase().includes('cohort') ? 'cohort' : 'webinar',
+            mentor: {
+              name: c.educatorName || c.educator?.name || "Educator",
+              role: c.subtitle || "Mentor",
+              avatar: c.educator?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.educatorName || "E")}&background=random`,
+            },
+            date: dateStr,
+            time: timeStr,
+            badge: null,
+            badgeType: "gray",
+            tab: "upcoming", 
+            isFocusToday: false
           });
+        });
 
-          setSessions(mappedCourses);
-        }
-      } catch {
+        // 2. Process Upcoming Sessions (Specific focus) - Mark existing enrolled courses as "Today"
+        const upcoming = asArray(data.upcomingSessions || []);
+        upcoming.forEach((s: any) => {
+          const targetId = s.courseId || s.id || s._id;
+          const existing = allSessions.find(item => item.id === targetId);
+          if (existing) {
+             existing.isFocusToday = true;
+             existing.badge = "STARTS SOON";
+             existing.badgeType = "purple";
+          }
+        });
+
+        setSessions(allSessions);
+      } catch (error) {
+        console.error("Sessions fetch error:", error);
         setSessions([]);
       } finally {
         setIsLoading(false);

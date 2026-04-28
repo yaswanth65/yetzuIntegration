@@ -3,15 +3,20 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link2, Send, MessageSquareMore, ArrowLeft, Search, Mic, MoreVertical } from "lucide-react";
 import { StudentAPI, asArray } from "@/lib/api";
+import Cookies from "js-cookie";
 
 export default function ChatPage() {
-  const [userId, setUserId] = useState<string | null>(null);
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
   const [inputText, setInputText] = useState("");
   const [showMobileList, setShowMobileList] = useState(true);
   const [educators, setEducators] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+
+  useEffect(() => {
+    setCurrentUserId(Cookies.get("userId") || "");
+  }, []);
 
   useEffect(() => {
     const fetchEducators = async () => {
@@ -39,24 +44,29 @@ export default function ChatPage() {
       } catch {
         setEducators([]);
       }
-      setUserId("me");
     };
 
     fetchEducators();
   }, []);
 
-  useEffect(() => {
+useEffect(() => {
     if (!activeContactId) return;
 
     const fetchMessages = async () => {
       try {
         const response = await StudentAPI.getChatMessages(activeContactId);
-        const apiMessages = asArray(response).map((item: any, index: number) => ({
-          id: item.id || item._id || `msg-${index}`,
-          from: item.from || item.sender || (item.senderId === userId ? "me" : "educator"),
-          content: item.content || item.message || item.text || "",
-          timestamp: item.timestamp || item.createdAt || item.time || new Date().toISOString(),
-        }));
+        const rawMessages = asArray(response);
+        
+        const apiMessages = rawMessages.map((item: any, index: number) => {
+          const messageFrom = item.from || "";
+          const isFromMe = messageFrom === currentUserId;
+          return {
+            id: item.id || item._id || "msg-" + index,
+            from: isFromMe ? "me" : "educator",
+            content: item.content || item.message || item.text || "",
+            timestamp: item.timestamp || item.createdAt || item.time || new Date().toISOString(),
+          };
+        });
         setMessages(apiMessages);
       } catch {
         setMessages([]);
@@ -64,7 +74,7 @@ export default function ChatPage() {
     };
 
     fetchMessages();
-  }, [activeContactId]);
+  }, [activeContactId, currentUserId]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -257,4 +267,4 @@ export default function ChatPage() {
       </div>
     </div>
   );
-}
+} 

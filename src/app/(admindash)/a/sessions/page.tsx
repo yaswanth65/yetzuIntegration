@@ -14,14 +14,14 @@ export default function page() {
       try {
         const response = await AdminAPI.getSessions();
         const rawData = asArray(response);
-        console.log('Raw API sessions data:', rawData.slice(0, 2)); // Debug log
+        console.log('Raw API sessions data:', rawData.slice(0, 2)); 
         
         const apiSessions = rawData.map((item: any, index: number) => {
           const rawDate = item.date || item.scheduledDate || item.startDateTime || item.createdAt;
           const date = rawDate ? new Date(rawDate).toLocaleDateString() : "TBD";
+          const dateTime = rawDate ? new Date(rawDate) : new Date();
           const status = item.status || item.Status || "Scheduled";
 
-          // Extract educator name safely
           let educatorName = "Educator";
           const edu = item.educator;
           if (typeof edu === 'string') {
@@ -34,7 +34,6 @@ export default function page() {
             educatorName = item.mentorName;
           }
 
-          // Extract type safely
           let sessionType = "Webinar";
           const typ = item.type;
           if (typeof typ === 'string') {
@@ -45,7 +44,6 @@ export default function page() {
             sessionType = item.sessionType;
           }
 
-          // Extract students count safely
           let studentsCount = 0;
           const stu = item.students;
           if (typeof stu === 'number') {
@@ -59,15 +57,18 @@ export default function page() {
           }
 
           const session = {
-            id: String(item.id || item._id || item.sessionId || `SESSION-${index + 1}`),
+            id: String(item.id || item._id || item.sessionId || item.sessionCode || `SESSION-${index + 1}`),
+            title: item.title || sessionType,
             type: String(sessionType),
             educator: String(educatorName),
             students: Number(studentsCount),
+            attendees: Number(studentsCount),
             date,
+            startTime: item.startTime || "09:00 AM",
+            endTime: item.endTime || "10:00 AM",
             status: String(status === "Upcoming" ? "Scheduled" : status),
           };
           
-          // Verify no objects remain
           Object.keys(session).forEach(key => {
             if (typeof (session as any)[key] === 'object') {
               console.error(`Session field ${key} is still an object:`, (session as any)[key]);
