@@ -1,77 +1,187 @@
 import Cookies from "js-cookie";
-import { api, authApi } from "./axios";
+import { AxiosError } from "axios";
+import { api, authApi, getJwtUserId } from "./axios";
 
 const dataOf = (response: any) => response?.data ?? response;
 
-export const asArray = (value: any): any[] => {
-  if (Array.isArray(value)) return value;
-  if (Array.isArray(value?.data?.list)) return value.data.list;
-  if (Array.isArray(value?.data?.items)) return value.data.items;
-  if (Array.isArray(value?.data?.session?.list)) return value.data.session.list;
-  if (Array.isArray(value?.data?.sessions?.list)) return value.data.sessions.list;
-  if (Array.isArray(value?.data?.assignments?.list)) return value.data.assignments.list;
-  if (Array.isArray(value?.data?.requests)) return value.data.requests;
-  if (Array.isArray(value?.data?.notifications)) return value.data.notifications;
-  if (Array.isArray(value?.data?.messages)) return value.data.messages;
-  if (Array.isArray(value?.data)) return value.data;
-  if (Array.isArray(value?.items)) return value.items;
-  if (Array.isArray(value?.list)) return value.list;
-  if (Array.isArray(value?.session?.list)) return value.session.list;
-  if (Array.isArray(value?.sessions?.list)) return value.sessions.list;
-  if (Array.isArray(value?.assignments?.list)) return value.assignments.list;
-  if (Array.isArray(value?.requests)) return value.requests;
-  if (Array.isArray(value?.courses)) return value.courses;
-  if (Array.isArray(value?.assignments)) return value.assignments;
-  if (Array.isArray(value?.sessions)) return value.sessions;
-  if (Array.isArray(value?.userList)) return value.userList;
-  if (Array.isArray(value?.notifications)) return value.notifications;
-  if (Array.isArray(value?.educators)) return value.educators;
-  if (Array.isArray(value?.students)) return value.students;
-  if (Array.isArray(value?.messages)) return value.messages;
-  return [];
-};
+const getObjectKeys = (value: any): string[] =>
+  value && typeof value === "object" ? Object.keys(value).slice(0, 12) : [];
+
+const isFileLike = (value: any): boolean =>
+  typeof File !== "undefined" && value instanceof File;
+
+const getUserId = (): string => getJwtUserId(Cookies.get("jwtToken")) || Cookies.get("userId") || "";
 
 const withUserId = (payload: Record<string, any> = {}) => {
-  const userId = Cookies.get("userId");
+  const userId = getUserId();
   return userId ? { ...payload, userId } : payload;
+};
+
+const logApiFailure = (label: string, error: unknown, meta?: Record<string, any>) => {
+  const axiosError = error as AxiosError;
+  console.error(`[API:${label}]`, {
+    meta,
+    message: axiosError?.message,
+    status: axiosError?.response?.status,
+    response: axiosError?.response?.data,
+  });
+};
+
+const appendFormDataValue = (formData: FormData, key: string, value: any) => {
+  if (value === undefined || value === null || value === "") return;
+  if (Array.isArray(value) || (typeof value === "object" && !isFileLike(value) && !(value instanceof Blob))) {
+    formData.append(key, JSON.stringify(value));
+    return;
+  }
+  if (typeof value === "boolean") {
+    formData.append(key, value ? "true" : "false");
+    return;
+  }
+  formData.append(key, value as string | Blob);
+};
+
+const buildFormData = (payload: Record<string, any>): FormData => {
+  const formData = new FormData();
+  Object.entries(payload).forEach(([key, value]) => appendFormDataValue(formData, key, value));
+  return formData;
+};
+
+const overviewAssignmentFallback = async () => {
+  const overview = await authApi.post("/api/student/dashboard/overview", {});
+  const data = dataOf(overview);
+  const list =
+    asArray(data?.data?.pendingAssignments) ||
+    asArray(data?.data?.dueAssignments) ||
+    asArray(data?.pendingAssignments) ||
+    asArray(data?.dueAssignments);
+
+  return {
+    success: false,
+    message: "Student assignment list endpoint failed. Using dashboard fallback.",
+    data: list,
+  };
+};
+
+export const asArray = (value: any): any[] => {
+  if (Array.isArray(value)) return value;
+
+  const candidates = [
+    value?.data?.list,
+    value?.data?.items,
+    value?.data?.session?.list,
+    value?.data?.sessions?.list,
+    value?.data?.assignments?.list,
+    value?.data?.requests,
+    value?.data?.notifications,
+    value?.data?.messages,
+    value?.data?.courses,
+    value?.data?.userList,
+    value?.data?.students,
+    value?.data?.educators,
+    value?.data?.submissions,
+    value?.data,
+    value?.items,
+    value?.list,
+    value?.session?.list,
+    value?.sessions?.list,
+    value?.assignments?.list,
+    value?.requests,
+    value?.courses,
+    value?.assignments,
+    value?.sessions,
+    value?.userList,
+    value?.notifications,
+    value?.educators,
+    value?.students,
+    value?.messages,
+    value?.submissions,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) {
+      return candidate;
+    }
+  }
+
+  return [];
 };
 
 export const CourseAPI = {
   getAllCourses: async (params?: { search?: string; minCost?: number; maxCost?: number }) => {
-    const response = await api.get("/api/course/v1/courselist", { params });
-    return dataOf(response);
+    try {
+      const response = await authApi.get("/api/course/v1/courselist", { params });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("CourseAPI.getAllCourses", error, { params });
+      throw error;
+    }
   },
 
   getCourseById: async (courseId: string) => {
-    const response = await api.get(`/api/courses/${courseId}`);
-    return dataOf(response);
+    try {
+      const response = await api.get(`/api/course/v1/get/${courseId}`);
+      return dataOf(response);
+    } catch (primaryError) {
+      logApiFailure("CourseAPI.getCourseById.primary", primaryError, { courseId });
+      try {
+        const fallbackResponse = await api.get(`/api/courses/${courseId}`);
+        return dataOf(fallbackResponse);
+      } catch (fallbackError) {
+        logApiFailure("CourseAPI.getCourseById.fallback", fallbackError, { courseId });
+        throw fallbackError;
+      }
+    }
   },
 };
 
 export const PaymentAPI = {
   createOrder: async (payload: { amount: number; currency?: string; courseId: string; userId?: string }) => {
-    const response = await authApi.post("/api/payment/order", {
-      currency: "INR",
-      ...withUserId(payload),
-    });
-    return dataOf(response);
+    try {
+      const response = await authApi.post("/api/payment/order", {
+        currency: "INR",
+        ...withUserId(payload),
+      });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("PaymentAPI.createOrder", error, { payload });
+      throw error;
+    }
   },
 };
 
 export const StudentAPI = {
   getOverview: async () => {
-    const response = await authApi.post("/api/student/dashboard/overview", {});
-    return dataOf(response);
+    try {
+      const response = await authApi.post("/api/student/dashboard/overview", {});
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("StudentAPI.getOverview", error);
+      throw error;
+    }
   },
 
   getDashboardOverview: async () => {
-    const response = await authApi.post("/api/student/dashboard/overview", {});
-    return dataOf(response);
+    return StudentAPI.getOverview();
+  },
+
+  getProfile: async () => {
+    try {
+      const response = await authApi.get("/api/identityapi/v1/auth/me");
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("StudentAPI.getProfile", error);
+      throw error;
+    }
   },
 
   getNotifications: async () => {
-    const response = await authApi.get("/api/student/dashboard/notifications");
-    return dataOf(response);
+    try {
+      const response = await authApi.get("/api/student/dashboard/notifications");
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("StudentAPI.getNotifications", error);
+      throw error;
+    }
   },
 
   editProfile: async (data: { name?: string; email?: string; mobileno?: string; phone?: string }) => {
@@ -79,12 +189,19 @@ export const StudentAPI = {
       ...data,
       mobileno: data.mobileno ?? data.phone,
     };
+
     try {
       const response = await authApi.put("/api/dashboard/updateStudentDetails", payload);
       return dataOf(response);
-    } catch (error) {
-      const response = await authApi.put("/api/student/edit-profile", payload);
-      return dataOf(response);
+    } catch (primaryError) {
+      logApiFailure("StudentAPI.editProfile.primary", primaryError, { payload });
+      try {
+        const fallback = await authApi.put("/api/student/edit-profile", payload);
+        return dataOf(fallback);
+      } catch (fallbackError) {
+        logApiFailure("StudentAPI.editProfile.fallback", fallbackError, { payload });
+        throw fallbackError;
+      }
     }
   },
 
@@ -92,100 +209,167 @@ export const StudentAPI = {
     try {
       const response = await authApi.get("/api/assignment/studentList");
       return dataOf(response);
-    } catch {
-      return { success: false, data: [] };
+    } catch (error) {
+      logApiFailure("StudentAPI.getAssignments.primary", error);
+      try {
+        return await overviewAssignmentFallback();
+      } catch (fallbackError) {
+        logApiFailure("StudentAPI.getAssignments.fallback", fallbackError);
+        return { success: false, data: [] };
+      }
     }
   },
 
   uploadAssignment: async (formData: FormData) => {
-    const response = await authApi.post("/api/assignment/upload", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    return dataOf(response);
+    try {
+      const response = await authApi.post("/api/assignment/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("StudentAPI.uploadAssignment", error, {
+        keys: Array.from(formData.keys()),
+      });
+      throw error;
+    }
   },
 
   submitAssignment: async (assignmentId: string, file: File) => {
     if (!assignmentId || !file) {
       throw new Error("Assignment and file are required.");
     }
+
     const formData = new FormData();
     formData.append("assignmentId", assignmentId);
     formData.append("file", file);
-    const response = await authApi.post("/api/student/assignments/submit", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    return dataOf(response);
+
+    try {
+      const response = await authApi.post("/api/student/assignments/submit", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("StudentAPI.submitAssignment", error, {
+        assignmentId,
+        fileName: file.name,
+      });
+      throw error;
+    }
   },
 
   addAssignmentComment: async (payload: { assignmentId: string; comment: string }) => {
-    const response = await authApi.post("/api/student/assignments/add-comment", payload);
-    return dataOf(response);
+    try {
+      const response = await authApi.post("/api/student/assignments/add-comment", payload);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("StudentAPI.addAssignmentComment", error, { payload });
+      throw error;
+    }
   },
 
   rescheduleCourse: async (payload: { courseId: string; reason: string; proposedDate: string }) => {
     if (!payload.courseId || !payload.reason || !payload.proposedDate) {
       throw new Error("Course, reason, and proposed date are required.");
     }
-    const response = await authApi.post("/api/student/course/reschedule-request", payload);
-    return dataOf(response);
+
+    try {
+      const response = await authApi.post("/api/student/course/reschedule-request", payload);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("StudentAPI.rescheduleCourse", error, { payload });
+      throw error;
+    }
   },
 
   getChatEducators: async () => {
-    const response = await authApi.get("/api/Studentchat/educators");
-    return dataOf(response);
+    try {
+      const response = await authApi.get("/api/Studentchat/educators");
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("StudentAPI.getChatEducators", error);
+      throw error;
+    }
   },
 
   getChatMessages: async (educatorId: string) => {
-    const response = await authApi.post("/api/Studentchat/messages", { educatorId });
-    return dataOf(response);
+    try {
+      const response = await authApi.post("/api/Studentchat/messages", { educatorId });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("StudentAPI.getChatMessages", error, { educatorId });
+      throw error;
+    }
   },
 
   sendChatMessage: async (educatorId: string, content: string) => {
-    const response = await authApi.post("/api/Studentchat/send", { educatorId, content });
-    return dataOf(response);
+    try {
+      const response = await authApi.post("/api/Studentchat/send", { educatorId, content });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("StudentAPI.sendChatMessage", error, { educatorId, contentLength: content.length });
+      throw error;
+    }
   },
 };
 
 export const EducatorAPI = {
+  rescheduleSession: async (payload: { sessionId: string; reason: string; proposedDate: string; proposedTime: string }) => {
+    try {
+      const response = await authApi.post("/api/educator/session/reschedule-request", payload);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.rescheduleSession", error, { payload });
+      throw error;
+    }
+  },
+
   getOverview: async () => {
-    const response = await authApi.post("/api/educator/overview", {});
-    return dataOf(response);
+    try {
+      const response = await authApi.post("/api/educator/overview", {});
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.getOverview", error);
+      throw error;
+    }
   },
 
   getMySessions: async () => {
-    const response = await authApi.get("/api/educator/sessions", {
-      params: { page: 1, limit: 100 },
-    });
-    return dataOf(response);
+    try {
+      const response = await authApi.get("/api/educator/sessions", {
+        params: { page: 1, limit: 100 },
+      });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.getMySessions", error);
+      throw error;
+    }
   },
 
   getSessions: async () => {
-    const response = await authApi.get("/api/educator/sessions", {
-      params: { page: 1, limit: 100 },
-    });
-    return dataOf(response);
+    return EducatorAPI.getMySessions();
   },
 
   getRescheduleRequests: async () => {
-    const overview = await authApi.post("/api/educator/overview", {});
-    const sessions = await authApi.get("/api/educator/sessions");
-    
-    const overviewData = dataOf(overview);
-    const sessionsData = dataOf(sessions);
-    
-    const rescheduleRequests = [];
-    if (sessionsData?.list) {
-      for (const session of sessionsData.list) {
-        if (session.rescheduleRequests) {
-          rescheduleRequests.push(...session.rescheduleRequests);
-        }
-      }
+    try {
+      const response = await authApi.post("/api/educator/reschedule/list", {});
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.getRescheduleRequests.primary", error);
+      const [overview, sessions] = await Promise.all([EducatorAPI.getOverview(), EducatorAPI.getSessions()]);
+      const requests = [
+        ...asArray(overview?.data?.requests || overview?.requests),
+        ...asArray(sessions).flatMap((session: any) => asArray(session?.rescheduleRequests)),
+      ];
+
+      return {
+        success: false,
+        message: "Reschedule list endpoint unavailable. Using session-derived fallback.",
+        data: {
+          list: requests,
+          count: requests.length,
+        },
+      };
     }
-    
-    return {
-      list: rescheduleRequests,
-      fromOverview: overviewData
-    };
   },
 
   handleRescheduleAction: async (payload: {
@@ -199,130 +383,324 @@ export const EducatorAPI = {
       ...payload,
       status: payload.status ?? payload.action,
     };
-    const response = await authApi.post("/api/educator/reschedule/action", body);
-    return dataOf(response);
+
+    try {
+      const response = await authApi.post("/api/educator/reschedule/action", body);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.handleRescheduleAction", error, { body });
+      throw error;
+    }
   },
 
   createAssignment: async (formData: FormData) => {
     for (const field of ["title", "description", "dueDate"]) {
-      if (!formData.get(field)) throw new Error(`${field} is required.`);
+      if (!formData.get(field)) {
+        throw new Error(`${field} is required.`);
+      }
     }
-    const userId = Cookies.get("userId");
-    if (userId) formData.append("userId", userId);
-    const response = await authApi.post("/api/educator/assignments/create", formData);
-    return dataOf(response);
+
+    if (!formData.get("sessionId") && !formData.get("courseId")) {
+      throw new Error("sessionId or courseId is required.");
+    }
+
+    try {
+      const response = await authApi.post("/api/educator/assignments/create", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return dataOf(response);
+    } catch (primaryError) {
+      logApiFailure("EducatorAPI.createAssignment.primary", primaryError, {
+        keys: Array.from(formData.keys()),
+      });
+      try {
+        const fallback = await authApi.post("/api/educator/assignment/create", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        return dataOf(fallback);
+      } catch (fallbackError) {
+        logApiFailure("EducatorAPI.createAssignment.fallback", fallbackError, {
+          keys: Array.from(formData.keys()),
+        });
+        throw fallbackError;
+      }
+    }
   },
 
   getAssignments: async () => {
-    const response = await authApi.post("/api/educator/assignments/list", {
-      status: "published",
-    });
-    return dataOf(response);
+    try {
+      const response = await authApi.post("/api/educator/assignments/list", {
+        status: "published",
+      });
+      return dataOf(response);
+    } catch (primaryError) {
+      logApiFailure("EducatorAPI.getAssignments.primary", primaryError);
+      try {
+        const fallback = await authApi.post("/api/educator/assignment/list", {
+          status: "published",
+        });
+        return dataOf(fallback);
+      } catch (fallbackError) {
+        logApiFailure("EducatorAPI.getAssignments.fallback", fallbackError);
+        throw fallbackError;
+      }
+    }
+  },
+
+  getAssignmentById: async (id: string) => {
+    const response = await EducatorAPI.getAssignments();
+    const match = asArray(response).find(
+      (assignment: any) =>
+        String(assignment.id || assignment._id || assignment.assignmentId) === String(id),
+    );
+
+    if (!match) {
+      throw new Error(`Assignment ${id} not found in educator assignment list.`);
+    }
+
+    return match;
+  },
+
+  addFeedback: async (payload: { assignmentId: string; text: string }) => {
+    try {
+      const response = await authApi.post("/api/educator/assignments/feedback", payload);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.addFeedback", error, { payload });
+      throw error;
+    }
+  },
+
+  updateAssignmentStatus: async (payload: { assignmentId: string; status: string }) => {
+    try {
+      const response = await authApi.post("/api/educator/assignments/status", payload);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.updateAssignmentStatus", error, { payload });
+      throw error;
+    }
   },
 
   getPendingSubmissions: async () => {
-    const overview = await authApi.post("/api/educator/overview", {});
-    const overviewData = dataOf(overview);
-    
-    return {
-      list: overviewData?.pending?.list || [],
-      alerts: overviewData?.alerts?.list || []
-    };
+    try {
+      const response = await authApi.post("/api/educator/submissions/pending", {});
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.getPendingSubmissions.primary", error);
+      const assignmentsResponse = await EducatorAPI.getAssignments();
+      const pending = asArray(assignmentsResponse).flatMap((assignment: any) =>
+        asArray(assignment?.submissions).filter((submission: any) => {
+          const status = String(submission?.status || "").toLowerCase();
+          return status === "submitted" || status === "pending";
+        }).map((submission: any) => ({
+          ...submission,
+          assignmentId: assignment.id || assignment.assignmentId,
+          assignmentTitle: assignment.title,
+          studentName:
+            submission.studentName ||
+            submission.student?.name ||
+            assignment.assignedStudents?.[0]?.name ||
+            "Student",
+        })),
+      );
+
+      return {
+        success: false,
+        message: "Pending submissions endpoint unavailable. Using assignment submissions fallback.",
+        data: {
+          list: pending,
+          count: pending.length,
+        },
+      };
+    }
   },
 
   reviewSubmission: async (payload: { submissionId: string; status: string; educatorRemark: string }) => {
-    const response = await authApi.post("/api/educator/submissions/review", payload);
-    return dataOf(response);
+    try {
+      const response = await authApi.post("/api/educator/submissions/review", payload);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.reviewSubmission", error, { payload });
+      throw error;
+    }
   },
 };
 
 export const EducatorChatAPI = {
   getStudents: async () => {
-    const response = await authApi.get("/api/Educatorchat/students");
-    return dataOf(response);
+    try {
+      const response = await authApi.get("/api/Educatorchat/students");
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorChatAPI.getStudents", error);
+      throw error;
+    }
   },
 
   getMessages: async (studentId: string) => {
-    const response = await authApi.post("/api/Educatorchat/messages", { studentId });
-    return dataOf(response);
+    try {
+      const response = await authApi.post("/api/Educatorchat/messages", { studentId });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorChatAPI.getMessages", error, { studentId });
+      throw error;
+    }
   },
 
   sendMessage: async (studentId: string, content: string) => {
-    const response = await authApi.post("/api/Educatorchat/send", { studentId, content });
-    return dataOf(response);
+    try {
+      const response = await authApi.post("/api/Educatorchat/send", { studentId, content });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorChatAPI.sendMessage", error, { studentId, contentLength: content.length });
+      throw error;
+    }
   },
 };
 
 export const AdminAPI = {
   getOverview: async () => {
-    const response = await authApi.get("/api/admin/overview");
-    return dataOf(response);
+    try {
+      const response = await authApi.get("/api/admin/overview");
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.getOverview.primary", error);
+      const [users, sessions] = await Promise.all([
+        AdminAPI.getUsers({ page: 1, limit: 100 }),
+        AdminAPI.getSessions({ page: 1, limit: 100 }),
+      ]);
+      const userList = asArray(users);
+      const sessionList = asArray(sessions);
+
+      return {
+        success: false,
+        message: "Admin overview endpoint unavailable. Using users and sessions fallback.",
+        data: {
+          cards: {
+            activeStudents: userList.filter((user: any) => user.role === "student" || user.Role === "student").length,
+            activeEducators: userList.filter((user: any) => user.role === "educator" || user.Role === "educator").length,
+            sessionsToday: sessionList.filter((session: any) => {
+              const rawDate = session.scheduleDate || session.scheduledDate || session.date;
+              if (!rawDate) return false;
+              return new Date(rawDate).toDateString() === new Date().toDateString();
+            }).length,
+            certificatesIssued: 0,
+          },
+          liveActivityFeed: [],
+          alerts: [],
+        },
+      };
+    }
   },
 
   getUsers: async (params?: { search?: string; status?: string; role?: string; page?: number; limit?: number }) => {
-    const response = await authApi.get("/api/admin/users", { params });
-    return dataOf(response);
+    try {
+      const response = await authApi.get("/api/admin/users", { params });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.getUsers", error, { params });
+      throw error;
+    }
   },
 
   createUser: async (payload: { name: string; email: string; role: string; password?: string }) => {
     if (!payload.name || !payload.email || !payload.role) {
       throw new Error("Name, email, and role are required.");
     }
-    const response = await authApi.post("/api/admin/users", payload);
-    return dataOf(response);
+
+    try {
+      const response = await authApi.post("/api/admin/users", payload);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.createUser", error, { payload });
+      throw error;
+    }
   },
 
   updateUser: async (payload: { userId: string; name?: string; email?: string; status?: string; role?: string }) => {
     const { userId, ...body } = payload;
-    const response = await authApi.put(`/api/admin/users/${userId}`, body);
-    return dataOf(response);
+    try {
+      const response = await authApi.put(`/api/admin/users/${userId}`, body);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.updateUser", error, { payload });
+      throw error;
+    }
   },
 
   deleteUser: async (userId: string) => {
-    const response = await authApi.delete(`/api/admin/users/${userId}`);
-    return dataOf(response);
+    try {
+      const response = await authApi.delete(`/api/admin/users/${userId}`);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.deleteUser", error, { userId });
+      throw error;
+    }
   },
 
   getSessions: async (params?: { search?: string; status?: string; page?: number; limit?: number }) => {
-    const response = await authApi.get("/api/admin/sessions", { params });
-    return dataOf(response);
+    try {
+      const response = await authApi.get("/api/admin/sessions", { params });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.getSessions", error, { params });
+      throw error;
+    }
   },
 
-  createSession: async (sessionData: any) => {
-    // Evidence from Postman and test scripts shows the API expects multipart/form-data
-    const formData = new FormData();
-    Object.entries(sessionData).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        formData.append(key, String(value));
-      }
-    });
-    
-    // Explicitly using multipart/form-data but letting Axios set the boundary
-    const response = await authApi.post("/api/admin/sessions", formData, {
-      headers: {
-        "Content-Type": undefined,
-      },
-    } as any);
-    return dataOf(response);
+  createSession: async (sessionData: FormData | Record<string, any>) => {
+    const formData = sessionData instanceof FormData ? sessionData : buildFormData(sessionData);
+
+    try {
+      const response = await authApi.post("/api/admin/sessions", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.createSession", error, {
+        keys: Array.from(formData.keys()),
+      });
+      throw error;
+    }
   },
 
   updateSession: async (sessionId: string, sessionData: any) => {
-    const response = await authApi.put(`/api/admin/sessions/${sessionId}`, sessionData);
-    return dataOf(response);
+    try {
+      const response = await authApi.put(`/api/admin/sessions/${sessionId}`, sessionData);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.updateSession", error, { sessionId, keys: getObjectKeys(sessionData) });
+      throw error;
+    }
   },
 
   deleteSession: async (sessionId: string) => {
-    const response = await authApi.delete(`/api/admin/sessions/${sessionId}`);
-    return dataOf(response);
+    try {
+      const response = await authApi.delete(`/api/admin/sessions/${sessionId}`);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.deleteSession", error, { sessionId });
+      throw error;
+    }
   },
 
   getActivity: async (params?: { page?: number; limit?: number }) => {
-    const response = await authApi.get("/api/admin/activity", { params });
-    return dataOf(response);
+    try {
+      const response = await authApi.get("/api/admin/activity", { params });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.getActivity", error, { params });
+      throw error;
+    }
   },
 
   getTickets: async (params?: { page?: number; limit?: number }) => {
-    const response = await authApi.get("/api/admin/tickets", { params });
-    return dataOf(response);
+    try {
+      const response = await authApi.get("/api/admin/tickets", { params });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.getTickets", error, { params });
+      throw error;
+    }
   },
 };

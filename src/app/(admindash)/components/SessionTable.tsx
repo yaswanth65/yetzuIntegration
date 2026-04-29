@@ -90,23 +90,16 @@ export default function SessionTable({data,showHeader = true, title, onRowClick,
                               No sessions found
                             </td>
                           </tr>
-                        ) : data.map((item, idx) => {
-                            const renderSafe = (value: any) => {
-                              if (typeof value === 'object' && value !== null) {
-                                return JSON.stringify(value);
-                              }
-                              return value;
-                            };
-                            return (
+                        ) : data.map((item, idx) => (
                             <tr 
                               key={idx} 
                               className={`transition-colors hover:bg-gray-50 ${selectedSessionId === item.id ? "bg-blue-50/50" : ""}`}
                             >
-                                <td className="px-7 py-4 font-semibold">{renderSafe(item.id)}</td>
-                                <td className="px-7 py-4 text-gray-500">{renderSafe(item.type)}</td>
-                                <td className="px-7 py-4">{renderSafe(item.educator)}</td>
-                                <td className="px-7 py-4 text-gray-500">{renderSafe(item.students)}</td>
-                                <td className="px-7 py-4 text-gray-500">{renderSafe(item.date)}</td>
+                                <td className="px-7 py-4 font-semibold">{String(item.id)}</td>
+                                <td className="px-7 py-4 text-gray-500">{String(item.type)}</td>
+                                <td className="px-7 py-4">{String(item.educator)}</td>
+                                <td className="px-7 py-4 text-gray-500">{Number(item.students)}</td>
+                                <td className="px-7 py-4 text-gray-500">{String(item.date)}</td>
                                 <td className="px-7 py-4"><StatusBadge status={item.status} /></td>
                                 <td className="px-7 py-4">
                                   <button 
@@ -117,7 +110,7 @@ export default function SessionTable({data,showHeader = true, title, onRowClick,
                                   </button>
                                 </td>
                             </tr>
-                        )})};
+                        ))}
                     </tbody>
 
                 </table>

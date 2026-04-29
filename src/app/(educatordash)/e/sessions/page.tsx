@@ -11,7 +11,8 @@ import { EducatorAPI, asArray } from '@/lib/api';
 export default function EducatorSessionsPage() {
     const [activeTab, setActiveTab] = useState<'All' | 'Upcoming' | 'Completed' | 'Missed'>('All');
     const [activeView, setActiveView] = useState<'Sessions List' | 'Calendar View'>('Sessions List');
-
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState("");
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedSession, setSelectedSession] = useState<Session | null>(null);
     const [sessions, setSessions] = useState<Session[]>([]);
@@ -24,6 +25,8 @@ export default function EducatorSessionsPage() {
 
     useEffect(() => {
         const fetchSessions = async () => {
+            setIsLoading(true);
+            setError("");
             try {
                 const response = await EducatorAPI.getMySessions();
                 const apiSessions = asArray(response).map((item: any, index: number) => {
@@ -34,21 +37,23 @@ export default function EducatorSessionsPage() {
                         title: item.title || item.sessionTitle || item.courseTitle || "Session",
                         type: item.type || item.sessionType || "Webinar",
                         attendees: item.attendees || item.students || item.enrolledCount || 0,
-                        date: item.date || dateTime.toLocaleDateString(),
+                        date: rawDate ? dateTime.toLocaleDateString() : "TBD",
                         dateTime,
                         startTime: item.startTime || item.time || dateTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
                         endTime: item.endTime || "",
                         status: item.status || "Scheduled",
                         educator: item.educator || item.educatorName || "Educator",
+                        assignments: asArray(item.assignments),
+                        resources: asArray(item.resources || item.files || item.materials),
                     };
                 });
-                if (apiSessions.length > 0) {
-                  setSessions(apiSessions as Session[]);
-                } else {
-                  setSessions([]);
-                }
-            } catch {
+                setSessions(apiSessions as Session[]);
+            } catch (fetchError: any) {
+                console.error("Educator sessions fetch failed", fetchError);
                 setSessions([]);
+                setError(fetchError?.message || "Unable to load educator sessions.");
+            } finally {
+                setIsLoading(false);
             }
         };
         fetchSessions();
@@ -153,10 +158,25 @@ export default function EducatorSessionsPage() {
 
                 {/* Content */}
                 {activeView === 'Sessions List' ? (
-                    <SessionsList sessions={filteredSessions} onViewDetails={handleViewDetails} />
+                    <SessionsList sessions={filteredSessions} onViewDetails={handleViewDetails} loading={isLoading} />
                 ) : (
-                    <CalendarView sessions={filteredSessions} />
+                    <>
+                        {error ? (
+                            <div className="mt-6 rounded-[20px] border border-red-200 bg-red-50 px-6 py-10 text-center">
+                                <h3 className="text-lg font-semibold text-gray-900">Unable to load sessions</h3>
+                                <p className="mt-2 text-sm text-red-600">{error}</p>
+                            </div>
+                        ) : (
+                            <CalendarView sessions={filteredSessions} />
+                        )}
+                    </>
                 )}
+
+                {!isLoading && error && activeView === 'Sessions List' ? (
+                    <div className="mt-6 rounded-[20px] border border-red-200 bg-red-50 px-6 py-4 text-sm text-red-600">
+                        {error}
+                    </div>
+                ) : null}
             </div>
 
             <SessionDetailsDrawer

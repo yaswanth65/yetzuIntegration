@@ -1,5 +1,5 @@
 export type SessionStatus = 'Scheduled' | 'Live' | 'Completed' | 'Missed';
-export type SessionType = 'Webinar' | 'Cohort' | 'Workshop';
+export type SessionType = 'Webinar' | 'Cohort' | 'Workshop' | 'Mentorship';
 
 export interface Session {
   id: string;
@@ -12,4 +12,6 @@ export interface Session {
   endTime: string; // e.g., "10:30 AM"
   status: SessionStatus;
   educator: string;
+  assignments?: Array<Record<string, any>>;
+  resources?: Array<Record<string, any>>;
 }

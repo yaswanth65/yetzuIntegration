@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { AdminAPI, asArray } from "@/lib/api";
 import toast from "react-hot-toast";
 
 interface CreateSessionProps {
   onBack: () => void;
+  onCreated?: () => Promise<void> | void;
 }
 
 interface Educator {
@@ -15,24 +16,47 @@ interface Educator {
   availabilityStatus: string;
 }
 
+interface Student {
+  id: string;
+  name: string;
+  email: string;
+}
+
 const stepsList = [
   "Session Type",
   "Schedule",
   "Pricing",
   "Educator",
+  "Students",
   "Review",
 ];
 
 const generateSessionCode = (type: string) => {
-  const prefix = type === "Webinar" ? "WEB" : type === "Cohort" ? "COH" : "1NA";
+  const prefix =
+    type === "Webinar"
+      ? "WEB"
+      : type === "Cohort"
+      ? "COH"
+      : type === "Workshop"
+      ? "WRK"
+      : "MNT";
   const num = Math.floor(Math.random() * 900) + 100;
   return `${prefix}-${num}`;
 };
 
-export default function CreateSession({ onBack }: CreateSessionProps) {
+const normalizeSessionType = (type: string) => (type === "1:1" ? "Mentorship" : type);
+
+const isFutureSession = (date: string, time: string) => {
+  const scheduledAt = new Date(`${date}T${time}`);
+  return !Number.isNaN(scheduledAt.getTime()) && scheduledAt.getTime() > Date.now();
+};
+
+export default function CreateSession({ onBack, onCreated }: CreateSessionProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [educators, setEducators] = useState<Educator[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form State
   const [sessionTitle, setSessionTitle] = useState("");
@@ -58,14 +82,22 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
   const [assignmentEnabled, setAssignmentEnabled] = useState(true);
   const [certificateEnabled, setCertificateEnabled] = useState(false);
   
+  const [enrollmentType, setEnrollmentType] = useState("Open");
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  
   const [selectedBundleSessions, setSelectedBundleSessions] = useState<string[]>([]);
   const [paidSessions, setPaidSessions] = useState<any[]>([]);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
 
   useEffect(() => {
-    const fetchEducators = async () => {
+    const fetchUsers = async () => {
       try {
-        const response = await AdminAPI.getUsers({ role: "educator" });
-        const users = asArray(response).map((u: any) => ({
+        const [educatorResponse, studentResponse] = await Promise.all([
+          AdminAPI.getUsers({ role: "educator" }),
+          AdminAPI.getUsers({ role: "student" }),
+        ]);
+
+        const users = asArray(educatorResponse).map((u: any) => ({
           id: u.id || u.userId,
           name: u.name || u.Name,
           qualification: u.qualification || "",
@@ -74,15 +106,22 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
           availabilityStatus: u.availabilityStatus || u.Status || "available",
         }));
         setEducators(users);
+
+        const studentUsers = asArray(studentResponse).map((u: any) => ({
+          id: u.id || u.userId,
+          name: u.name || u.Name,
+          email: u.email || "",
+        }));
+        setStudents(studentUsers);
       } catch (error) {
-        console.error("Error fetching educators:", error);
+        console.error("Error fetching users:", error);
       }
     };
-    fetchEducators();
+    fetchUsers();
   }, []);
 
   useEffect(() => {
-    setSessionCode(generateSessionCode(sessionType));
+    setSessionCode(generateSessionCode(normalizeSessionType(sessionType)));
   }, [sessionType]);
 
   useEffect(() => {
@@ -100,6 +139,23 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
     };
     fetchPaidSessions();
   }, [pricingType]);
+
+  const handleThumbnailSelect = (file?: File | null) => {
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Please upload a JPG or PNG thumbnail.");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Thumbnail must be 10 MB or smaller.");
+      return;
+    }
+
+    setThumbnailFile(file);
+  };
 
   const toggleBundleSession = (sessionId: string) => {
     setSelectedBundleSessions(prev => 
@@ -131,13 +187,29 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
         toast.error("Please select start and end times");
         return;
       }
+      if (!isFutureSession(sessionDate, startTime)) {
+        toast.error("Please choose a future start date and time");
+        return;
+      }
+      if (endTime <= startTime) {
+        toast.error("End time must be after start time");
+        return;
+      }
+      if (minStudents < 1 || maxStudents < 1) {
+        toast.error("Capacity must be at least 1");
+        return;
+      }
+      if (minStudents > maxStudents) {
+        toast.error("Minimum students cannot exceed maximum students");
+        return;
+      }
     }
     if (currentStep === 3) {
       if (!pricingType) {
         toast.error("Please select a pricing type");
         return;
       }
-      if (pricingType.toLowerCase() === "paid" && !priceAmount) {
+      if (pricingType.toLowerCase() === "paid" && (!priceAmount || Number(priceAmount) <= 0)) {
         toast.error("Please enter a price");
         return;
       }
@@ -148,6 +220,14 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
     }
     if (currentStep === 4 && !selectedEducator) {
       toast.error("Please select an educator");
+      return;
+    }
+    if (currentStep === 5 && enrollmentType === "Individual" && selectedStudents.length === 0) {
+      toast.error("Please select at least one student");
+      return;
+    }
+    if (currentStep === 5 && selectedStudents.length > maxStudents) {
+      toast.error("Selected students exceed the maximum session capacity");
       return;
     }
     if (currentStep < stepsList.length) setCurrentStep(currentStep + 1);
@@ -166,35 +246,72 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
       toast.error("Description is required");
       return;
     }
+    if (!sessionDate || !startTime || !endTime) {
+      toast.error("Session date and time are required");
+      return;
+    }
+    if (!isFutureSession(sessionDate, startTime)) {
+      toast.error("Please choose a future start date and time");
+      return;
+    }
+    if (endTime <= startTime) {
+      toast.error("End time must be after start time");
+      return;
+    }
+    if (!selectedEducator) {
+      toast.error("Please assign an educator");
+      return;
+    }
+    if (!pricingType) {
+      toast.error("Please choose a pricing type");
+      return;
+    }
+    if (minStudents > maxStudents) {
+      toast.error("Minimum students cannot exceed maximum students");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      // Ensure organizationId is provided if possible, else use a placeholder or empty string
-      // Based on Postman, organizationId might be required
-      const sessionData = {
-        title: sessionTitle.trim(),
-        description: description.trim(),
-        sessionCode: sessionCode || generateSessionCode(sessionType),
-        sessionType: sessionType.toLowerCase(),
-        category: category.toLowerCase(),
-        assignmentEnabled: assignmentEnabled ? "true" : "false",
-        certificateEnabled: certificateEnabled ? "true" : "false",
-        date: sessionDate,
-        startTime,
-        endTime,
-        capacity: Number(maxStudents),
-        maxStudents: Number(maxStudents),
-        minStudents: Number(minStudents),
-        pricingType: pricingType.toLowerCase(),
-        price: pricingType.toLowerCase() === "paid" ? Number(priceAmount) : 0,
-        billingInterval: "one_time",
-        educatorId: selectedEducator,
-        organizationId: "", // Should be fetched from context if available
-      };
-      
-      const response = await AdminAPI.createSession(sessionData);
+      const normalizedType = normalizeSessionType(sessionType);
+      const formData = new FormData();
+
+      formData.append("title", sessionTitle.trim());
+      formData.append("description", description.trim());
+      formData.append("sessionCode", sessionCode || generateSessionCode(normalizedType));
+      formData.append("sessionType", normalizedType);
+      formData.append("category", category);
+      formData.append("assignmentEnabled", assignmentEnabled ? "true" : "false");
+      formData.append("certificateEnabled", certificateEnabled ? "true" : "false");
+      formData.append("scheduledDate", sessionDate);
+      formData.append("date", sessionDate);
+      formData.append("startTime", startTime);
+      formData.append("endTime", endTime);
+      formData.append("capacity", String(Number(maxStudents)));
+      formData.append("maxCapacity", String(Number(maxStudents)));
+      formData.append("maxStudents", String(Number(maxStudents)));
+      formData.append("minStudents", String(Number(minStudents)));
+      formData.append("pricingType", pricingType.toLowerCase());
+      formData.append("price", pricingType.toLowerCase() === "paid" ? String(Number(priceAmount)) : "0");
+      formData.append("currency", currency);
+      formData.append("billingInterval", "one_time");
+      formData.append("educatorId", selectedEducator);
+      formData.append("enrollmentType", enrollmentType);
+      formData.append("studentIds", JSON.stringify(selectedStudents));
+      formData.append("selectedStudents", JSON.stringify(selectedStudents));
+      formData.append("bundleSessionIds", JSON.stringify(selectedBundleSessions));
+      formData.append("platform", sessionPlatform);
+      formData.append("mode", mode);
+      formData.append("status", "Scheduled");
+
+      if (thumbnailFile) {
+        formData.append("thumbnail", thumbnailFile);
+      }
+
+      const response = await AdminAPI.createSession(formData);
       if (response.success || response.id || response.sessionCode || response.message?.includes("success")) {
         toast.success("Session created successfully!");
+        await onCreated?.();
         onBack();
       } else {
         toast.error(response.message || "Failed to create session");
@@ -287,10 +404,11 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
               </div>
 
               {/* Session Type Cards */}
-              <div className="grid grid-cols-3 gap-4 mb-8">
+              <div className="grid grid-cols-2 gap-4 mb-8 md:grid-cols-4">
                 {[
                   { id: "Webinar", desc: "One-to-many live session" },
                   { id: "Cohort", desc: "Multi-session batch program" },
+                  { id: "Workshop", desc: "Hands-on practical session" },
                   { id: "1:1", desc: "Private mentoring session" },
                 ].map((type) => (
                   <button
@@ -441,7 +559,17 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Thumbnail
                   </label>
-                  <div className="border border-dashed border-blue-400 bg-blue-50/30 rounded-xl p-8 flex flex-col items-center justify-center gap-3 text-center transition-colors hover:bg-blue-50/50 cursor-pointer">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg"
+                    className="hidden"
+                    onChange={(e) => handleThumbnailSelect(e.target.files?.[0] || null)}
+                  />
+                  <div
+                    className="border border-dashed border-blue-400 bg-blue-50/30 rounded-xl p-8 flex flex-col items-center justify-center gap-3 text-center transition-colors hover:bg-blue-50/50 cursor-pointer"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
                     <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-1">
                       <i className="ri-cloud-upload-line text-xl"></i>
                     </div>
@@ -452,8 +580,18 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                       <p className="text-xs text-gray-500 mt-1">
                         Only jpeg, jpg or png file up to 10 MB
                       </p>
+                      {thumbnailFile ? (
+                        <p className="mt-2 text-xs font-medium text-blue-700">{thumbnailFile.name}</p>
+                      ) : null}
                     </div>
-                    <button className="mt-2 px-4 py-1.5 text-blue-600 text-sm font-medium bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        fileInputRef.current?.click();
+                      }}
+                      className="mt-2 px-4 py-1.5 text-blue-600 text-sm font-medium bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                    >
                       Browse Files
                     </button>
                   </div>
@@ -738,6 +876,62 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
           {currentStep === 5 && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="mb-8">
+                <h2 className="text-lg font-bold text-gray-900 mb-1">Student Enrollment</h2>
+                <p className="text-sm text-gray-500">
+                  Configure how students will enroll in this session.
+                </p>
+              </div>
+
+              <div className="mb-8">
+                <label className="block text-sm font-medium text-gray-900 mb-3">
+                  Enrollment Type
+                </label>
+                <div className="flex gap-3">
+                  {["Open", "Individual", "Cohort"].map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setEnrollmentType(type)}
+                      className={`flex-1 py-3 text-sm font-medium rounded-lg border transition-colors ${
+                        enrollmentType === type
+                          ? "border-blue-600 text-blue-700 bg-blue-50/10 shadow-sm ring-1 ring-blue-600 outline-none"
+                          : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {enrollmentType === "Individual" && (
+                <div className="mb-8">
+                  <label className="block text-sm font-medium text-gray-900 mb-3">
+                    Select Students
+                  </label>
+                  <div className="border border-gray-200 rounded-xl overflow-hidden max-h-80 overflow-y-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr><th className="px-4 py-3 w-12"></th><th className="px-4 py-3 font-medium">Name</th><th className="px-4 py-3 font-medium">Email</th></tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {students.map((stu) => (
+                          <tr key={stu.id} className={`cursor-pointer ${selectedStudents.includes(stu.id) ? "bg-blue-50" : "hover:bg-gray-50"}`} onClick={() => setSelectedStudents(prev => prev.includes(stu.id) ? prev.filter(id => id !== stu.id) : [...prev, stu.id])}>
+                            <td className="px-4 py-3"><input type="checkbox" checked={selectedStudents.includes(stu.id)} onChange={() => {}} className="w-4 h-4" /></td>
+                            <td className="px-4 py-3 font-medium">{stu.name}</td>
+                            <td className="px-4 py-3 text-gray-500">{stu.email}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentStep === 6 && (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="mb-8">
                 <h2 className="text-lg font-bold text-gray-900 mb-1">Review & Create</h2>
                 <p className="text-sm text-gray-500">
                   Review session details before creating.
@@ -778,6 +972,16 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                     <p className="text-sm text-gray-500">Pricing</p>
                     <p className="font-medium">{pricingType} {pricingType === "Paid" && `$${priceAmount}`}</p>
                   </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Enrollment Type</p>
+                    <p className="font-medium">{enrollmentType}</p>
+                  </div>
+                  {enrollmentType === "Individual" && (
+                    <div>
+                      <p className="text-sm text-gray-500">Selected Students</p>
+                      <p className="font-medium">{selectedStudents.length} students</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -800,11 +1004,11 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                 Cancel
               </button>
               <button
-                onClick={currentStep === 5 ? handleSubmit : handleNext}
+                onClick={currentStep === 6 ? handleSubmit : handleNext}
                 disabled={isSubmitting}
                 className="px-6 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
               >
-                {isSubmitting ? "Creating..." : currentStep === 5 ? "Create Session" : "Next"}
+                {isSubmitting ? "Creating..." : currentStep === 6 ? "Create Session" : "Next"}
               </button>
             </div>
           </div>

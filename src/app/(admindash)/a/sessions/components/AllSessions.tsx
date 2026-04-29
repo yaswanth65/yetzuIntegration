@@ -27,10 +27,12 @@ export default function AllSessions({ data }: Props) {
   const [isCreating, setIsCreating] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
-  const [localData, setLocalData] = useState<Session[]>(data);
+  const [localData, setLocalData] = useState<Session[]>([]);
 
   useEffect(() => {
-    setLocalData(data);
+    if (data && data.length > 0) {
+      setLocalData(data);
+    }
   }, [data]);
 
   const refreshSessions = async () => {
@@ -39,16 +41,47 @@ export default function AllSessions({ data }: Props) {
       const rawData = asArray(response);
       const apiSessions = rawData.map((item: any, index: number) => {
         const rawDate = item.date || item.scheduledDate || item.startDateTime || item.createdAt;
+
+        let educatorName = "Educator";
+        const edu = item.educator;
+        if (typeof edu === 'string') {
+          educatorName = edu;
+        } else if (edu && typeof edu === 'object' && edu !== null) {
+          educatorName = edu.name || edu.full_name || edu.displayName || String(edu.id || "");
+        } else if (item.educatorName) {
+          educatorName = item.educatorName;
+        } else if (item.mentorName) {
+          educatorName = item.mentorName;
+        }
+
+        let sessionType = "Webinar";
+        const typ = item.type;
+        if (typeof typ === 'string') {
+          sessionType = typ;
+        } else if (typ && typeof typ === 'object' && typ !== null) {
+          sessionType = typ.name || typ.type || typ.displayName || "Webinar";
+        } else if (item.sessionType) {
+          sessionType = item.sessionType;
+        }
+
+        let studentsCount = 0;
+        const stu = item.students;
+        if (typeof stu === 'number') {
+          studentsCount = stu;
+        } else if (Array.isArray(stu)) {
+          studentsCount = stu.length;
+        } else if (item.attendees) {
+          studentsCount = item.attendees;
+        } else if (item.enrolledCount) {
+          studentsCount = item.enrolledCount;
+        }
+
         return {
-          id: String(item.id || item._id || item.sessionId || `SESSION-${index + 1}`),
-          title: item.title || "Untitled",
-          type: String(item.type || "Webinar"),
-          educator: String(item.educatorName || item.mentorName || "Educator"),
-          students: Number(item.students || item.attendees || item.enrolledCount || 0),
-          attendees: Number(item.students || item.attendees || item.enrolledCount || 0),
+          id: String(item.id || item._id || item.sessionId || item.sessionCode || `SESSION-${index + 1}`),
+          type: String(sessionType || "Webinar"),
+          educator: String(educatorName || "Educator"),
+          students: Number(studentsCount) || 0,
           date: rawDate ? new Date(rawDate).toLocaleDateString() : "TBD",
-          startTime: item.startTime || "09:00 AM",
-          endTime: item.endTime || "10:00 AM",
           status: String(item.status === "Upcoming" ? "Scheduled" : (item.status || "Scheduled")),
         };
       });
@@ -57,7 +90,6 @@ export default function AllSessions({ data }: Props) {
       console.error("Failed to refresh sessions:", error);
     }
   };
-
   const filteredData = useMemo(() => {
     let list = localData;
 
@@ -70,26 +102,34 @@ export default function AllSessions({ data }: Props) {
       const lowered = search.toLowerCase();
       list = list.filter(
         (session) =>
-          session.id.toLowerCase().includes(lowered) ||
-          session.educator.toLowerCase().includes(lowered)
+          String(session.id).toLowerCase().includes(lowered) ||
+          String(session.educator).toLowerCase().includes(lowered)
       );
     }
 
     return list;
-  }, [activeTab, data, search]);
+  }, [activeTab, localData, search]);
 
   const tabCounts = useMemo(
     () => ({
-      All: data.length,
-      Upcoming: data.filter((session) => session.status === "Scheduled").length,
-      Completed: data.filter((session) => session.status === "Completed").length,
-      Missed: data.filter((session) => session.status === "Missed").length,
+      All: localData.length,
+      Upcoming: localData.filter((session) => session.status === "Scheduled").length,
+      Completed: localData.filter((session) => session.status === "Completed").length,
+      Missed: localData.filter((session) => session.status === "Missed").length,
     }),
-    [data]
+    [localData]
   );
 
   if (isCreating) {
-    return <CreateSession onBack={() => setIsCreating(false)} />;
+    return (
+      <CreateSession
+        onBack={() => setIsCreating(false)}
+        onCreated={async () => {
+          await refreshSessions();
+          setSelectedSession(null);
+        }}
+      />
+    );
   }
 
   return (

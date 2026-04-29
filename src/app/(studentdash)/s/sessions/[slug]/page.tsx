@@ -1,756 +1,538 @@
-// "use client";
-
-// import React, { useEffect, useRef, useState } from "react";
-// import Link from "next/link";
-// import { 
-//   ChevronRight, 
-//   Calendar, 
-//   Clock, 
-//   Timer, 
-//   Users, 
-//   Link2, 
-//   Download, 
-//   MoreVertical,
-//   Monitor,
-//   X
-// } from "lucide-react";
-
-// // Mock Data for the specific session
-// const SESSION_DATA = {
-//   type: "Mentorship",
-//   title: "Management of Acute Coronary Syndromes: Evidence-Based Updates",
-//   mentor: {
-//     name: "Dr. Sophia Tyler",
-//     role: "Associate Professor, Cambridge Institute",
-//     avatar: "https://ui-avatars.com/api/?name=Sophia+Tyler&background=random",
-//   },
-//   stats: {
-//     date: "23 Feb, 2026",
-//     time: "4:15 PM - 6:15 PM",
-//     duration: "120 min",
-//     attendees: "143 attendees", 
-//   },
-//   assignments: [
-//     {
-//       id: 1,
-//       title: "Obstetric Case- Third Trimester Bleeding",
-//       due: "26 FEB, 2026",
-//     },
-//     {
-//       id: 2,
-//       title: "Managing Obstetric: Addressing Trimester",
-//       due: "31 MAR, 2026",
-//     }
-//   ],
-//   resources: [
-//     {
-//       id: 1,
-//       title: "Pre-Session Reading Material.pdf",
-//     },
-//     {
-//       id: 2,
-//       title: "Additional Reference Article.pdf",
-//     },
-//     {
-//       id: 3,
-//       title: "Insights into Acute Coronary.pdf",
-//     }
-//   ]
-// };
-// const MOCK_TIME_SLOTS = [
-//   { id: 1, date: "Feb 13, 2026", time: "10:00 AM - 11:00 AM" },
-//   { id: 2, date: "Feb 13, 2026", time: "02:00 PM - 03:00 PM" },
-//   { id: 3, date: "Feb 14, 2026", time: "11:00 AM - 12:00 PM" },
-//   { id: 4, date: "Feb 13, 2026", time: "03:30 PM - 04:30 PM" },
-//   { id: 5, date: "Feb 14, 2026", time: "10:30 AM - 11:30 PM" },
-// ];
-
-// export default function SessionSlugPage() {
-//   const [isMenuOpen, setIsMenuOpen] = useState(false);
-//   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false); 
-//   const dropdownRef = useRef<HTMLDivElement>(null);
-//   const [selectedSlots, setSelectedSlots] = useState<number[]>([]);
-
-//   // Close dropdown when clicking outside
-//   useEffect(() => {
-//     function handleClickOutside(event: MouseEvent) {
-//       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-//         setIsMenuOpen(false);
-//       }
-//     }
-//     document.addEventListener("mousedown", handleClickOutside);
-//     return () => document.removeEventListener("mousedown", handleClickOutside);
-//   }, []);
-
-//   const toggleSlot = (id: number) => {
-//     setSelectedSlots(prev => 
-//       prev.includes(id) ? prev.filter(slotId => slotId !== id) : [...prev, id]
-//     );
-//   };
-//   return (
-//     <div className="w-full min-h-screen bg-[#F8F9FA] mt-4 p-4 md:p-8 font-sans">
-//       <div className="max-w-[1600px] mx-auto">
-        
-//         {/* Breadcrumb */}
-//         <div className="flex items-center gap-2 text-[13px] font-medium mb-6 px-2">
-//           <Link href="/s/sessions" className="text-gray-500 hover:text-gray-900 transition-colors">
-//             Sessions
-//           </Link>
-//           <ChevronRight size={14} className="text-gray-400" />
-//           <span className="text-gray-900 truncate">
-//             {SESSION_DATA.type}: {SESSION_DATA.title}
-//           </span>
-//         </div>
-
-//         {/* --- TOP CARD (Main Details) --- */}
-//         <div className="bg-white rounded-[24px] border border-gray-100 shadow-[0_2px_15px_rgba(0,0,0,0.02)] mb-6 p-6 md:p-8">
-          
-//           <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-8 mb-8">
-            
-//             {/* Title & Mentor */}
-//             <div className="flex-1">
-//               <h1 className="text-[24px] md:text-[28px] font-bold text-gray-900 leading-snug mb-6 max-w-4xl">
-//                 {SESSION_DATA.type}: {SESSION_DATA.title}
-//               </h1>
-              
-//               <div className="flex items-center gap-4">
-//                 <img 
-//                   src={SESSION_DATA.mentor.avatar} 
-//                   alt={SESSION_DATA.mentor.name} 
-//                   className="w-12 h-12 rounded-full object-cover shrink-0" 
-//                 />
-//                 <div>
-//                   <h3 className="text-[16px] font-semibold text-gray-900 leading-snug">
-//                     {SESSION_DATA.mentor.name}
-//                   </h3>
-//                   <p className="text-[14px] text-gray-500">
-//                     {SESSION_DATA.mentor.role}
-//                   </p>
-//                 </div>
-//               </div>
-//             </div>
-
-//             {/* Action Buttons */}
-//             <div className="flex items-center gap-3 shrink-0 mt-2 xl:mt-0">
-//               <button className="flex items-center gap-2 bg-[#111111] hover:bg-black text-white px-6 py-2.5 rounded-xl text-[14px] font-medium transition-colors shadow-sm">
-//                 <img src="/images/google-video.svg" alt="Meet" className="w-5 h-5 object-contain" />
-//                 Join Now
-//               </button>
-//               <div className="relative flex items-center" ref={dropdownRef}>
-//                 <button 
-//                   onClick={(e) => {
-//                     e.stopPropagation();
-//                     setIsMenuOpen(!isMenuOpen);
-//                   }}
-//                   className={`w-11 h-11 border rounded-xl flex items-center justify-center transition-colors shrink-0 ${isMenuOpen ? 'border-gray-300 bg-gray-50 text-gray-900' : 'border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
-//                 >
-//                   <MoreVertical size={20} strokeWidth={2} className="pointer-events-none" />
-//                 </button>
-
-//                 {/* Popup Menu - Pinned exactly relative to the button */}
-//                 {isMenuOpen && (
-//                   <div className="absolute right-0 top-[115%] w-[220px] bg-white border border-gray-200 rounded-[12px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
-//                     <button 
-//                       className="w-full text-left px-5 py-2.5 text-[14px] font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-//                       onClick={() => {
-//                         setIsMenuOpen(false);
-//                         setIsRescheduleOpen(true); // Open the reschedule modal
-//                       }}
-//                     >
-//                       Reschedule
-//                     </button>
-//                     <button 
-//                       className="w-full text-left px-5 py-2.5 text-[14px] font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-//                       onClick={() => setIsMenuOpen(false)}
-//                     >
-//                       Copy Link to Interview
-//                     </button>
-                    
-//                     {SESSION_DATA.type.toLowerCase() === 'mentorship' && (
-//                       <button 
-//                         className="w-full text-left px-5 py-2.5 text-[14px] font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-//                         onClick={() => setIsMenuOpen(false)}
-//                       >
-//                         Chat with Mentor
-//                       </button>
-//                     )}
-                    
-//                     <div className="h-[1px] bg-gray-100 my-1.5"></div>
-//                     <div className="px-5 py-2 text-[13px] font-medium text-gray-400">
-//                       {SESSION_DATA.type} Session
-//                     </div>
-//                   </div>
-//                 )}
-//                 </div>
-//             </div>
-//           </div>
-
-//           {/* Info Strip (Rounded Gray Box) */}
-//           <div className="grid grid-cols-2 md:grid-cols-4 bg-[#F8FAFC] rounded-[16px] py-6 border border-gray-50">
-//             <div className="flex flex-col items-center justify-center gap-3 md:border-r border-gray-200">
-//               <Calendar size={22} className="text-gray-500" strokeWidth={1.5} />
-//               <span className="text-[15px] font-medium text-gray-700">{SESSION_DATA.stats.date}</span>
-//             </div>
-//             <div className="flex flex-col items-center justify-center gap-3 md:border-r border-gray-200">
-//               <Clock size={22} className="text-gray-500" strokeWidth={1.5} />
-//               <span className="text-[15px] font-medium text-gray-700">{SESSION_DATA.stats.time}</span>
-//             </div>
-//             <div className="flex flex-col items-center justify-center gap-3 md:border-r border-gray-200 mt-6 md:mt-0">
-//               <Timer size={22} className="text-gray-500" strokeWidth={1.5} />
-//               <span className="text-[15px] font-medium text-gray-700">{SESSION_DATA.stats.duration}</span>
-//             </div>
-//             <div className="flex flex-col items-center justify-center gap-3 mt-6 md:mt-0">
-//               <Users size={22} className="text-gray-500" strokeWidth={1.5} />
-//               <span className="text-[15px] font-medium text-gray-700">{SESSION_DATA.stats.attendees}</span>
-//             </div>
-//           </div>
-          
-//         </div>
-
-//         {/* --- BOTTOM GRID (Assignments & Resources) --- */}
-//         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
-//           {/* Assignments Column */}
-//           <div className="bg-white rounded-[24px] border border-gray-100 shadow-[0_2px_15px_rgba(0,0,0,0.02)] p-6 md:p-8 flex flex-col">
-//             <div className="flex items-center gap-3 mb-6">
-//               <h2 className="text-[18px] font-bold text-gray-900">Assignments</h2>
-//               <span className="bg-[#F1F5F9] text-gray-600 text-[12px] font-bold w-6 h-6 flex items-center justify-center rounded-full">
-//                 {SESSION_DATA.assignments.length}
-//               </span>
-//             </div>
-
-//             <div className="flex flex-col gap-4 flex-1">
-//               {SESSION_DATA.assignments.map((assignment) => (
-//                 <div 
-//                   key={assignment.id} 
-//                   className="border border-gray-200 rounded-2xl p-5 flex flex-col justify-between hover:border-gray-300 transition-colors bg-white h-full"
-//                 >
-//                   <div className="flex gap-4 items-start mb-4">
-//                     {/* Custom Gray SVG Icon */}
-//                     <img 
-//                       src="/images/green-file.svg" 
-//                       alt="Assignment" 
-//                       className="w-[48px] h-[48px] shrink-0 object-contain" 
-//                     />
-//                     <div className="pt-1">
-//                       <h4 className="text-[16px] font-semibold text-gray-900 leading-snug mb-2.5">
-//                         {assignment.title}
-//                       </h4>
-//                       <span className="inline-block bg-[#F8FAFC] text-gray-600 text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
-//                         DUE: {assignment.due}
-//                       </span>
-//                     </div>
-//                   </div>
-                  
-//                   {/* Button aligned to the bottom right */}
-//                   <div className="flex justify-end mt-auto">
-//                     <button className="px-5 py-2.5 border border-gray-200 text-gray-900 font-medium text-[14px] rounded-xl hover:bg-gray-50 transition-colors">
-//                       Open Workspace
-//                     </button>
-//                   </div>
-//                 </div>
-//               ))}
-//             </div>
-//           </div>
-
-//           {/* Resources Column */}
-//           <div className="bg-white rounded-[24px] border border-gray-100 shadow-[0_2px_15px_rgba(0,0,0,0.02)] p-6 md:p-8 flex flex-col">
-//             <div className="flex items-center gap-3 mb-6">
-//               <h2 className="text-[18px] font-bold text-gray-900">Resources</h2>
-//               <span className="bg-[#F1F5F9] text-gray-600 text-[12px] font-bold w-6 h-6 flex items-center justify-center rounded-full">
-//                 {SESSION_DATA.resources.length}
-//               </span>
-//             </div>
-
-//             <div className="flex flex-col gap-4">
-//               {SESSION_DATA.resources.map((resource) => (
-//                 <div 
-//                   key={resource.id} 
-//                   className="border border-gray-200 rounded-2xl p-4 flex items-center justify-between gap-4 hover:border-gray-300 transition-colors bg-white"
-//                 >
-//                   <div className="flex items-center gap-4 min-w-0">
-//                     {/* Simulated Blue PDF Icon */}
-//                     <div className="w-12 h-12 rounded-[14px] bg-[#EEF2FF] text-[#042BFD] flex items-center justify-center shrink-0">
-//                       <span className="text-[12px] font-bold uppercase tracking-wider">PDF</span>
-//                     </div>
-//                     <h4 className="text-[15px] font-medium text-gray-900 truncate pr-4">
-//                       {resource.title}
-//                     </h4>
-//                   </div>
-//                   <button className="w-11 h-11 flex items-center justify-center border border-gray-200 text-gray-500 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-colors shrink-0">
-//                     <Download size={20} strokeWidth={1.5} />
-//                   </button>
-//                 </div>
-//               ))}
-//             </div>
-//           </div>
-
-//         </div>
-
-//       </div>
-//       {isRescheduleOpen && (
-//         <div className="fixed inset-0 z-[100] flex justify-end">
-//           {/* Overlay (makes the rest of the screen dull) */}
-//           <div 
-//             className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" 
-//             onClick={() => setIsRescheduleOpen(false)}
-//           ></div>
-          
-//           {/* Slide-over Content */}
-//           <div className="relative bg-white w-full max-w-[480px] h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
-            
-//             <div className="flex-1 overflow-y-auto p-6  custom-scrollbar">
-              
-//               {/* Header Icon & Close */}
-//               <div className="flex justify-between items-start mb-3">
-//                 <div className="w-11 h-11 rounded-xl border border-gray-200 flex items-center justify-center shadow-sm">
-//                   <Monitor size={20} className="text-gray-700" />
-//                 </div>
-//                 <button onClick={() => setIsRescheduleOpen(false)} className="p-1 text-gray-400 hover:text-gray-900 transition-colors -mr-2">
-//                   <X size={22} strokeWidth={1.5} />
-//                 </button>
-//               </div>
-
-//               <h2 className="text-[22px] font-bold text-gray-900 mb-4">Reschedule Session</h2>
-
-//               {/* Current Session Box */}
-//               <div className="bg-[#F8FAFC] border border-gray-100 rounded-[12px] p-5 mb-8">
-//                 <p className="text-[12px] text-gray-500 mb-2 font-medium">Current Session</p>
-//                 <h3 className="text-[16px] font-bold text-gray-900 mb-2.5 leading-snug">Research Methodology Session</h3>
-//                 <div className="flex items-center gap-4 text-[13px] text-gray-700 mb-2">
-//                   <div className="flex items-center gap-1.5"><Calendar size={14} className="text-gray-500"/> 2026-02-11</div>
-//                   <div className="flex items-center gap-1.5"><Clock size={14} className="text-gray-500"/> 10:30 - 11:30</div>
-//                 </div>
-//                 <p className="text-[13px] text-gray-500">with Pradhyumn Dhondi</p>
-//               </div>
-
-//               {/* Reason Textarea */}
-//               <div className="mb-8">
-//                 <label className="block text-[13px] font-bold text-gray-900 mb-3">
-//                   Reason for Rescheduling <span className="text-gray-900">*</span>
-//                 </label>
-//                 <textarea 
-//                   className="w-full border border-gray-200 rounded-[12px] p-4 text-[14px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#042BFD]/20 focus:border-[#042BFD] min-h-[110px] resize-none transition-all"
-//                   placeholder="Please provide a brief explanation for the student..."
-//                 ></textarea>
-//               </div>
-
-//               {/* Suggest Alternative Times Grid */}
-//               <div className="mb-8">
-//                 <label className="block text-[13px] font-bold text-gray-900 mb-3">
-//                   Suggest Alternative Times <span className="text-gray-900">*</span>
-//                 </label>
-//                 <div className="grid grid-cols-2 gap-3 mb-3">
-//                   {MOCK_TIME_SLOTS.map((slot) => {
-//                     const isSelected = selectedSlots.includes(slot.id);
-//                     return (
-//                       <div 
-//                         key={slot.id}
-//                         onClick={() => toggleSlot(slot.id)}
-//                         className={`border rounded-[12px] p-3.5 cursor-pointer transition-all ${
-//                           isSelected 
-//                             ? 'border-[#042BFD] bg-[#F5F6FF]' 
-//                             : 'border-gray-200 hover:border-[#042BFD] hover:bg-[#F5F6FF]/50'
-//                         }`}
-//                       >
-//                         <p className={`text-[14px] font-bold mb-1.5 ${isSelected ? 'text-[#042BFD]' : 'text-gray-900'}`}>
-//                           {slot.date}
-//                         </p>
-//                         <p className={`text-[13px] ${isSelected ? 'text-[#042BFD]/80 font-medium' : 'text-gray-500'}`}>
-//                           {slot.time}
-//                         </p>
-//                       </div>
-//                     );
-//                   })}
-//                 </div>
-//                 <p className="text-[13px] text-gray-500">Select one or more time slots to offer the student</p>
-//               </div>
-
-//               {/* Additional Message Textarea */}
-//               <div className="mb-4">
-//                 <label className="block text-[13px] font-bold text-gray-900 mb-3">
-//                   Additional Message (Optional)
-//                 </label>
-//                 <textarea 
-//                   className="w-full border border-gray-200 rounded-[12px] p-4 text-[14px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#042BFD]/20 focus:border-[#042BFD] min-h-[100px] resize-none transition-all"
-//                   placeholder="Add any additional context for the student..."
-//                 ></textarea>
-//               </div>
-
-//             </div>
-
-//             {/* Footer Buttons */}
-//             <div className="p-6 md:p-8 flex items-center gap-4 border-t border-gray-100 bg-white shrink-0">
-//               <button 
-//                 onClick={() => setIsRescheduleOpen(false)}
-//                 className="flex-1 py-3.5 border border-gray-200 rounded-[10px] text-[14px] font-bold text-gray-700 hover:bg-gray-50 transition-colors"
-//               >
-//                 Cancel
-//               </button>
-//               <button 
-//                 onClick={() => setIsRescheduleOpen(false)}
-//                 className="flex-1 py-3.5 bg-[#042BFD] rounded-[10px] text-[14px] font-bold text-white hover:bg-blue-700 transition-colors"
-//               >
-//                 Confirm
-//               </button>
-//             </div>
-
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { 
-  ChevronRight, 
-  Calendar, 
-  Clock, 
-  Timer, 
-  Users, 
-  Download, 
+import {
+  ChevronRight,
+  Calendar,
+  Clock,
+  Timer,
+  Users,
+  Download,
   MoreVertical,
-  ArrowLeft
+  ArrowLeft,
 } from "lucide-react";
-import { CourseAPI } from "@/lib/api"; 
-import RescheduleModal from "@/app/(studentdash)/components/Reschedule"; // Adjust path as needed
+import { CourseAPI, StudentAPI, asArray } from "@/lib/api";
+import RescheduleModal from "@/app/(studentdash)/components/Reschedule";
 
-const FALLBACK_SESSION_DATA = {
-  type: "Webinar",
-  title: "Loading...",
+interface SessionDetail {
+  courseId: string;
+  title: string;
+  type: string;
   mentor: {
-    name: "Educator",
-    role: "",
-    avatar: "https://ui-avatars.com/api/?name=Educator&background=random",
-  },
+    name: string;
+    role: string;
+    avatar: string;
+  };
   stats: {
-    date: "--",
-    time: "--",
-    duration: "--",
-    attendees: "--", 
-  },
-  assignments: [] as Array<{ id: string | number; title: string; due: string }>,
-  resources: [] as Array<{ id: string | number; title: string }>
+    date: string;
+    time: string;
+    duration: string;
+    attendees: string;
+  };
+  joinUrl?: string;
+  startIso?: string;
+  assignments: Array<{ id: string; title: string; due: string }>;
+  resources: Array<{ id: string; title: string; url?: string }>;
+}
+
+const parseDateValue = (value: any) => {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
+
+const formatDuration = (item: any, startDate: Date | null) => {
+  if (item.duration) return String(item.duration);
+
+  const endDate = parseDateValue(item.endDateTime);
+  if (startDate && endDate) {
+    const minutes = Math.max(0, Math.round((endDate.getTime() - startDate.getTime()) / 60000));
+    return `${minutes} min`;
+  }
+
+  return "TBD";
+};
+
+const formatDate = (date: Date | null) =>
+  date
+    ? date.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "TBD";
+
+const formatTimeRange = (item: any, startDate: Date | null) => {
+  if (item.time) return String(item.time);
+  if (!startDate) return "TBD";
+
+  const endDate = parseDateValue(item.endDateTime);
+  const startLabel = startDate.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  if (!endDate) return startLabel;
+
+  const endLabel = endDate.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  return `${startLabel} - ${endLabel}`;
+};
+
+const toResourceList = (course: any) =>
+  [
+    ...asArray(course?.resources),
+    ...asArray(course?.files),
+    ...asArray(course?.materials),
+    ...asArray(course?.documents),
+  ].map((resource: any, index: number) => ({
+    id: String(resource.id || resource._id || index),
+    title: resource.title || resource.name || resource.fileName || "Resource",
+    url: resource.url || resource.fileUrl || resource.documentUrl || resource.path,
+  }));
+
+const toAssignmentList = (course: any, assignments: any[]) => {
+  const directAssignments = asArray(course?.assignments).map((assignment: any, index: number) => ({
+    id: String(assignment.id || assignment._id || assignment.assignmentId || index),
+    title: assignment.title || assignment.assignmentTitle || "Assignment",
+    due: assignment.dueDate || assignment.deadline || "TBD",
+  }));
+
+  if (directAssignments.length > 0) return directAssignments;
+
+  return assignments.map((assignment: any, index: number) => ({
+    id: String(assignment.id || assignment._id || assignment.assignmentId || index),
+    title: assignment.title || assignment.assignmentTitle || assignment.sessionTitle || "Assignment",
+    due: assignment.dueDate || assignment.deadline || "TBD",
+  }));
+};
+
+const matchAssignmentsToCourse = (courseId: string, title: string, assignments: any[]) =>
+  assignments.filter((assignment: any) => {
+    const linkedCourseId = String(
+      assignment.courseId || assignment.sessionId || assignment.course?._id || assignment.course?.id || "",
+    );
+    const linkedTitle = String(assignment.courseTitle || assignment.sessionTitle || "").toLowerCase();
+
+    return linkedCourseId === courseId || linkedTitle === title.toLowerCase();
+  });
 
 export default function SessionSlugPage() {
   const params = useParams();
-  const slug = params?.slug as string; 
-  
-  const [sessionData, setSessionData] = useState(FALLBACK_SESSION_DATA);
+  const slug = String(params?.slug || "");
+
+  const [sessionData, setSessionData] = useState<SessionDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false); 
+  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // --- FETCH DATA FROM API ---
   useEffect(() => {
     const fetchCourseDetails = async () => {
-      // If we don't have a dynamic slug from the router, fallback to standard test ID
-      const targetId =  slug || "69540b52ad785acc821a0106"; 
+      setIsLoading(true);
+      setError("");
 
       try {
-        const response = await CourseAPI.getCourseById(targetId);
-        
-        if (response && response.course) {
-          const course = response.course;
+        const [overviewResponse, assignmentResponse] = await Promise.all([
+          StudentAPI.getOverview(),
+          StudentAPI.getAssignments().catch(() => ({ data: [] })),
+        ]);
 
-          // Parse Date & Time
-          const startDate = new Date(course.startDateTime);
-          const durationHours = parseInt(course.duration) || 1;
-          const endDate = new Date(startDate.getTime() + durationHours * 60 * 60 * 1000);
+        const overviewData = overviewResponse?.data || overviewResponse;
+        const overviewItems = [
+          ...asArray(overviewData?.enrolledCourses),
+          ...asArray(overviewData?.upcomingSessions),
+          ...asArray(overviewData?.sessions),
+        ];
 
-          const dateStr = startDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-          const formatTime = (d: Date) => d.toLocaleTimeString("en-US", { hour: 'numeric', minute: '2-digit', hour12: true });
-          const timeStr = `${formatTime(startDate)} - ${formatTime(endDate)}`;
+        const overviewMatch = overviewItems.find(
+          (item: any) => String(item._id || item.id || item.courseId || item.sessionId) === slug,
+        );
 
-          // Merge API data with Fallback Data
-          setSessionData({
-            ...FALLBACK_SESSION_DATA,
-            title: course.title || FALLBACK_SESSION_DATA.title,
-            type: "Webinar", // Assuming Webinar based on screenshot
-            mentor: {
-              ...FALLBACK_SESSION_DATA.mentor,
-              role: course.subtitle || FALLBACK_SESSION_DATA.mentor.role,
-            },
-            stats: {
-              date: dateStr,
-              time: timeStr,
-              duration: course.duration,
-              attendees: `${course.enrolledCount} attendees`,
-            },
-          });
+        let coursePayload: any = overviewMatch || null;
+
+        try {
+          const courseResponse = await CourseAPI.getCourseById(slug);
+          coursePayload = courseResponse?.course || courseResponse || coursePayload;
+        } catch (courseError) {
+          if (!coursePayload) {
+            throw courseError;
+          }
         }
-      } catch {
-        setSessionData(FALLBACK_SESSION_DATA);
+
+        if (!coursePayload) {
+          throw new Error("Session details were not found.");
+        }
+
+        const startDate = parseDateValue(
+          coursePayload.startDateTime || coursePayload.scheduledDate || coursePayload.date,
+        );
+        const title = coursePayload.title || coursePayload.sessionTitle || coursePayload.courseTitle || "Session";
+        const courseId = String(
+          coursePayload._id || coursePayload.id || coursePayload.courseId || coursePayload.sessionId || slug,
+        );
+        const relatedAssignments = matchAssignmentsToCourse(courseId, title, asArray(assignmentResponse));
+        const mentorName =
+          coursePayload.educatorName || coursePayload.educator?.name || coursePayload.mentorName || "Educator";
+
+        setSessionData({
+          courseId,
+          title,
+          type: String(coursePayload.type || coursePayload.sessionType || "Session"),
+          mentor: {
+            name: mentorName,
+            role: coursePayload.subtitle || coursePayload.educator?.role || coursePayload.category || "Session Mentor",
+            avatar:
+              coursePayload.educator?.avatar ||
+              coursePayload.educator?.profileImage ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(mentorName)}&background=042BFD&color=fff`,
+          },
+          stats: {
+            date: formatDate(startDate),
+            time: formatTimeRange(coursePayload, startDate),
+            duration: formatDuration(coursePayload, startDate),
+            attendees: `${coursePayload.enrolledCount || coursePayload.attendees || coursePayload.maxStudents || 0} attendees`,
+          },
+          joinUrl:
+            coursePayload.meetingUrl ||
+            coursePayload.meetingLink ||
+            coursePayload.joinUrl ||
+            coursePayload.sessionLink ||
+            coursePayload.link,
+          startIso: startDate?.toISOString(),
+          assignments: toAssignmentList(coursePayload, relatedAssignments),
+          resources: toResourceList(coursePayload),
+        });
+      } catch (fetchError: any) {
+        console.error("Student session detail fetch failed", fetchError);
+        setSessionData(null);
+        setError(fetchError?.message || "Unable to load this session.");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchCourseDetails();
+    if (slug) {
+      fetchCourseDetails();
+    }
   }, [slug]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsMenuOpen(false);
       }
-    }
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const pageUrl = useMemo(() => (typeof window !== "undefined" ? `${window.location.origin}/s/sessions/${slug}` : ""), [slug]);
+
   if (isLoading) {
     return (
-      <div className="w-full min-h-screen bg-white md:bg-[#F8F9FA] flex items-center justify-center">
-        <p className="text-gray-500 font-medium">Loading details...</p>
+      <div className="flex min-h-screen w-full items-center justify-center bg-white md:bg-[#F8F9FA]">
+        <p className="font-medium text-gray-500">Loading details...</p>
+      </div>
+    );
+  }
+
+  if (error || !sessionData) {
+    return (
+      <div className="w-full min-h-screen bg-white md:bg-[#F8F9FA] md:p-8">
+        <div className="mx-auto max-w-[900px] rounded-[24px] border border-red-200 bg-white p-8 shadow-sm">
+          <Link href="/s/sessions" className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[#021165]">
+            <ArrowLeft size={18} />
+            Back to Sessions
+          </Link>
+          <h1 className="text-2xl font-semibold text-gray-900">Unable to load session</h1>
+          <p className="mt-2 text-sm text-red-600">{error || "This session could not be found."}</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full min-h-screen bg-white md:bg-[#F8F9FA] md:mt-4 p-0 md:p-8 font-sans pb-10 md:pb-8">
-      <div className="max-w-[1600px] mx-auto">
-        
-        {/* --- MOBILE HEADER --- */}
-        <div className="md:hidden flex items-center gap-2 mb-6 px-4 pt-6">
-          <Link href="/s/sessions" className="text-gray-900 flex items-center gap-2 font-semibold text-[18px]">
+    <div className="w-full min-h-screen bg-white p-0 pb-10 font-sans md:mt-4 md:bg-[#F8F9FA] md:p-8 md:pb-8">
+      <div className="mx-auto max-w-[1600px]">
+        <div className="mb-6 flex items-center gap-2 px-4 pt-6 text-[18px] font-semibold text-gray-900 md:hidden">
+          <Link href="/s/sessions" className="flex items-center gap-2">
             <ArrowLeft size={20} />
             Sessions
           </Link>
         </div>
 
-        {/* --- DESKTOP BREADCRUMB --- */}
-        <div className="hidden md:flex items-center gap-2 text-[13px] font-medium mb-6 px-2">
-          <Link href="/s/sessions" className="text-gray-500 hover:text-gray-900 transition-colors">
+        <div className="mb-6 hidden items-center gap-2 px-2 text-[13px] font-medium md:flex">
+          <Link href="/s/sessions" className="text-gray-500 transition-colors hover:text-gray-900">
             Sessions
           </Link>
           <ChevronRight size={14} className="text-gray-400" />
-          <span className="text-gray-900 truncate">
+          <span className="truncate text-gray-900">
             {sessionData.type}: {sessionData.title}
           </span>
         </div>
 
-        {/* --- TOP CARD (Main Details) --- */}
-        <div className="bg-white md:rounded-[24px] md:border border-gray-100 md:shadow-[0_2px_15px_rgba(0,0,0,0.02)] mb-2 md:mb-6 p-4 md:p-8 pt-0 md:pt-8">
-          
-          <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-6 md:gap-8 mb-6 md:mb-8">
-            
-            {/* Title & Mentor */}
+        <div className="mb-2 bg-white p-4 pt-0 md:mb-6 md:rounded-[24px] md:border md:border-gray-100 md:p-8 md:pt-8 md:shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
+          <div className="mb-6 flex flex-col justify-between gap-6 xl:flex-row xl:items-start md:mb-8">
             <div className="flex-1">
-              <h1 className="text-[20px] md:text-[28px] font-semibold text-gray-900 leading-snug mb-4 md:mb-6 max-w-4xl">
+              <h1 className="mb-4 max-w-4xl text-[20px] font-semibold leading-snug text-gray-900 md:mb-6 md:text-[28px]">
                 {sessionData.type}: {sessionData.title}
               </h1>
-              
+
               <div className="flex items-center gap-3 md:gap-4">
-                <img 
-                  src={sessionData.mentor.avatar} 
-                  alt={sessionData.mentor.name} 
-                  className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover shrink-0" 
+                <img
+                  src={sessionData.mentor.avatar}
+                  alt={sessionData.mentor.name}
+                  className="h-10 w-10 shrink-0 rounded-full object-cover md:h-12 md:w-12"
                 />
                 <div>
-                  <h3 className="text-[14px] md:text-[16px] font-medium md:font-semibold text-gray-900 leading-snug">
+                  <h3 className="text-[14px] font-medium leading-snug text-gray-900 md:text-[16px] md:font-semibold">
                     {sessionData.mentor.name}
                   </h3>
-                  <p className="text-[12px] md:text-[14px] text-gray-500">
-                    {sessionData.mentor.role}
-                  </p>
+                  <p className="text-[12px] text-gray-500 md:text-[14px]">{sessionData.mentor.role}</p>
                 </div>
               </div>
             </div>
 
-            {/* --- DESKTOP ACTION BUTTONS (Hidden on Mobile) --- */}
-            <div className="hidden md:flex items-center gap-3 shrink-0">
-              <button className="flex items-center gap-2 bg-[#111111] hover:bg-black text-white px-6 py-2.5 rounded-xl text-[14px] font-medium transition-colors shadow-sm">
-                <img src="/images/google-video.svg" alt="Meet" className="w-5 h-5 object-contain" />
-                Join Now
-              </button>
+            <div className="hidden shrink-0 items-center gap-3 md:flex">
+              {sessionData.joinUrl ? (
+                <a
+                  href={sessionData.joinUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 rounded-xl bg-[#111111] px-6 py-2.5 text-[14px] font-medium text-white shadow-sm transition-colors hover:bg-black"
+                >
+                  <img src="/images/google-video.svg" alt="Meet" className="h-5 w-5 object-contain" />
+                  Join Now
+                </a>
+              ) : (
+                <button disabled className="flex items-center gap-2 rounded-xl bg-[#111111] px-6 py-2.5 text-[14px] font-medium text-white opacity-60">
+                  <img src="/images/google-video.svg" alt="Meet" className="h-5 w-5 object-contain" />
+                  Join Now
+                </button>
+              )}
+
               <div className="relative flex items-center" ref={dropdownRef}>
-                <button 
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setIsMenuOpen(!isMenuOpen);
+                    setIsMenuOpen((current) => !current);
                   }}
-                  className={`w-11 h-11 border rounded-xl flex items-center justify-center transition-colors shrink-0 ${isMenuOpen ? 'border-gray-300 bg-gray-50 text-gray-900' : 'border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+                  className={`flex h-11 w-11 items-center justify-center rounded-xl border transition-colors ${
+                    isMenuOpen
+                      ? "border-gray-300 bg-gray-50 text-gray-900"
+                      : "border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                  }`}
                 >
                   <MoreVertical size={20} strokeWidth={2} className="pointer-events-none" />
                 </button>
 
-                {/* Popup Menu */}
-                {isMenuOpen && (
-                  <div className="absolute right-0 top-[115%] w-[220px] bg-white border border-gray-200 rounded-[12px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
-                    <button 
-                      className="w-full text-left px-5 py-2.5 text-[14px] font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                {isMenuOpen ? (
+                  <div className="animate-in fade-in zoom-in-95 absolute right-0 top-[115%] z-50 w-[220px] rounded-[12px] border border-gray-200 bg-white py-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)] duration-200">
+                    <button
+                      className="w-full px-5 py-2.5 text-left text-[14px] font-medium text-gray-700 transition-colors hover:bg-gray-50"
                       onClick={() => {
                         setIsMenuOpen(false);
-                        setIsRescheduleOpen(true); 
+                        setIsRescheduleOpen(true);
                       }}
                     >
                       Reschedule
                     </button>
-                    <button 
-                      className="w-full text-left px-5 py-2.5 text-[14px] font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                      onClick={() => setIsMenuOpen(false)}
+                    <button
+                      className="w-full px-5 py-2.5 text-left text-[14px] font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                      onClick={() => {
+                        navigator.clipboard.writeText(pageUrl);
+                        setIsMenuOpen(false);
+                      }}
                     >
-                      Copy Link to Interview
+                      Copy Link to Session
                     </button>
-                    
-                    {sessionData.type.toLowerCase() === 'mentorship' && (
-                      <button 
-                        className="w-full text-left px-5 py-2.5 text-[14px] font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+
+                    {sessionData.type.toLowerCase() === "mentorship" || sessionData.type.toLowerCase() === "1:1" ? (
+                      <Link
+                        href="/s/chat"
+                        className="block w-full px-5 py-2.5 text-left text-[14px] font-medium text-gray-700 transition-colors hover:bg-gray-50"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         Chat with Mentor
-                      </button>
-                    )}
-                    
-                    <div className="h-[1px] bg-gray-100 my-1.5"></div>
-                    <div className="px-5 py-2 text-[13px] font-medium text-gray-400">
-                      {sessionData.type} Session
-                    </div>
+                      </Link>
+                    ) : null}
+
+                    <div className="my-1.5 h-[1px] bg-gray-100"></div>
+                    <div className="px-5 py-2 text-[13px] font-medium text-gray-400">{sessionData.type} Session</div>
                   </div>
-                )}
-                </div>
+                ) : null}
+              </div>
             </div>
           </div>
 
-          {/* --- STATS GRID (Mobile 2x2 Grid | Desktop Row) --- */}
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-0 md:bg-[#F8FAFC] md:rounded-[16px] md:py-6 md:border md:border-gray-50">
-            <div className="bg-[#F8FAFC] md:bg-transparent rounded-[12px] md:rounded-none p-4 md:p-0 flex flex-col items-center justify-center gap-2 md:gap-3 md:border-r border-gray-200 border border-gray-50 md:border-none">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-0 md:rounded-[16px] md:border md:border-gray-50 md:bg-[#F8FAFC] md:py-6">
+            <div className="flex flex-col items-center justify-center gap-2 rounded-[12px] border border-gray-50 bg-[#F8FAFC] p-4 md:gap-3 md:border-r md:border-gray-200 md:bg-transparent md:p-0">
               <Calendar size={20} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-[14px] md:text-[15px] font-medium text-gray-700 text-center">{sessionData.stats.date}</span>
+              <span className="text-center text-[14px] font-medium text-gray-700 md:text-[15px]">{sessionData.stats.date}</span>
             </div>
-            <div className="bg-[#F8FAFC] md:bg-transparent rounded-[12px] md:rounded-none p-4 md:p-0 flex flex-col items-center justify-center gap-2 md:gap-3 md:border-r border-gray-200 border border-gray-50 md:border-none">
+            <div className="flex flex-col items-center justify-center gap-2 rounded-[12px] border border-gray-50 bg-[#F8FAFC] p-4 md:gap-3 md:border-r md:border-gray-200 md:bg-transparent md:p-0">
               <Clock size={20} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-[14px] md:text-[15px] font-medium text-gray-700 text-center">{sessionData.stats.time}</span>
+              <span className="text-center text-[14px] font-medium text-gray-700 md:text-[15px]">{sessionData.stats.time}</span>
             </div>
-            <div className="bg-[#F8FAFC] md:bg-transparent rounded-[12px] md:rounded-none p-4 md:p-0 flex flex-col items-center justify-center gap-2 md:gap-3 md:border-r border-gray-200 border border-gray-50 md:border-none">
+            <div className="flex flex-col items-center justify-center gap-2 rounded-[12px] border border-gray-50 bg-[#F8FAFC] p-4 md:gap-3 md:border-r md:border-gray-200 md:bg-transparent md:p-0">
               <Timer size={20} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-[14px] md:text-[15px] font-medium text-gray-700 text-center">{sessionData.stats.duration}</span>
+              <span className="text-center text-[14px] font-medium text-gray-700 md:text-[15px]">{sessionData.stats.duration}</span>
             </div>
-            <div className="bg-[#F8FAFC] md:bg-transparent rounded-[12px] md:rounded-none p-4 md:p-0 flex flex-col items-center justify-center gap-2 md:gap-3 border border-gray-50 md:border-none">
+            <div className="flex flex-col items-center justify-center gap-2 rounded-[12px] border border-gray-50 bg-[#F8FAFC] p-4 md:gap-3 md:bg-transparent md:p-0">
               <Users size={20} className="text-gray-500" strokeWidth={1.5} />
-              <span className="text-[14px] md:text-[15px] font-medium text-gray-700 text-center">{sessionData.stats.attendees}</span>
+              <span className="text-center text-[14px] font-medium text-gray-700 md:text-[15px]">{sessionData.stats.attendees}</span>
             </div>
           </div>
 
-          {/* --- MOBILE ACTION BUTTONS (Stacked) --- */}
-          <div className="flex flex-col gap-3 mt-6 md:hidden border-b border-gray-300 pb-4 md:pb-8">
-            <button className="w-full bg-[#111111] hover:bg-black text-white px-6 py-3.5 rounded-xl text-[14px] transition-colors shadow-sm flex items-center justify-center gap-2">
-              <img src="/images/google-video.svg" alt="Meet" className="w-5 h-5 object-contain" />
-              Join Now
-            </button>
-            <button 
+          <div className="mt-6 flex flex-col gap-3 border-b border-gray-300 pb-4 md:hidden md:pb-8">
+            {sessionData.joinUrl ? (
+              <a
+                href={sessionData.joinUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#111111] px-6 py-3.5 text-[14px] text-white shadow-sm transition-colors hover:bg-black"
+              >
+                <img src="/images/google-video.svg" alt="Meet" className="h-5 w-5 object-contain" />
+                Join Now
+              </a>
+            ) : (
+              <button disabled className="w-full rounded-xl bg-[#111111] px-6 py-3.5 text-[14px] text-white opacity-60">
+                Join Now
+              </button>
+            )}
+            <button
               onClick={() => setIsRescheduleOpen(true)}
-              className="w-full border border-gray-200 text-gray-700 px-6 py-3.5 rounded-xl text-[14px] font-medium hover:bg-gray-50 transition-colors"
+              className="w-full rounded-xl border border-gray-200 px-6 py-3.5 text-[14px] font-medium text-gray-700 transition-colors hover:bg-gray-50"
             >
               Reschedule
             </button>
-            <button 
-              className="w-full text-gray-700 px-6 py-3.5 rounded-xl text-[14px] font-medium hover:bg-gray-50 transition-colors text-center"
+            <button
+              onClick={() => navigator.clipboard.writeText(pageUrl)}
+              className="w-full rounded-xl px-6 py-3.5 text-center text-[14px] font-medium text-gray-700 transition-colors hover:bg-gray-50"
             >
-              Copy Link to Interview
+              Copy Link to Session
             </button>
           </div>
-          
         </div>
 
-        {/* --- BOTTOM GRID (Assignments & Resources) --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 px-4 md:px-0">
-          
-          {/* Assignments Column */}
-          <div className="bg-white rounded-[24px] md:border border-gray-100 md:shadow-[0_2px_15px_rgba(0,0,0,0.02)] p-0 md:p-8 flex flex-col">
-            <div className="flex items-center gap-2 mb-4 md:mb-6">
-              <h2 className="text-[16px] md:text-[18px] font-semibold text-gray-900">Assignments</h2>
-              <span className="bg-[#F1F5F9] text-gray-600 text-[12px] md:text-[12px] font-bold w-6 h-6 flex items-center justify-center rounded-full">
+        <div className="grid grid-cols-1 gap-4 px-4 md:gap-6 md:px-0 lg:grid-cols-2">
+          <div className="mt-0 flex flex-col rounded-[24px] bg-white p-0 md:border md:border-gray-100 md:p-8 md:shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
+            <div className="mb-4 flex items-center gap-2 md:mb-6">
+              <h2 className="text-[16px] font-semibold text-gray-900 md:text-[18px]">Assignments</h2>
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#F1F5F9] text-[12px] font-bold text-gray-600">
                 {sessionData.assignments.length}
               </span>
             </div>
 
-            <div className="flex flex-col gap-3 md:gap-4 flex-1">
-              {sessionData.assignments.map((assignment) => (
-                <div 
-                  key={assignment.id} 
-                  className="border border-gray-200 rounded-2xl p-4 md:p-5 flex flex-col justify-between hover:border-gray-300 transition-colors bg-white h-full"
-                >
-                  <div className="flex gap-3 md:gap-4 items-start mb-4">
-                    <img 
-                      src="/images/green-file.svg" 
-                      alt="Assignment" 
-                      className="w-[40px] h-[40px] md:w-[48px] md:h-[48px] shrink-0 object-contain" 
-                    />
-                    <div className="pt-0.5 md:pt-1">
-                      <h4 className="text-[14px] md:text-[16px] font-semibold text-gray-900 leading-snug mb-2 md:mb-2.5">
-                        {assignment.title}
-                      </h4>
-                      <span className="inline-block bg-[#F8FAFC] text-gray-600 text-[10px] md:text-[11px] font-bold px-2.5 py-1 md:px-3 md:py-1.5 rounded-full uppercase tracking-wider">
-                        DUE: {assignment.due}
-                      </span>
+            <div className="flex flex-1 flex-col gap-3 md:gap-4">
+              {sessionData.assignments.length > 0 ? (
+                sessionData.assignments.map((assignment) => (
+                  <div
+                    key={assignment.id}
+                    className="flex h-full flex-col justify-between rounded-2xl border border-gray-200 bg-white p-4 transition-colors hover:border-gray-300 md:p-5"
+                  >
+                    <div className="mb-4 flex items-start gap-3 md:gap-4">
+                      <img src="/images/green-file.svg" alt="Assignment" className="h-[40px] w-[40px] shrink-0 object-contain md:h-[48px] md:w-[48px]" />
+                      <div className="pt-0.5 md:pt-1">
+                        <h4 className="mb-2 text-[14px] font-semibold leading-snug text-gray-900 md:mb-2.5 md:text-[16px]">
+                          {assignment.title}
+                        </h4>
+                        <span className="inline-block rounded-full bg-[#F8FAFC] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-600 md:px-3 md:py-1.5 md:text-[11px]">
+                          DUE: {assignment.due}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-auto flex w-full justify-end md:w-auto">
+                      <Link href={`/s/assignments/${assignment.id}`} className="w-full md:w-auto">
+                        <button className="w-full rounded-xl border border-gray-200 px-5 py-2.5 text-[14px] font-medium text-gray-900 transition-colors hover:bg-gray-50 md:w-auto">
+                          Open Workspace
+                        </button>
+                      </Link>
                     </div>
                   </div>
-                  
-                  {/* Mobile: Full Width | Desktop: Right Aligned */}
-                  <div className="flex justify-end mt-auto w-full md:w-auto">
-                    <button className="w-full md:w-auto px-5 py-2.5 border border-gray-200 text-gray-900 font-medium text-[14px] md:text-[14px] rounded-xl hover:bg-gray-50 transition-colors">
-                      Open Workspace
-                    </button>
-                  </div>
+                ))
+              ) : (
+                <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-10 text-center text-sm text-gray-500">
+                  No assignments have been published for this session yet.
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
-          {/* Resources Column */}
-          <div className="bg-white rounded-[24px] md:border border-gray-100 md:shadow-[0_2px_15px_rgba(0,0,0,0.02)] p-0 md:p-8 flex flex-col mt-4 md:mt-0">
-            <div className="flex items-center gap-2 mb-4 md:mb-6">
-              <h2 className="text-[16px] md:text-[18px] font-semibold text-gray-900">Resources</h2>
-              <span className="bg-[#F1F5F9] text-gray-600 text-[11px] md:text-[12px] font-bold w-6 h-6 flex items-center justify-center rounded-full">
+          <div className="mt-4 flex flex-col rounded-[24px] bg-white p-0 md:mt-0 md:border md:border-gray-100 md:p-8 md:shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
+            <div className="mb-4 flex items-center gap-2 md:mb-6">
+              <h2 className="text-[16px] font-semibold text-gray-900 md:text-[18px]">Resources</h2>
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#F1F5F9] text-[11px] font-bold text-gray-600 md:text-[12px]">
                 {sessionData.resources.length}
               </span>
             </div>
 
             <div className="flex flex-col gap-3 md:gap-4">
-              {sessionData.resources.map((resource) => (
-                <div 
-                  key={resource.id} 
-                  className="border border-gray-200 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-gray-300 transition-colors bg-white"
-                >
-                  <div className="flex items-center gap-3 md:gap-4 min-w-0">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-[12px] md:rounded-[14px] bg-[#EEF2FF] text-[#042BFD] flex items-center justify-center shrink-0">
-                      <span className="text-[10px] md:text-[12px] font-bold uppercase tracking-wider">PDF</span>
+              {sessionData.resources.length > 0 ? (
+                sessionData.resources.map((resource) => (
+                  <div
+                    key={resource.id}
+                    className="flex flex-col justify-between gap-4 rounded-2xl border border-gray-200 bg-white p-4 transition-colors hover:border-gray-300 md:flex-row md:items-center"
+                  >
+                    <div className="flex min-w-0 items-center gap-3 md:gap-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#EEF2FF] text-[#042BFD] md:h-12 md:w-12 md:rounded-[14px]">
+                        <span className="text-[10px] font-bold uppercase tracking-wider md:text-[12px]">PDF</span>
+                      </div>
+                      <h4 className="truncate pr-2 text-[14px] font-medium text-gray-900 md:pr-4">{resource.title}</h4>
                     </div>
-                    <h4 className="text-[14px] font-medium text-gray-900 truncate pr-2 md:pr-4">
-                      {resource.title}
-                    </h4>
-                  </div>
 
-                  {/* Mobile: Full Width Text | Desktop: Icon Button */}
-                  <button className="w-full md:w-11 md:h-11 flex items-center justify-center border border-gray-200 text-gray-700 md:text-gray-500 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-colors shrink-0 py-2.5 md:py-0 text-[13px] font-medium md:text-transparent">
-                    <span className="md:hidden">Download</span>
-                    <Download size={20} strokeWidth={1.5} className="hidden md:block" />
-                  </button>
+                    {resource.url ? (
+                      <a
+                        href={resource.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex w-full shrink-0 items-center justify-center rounded-xl border border-gray-200 py-2.5 text-[13px] font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900 md:h-11 md:w-11 md:py-0 md:text-transparent"
+                      >
+                        <span className="md:hidden">Download</span>
+                        <Download size={20} strokeWidth={1.5} className="hidden md:block" />
+                      </a>
+                    ) : (
+                      <button
+                        disabled
+                        className="flex w-full shrink-0 items-center justify-center rounded-xl border border-gray-200 py-2.5 text-[13px] font-medium text-gray-400 md:h-11 md:w-11 md:py-0 md:text-transparent"
+                      >
+                        <span className="md:hidden">Unavailable</span>
+                        <Download size={20} strokeWidth={1.5} className="hidden md:block" />
+                      </button>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-10 text-center text-sm text-gray-500">
+                  Session resources will appear here when they are uploaded.
                 </div>
-              ))}
+              )}
             </div>
           </div>
-
         </div>
-
       </div>
 
-      {/* Slide-over Modal */}
-      {isRescheduleOpen && (
-        <RescheduleModal 
-       isOpen={isRescheduleOpen} 
-       onClose={() => setIsRescheduleOpen(false)} 
-       />
-      )}
+      <RescheduleModal
+        isOpen={isRescheduleOpen}
+        onClose={() => setIsRescheduleOpen(false)}
+        courseId={sessionData.courseId}
+        sessionTitle={sessionData.title}
+        sessionDate={sessionData.stats.date}
+        sessionTime={sessionData.stats.time}
+        mentorName={sessionData.mentor.name}
+        sessionStartIso={sessionData.startIso}
+      />
     </div>
   );
 }

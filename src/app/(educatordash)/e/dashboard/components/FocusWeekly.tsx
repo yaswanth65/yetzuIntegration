@@ -35,68 +35,8 @@ interface FocusItem {
   assignmentId?: string;
 }
 
-const defaultItems: FocusItem[] = [
-  {
-    id: "session-1",
-    title: "Webinar: Major Insights on Human Nervous System with Dr. Rao",
-    badgeLabel: "TODAY",
-    badgeColor: "bg-[#7C3AED] text-white",
-    watermarkIcon: "/admin-dashboard/cam.svg",
-    watermarkColor: "text-[#7C3AED]/10",
-    date: new Date().toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }),
-    time: "3:00 PM",
-    buttonText: "Join Now",
-    buttonType: "solid",
-    gradientFrom: "from-[#F3E8FF]",
-    type: "session",
-    sessionId: "WEB-001",
-  },
-  {
-    id: "assignment-1",
-    title: "Research Methodology Paper Review",
-    badgeLabel: "DUE IN 2 DAYS",
-    badgeColor: "bg-[#FEF3C7] text-[#D97706]",
-    watermarkIcon: "/admin-dashboard/file-edit-line.svg",
-    watermarkColor: "text-[#10B981]/10",
-    date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }),
-    time: null,
-    buttonText: "View Details",
-    buttonType: "outline",
-    gradientFrom: "from-[#D1FAE5]",
-    type: "assignment",
-  },
-  {
-    id: "session-2",
-    title: "Cohort Session - Research Paper Draft",
-    badgeLabel: null,
-    badgeColor: "",
-    watermarkIcon: "/admin-dashboard/user-2-line.svg",
-    watermarkColor: "text-[#F97316]/10",
-    date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }),
-    time: "7:00 PM",
-    buttonText: "View Details",
-    buttonType: "outline",
-    gradientFrom: "from-[#FFEDD5]",
-    type: "session",
-  },
-  {
-    id: "session-3",
-    title: "Mentorship Session - Career Strategy",
-    badgeLabel: null,
-    badgeColor: "",
-    watermarkIcon: "/admin-dashboard/team-line.svg",
-    watermarkColor: "text-[#0EA5E9]/10",
-    date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }),
-    time: "7:00 PM",
-    buttonText: "View Details",
-    buttonType: "outline",
-    gradientFrom: "from-[#E0F2FE]",
-    type: "session",
-  },
-];
-
 export default function FocusWeekly() {
-  const [items, setItems] = useState<FocusItem[]>(defaultItems);
+  const [items, setItems] = useState<FocusItem[]>([]);
   const [weekOffset, setWeekOffset] = useState(0);
   const [loading, setLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<FocusItem | null>(null);

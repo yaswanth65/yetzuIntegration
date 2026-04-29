@@ -1,15 +1,21 @@
+ "use client";
+
 import Image from "next/image";
 import { Course } from "@/lib/queries/courses/types";
 import Link from "next/link";
 import { getImageUrl } from "@/lib/utils/imageUtils";
 import Button from "@/components/ui/Button";
 import AvatarStack from "@/components/ui/AvatarStack";
+import { PaymentAPI } from "@/lib/api";
+import { useState } from "react";
+import { toast } from "react-hot-toast";
 
 interface CourseCardProps {
   course: Course;
 }
 
 export default function CourseCard({ course }: CourseCardProps) {
+  const [isBuying, setIsBuying] = useState(false);
 
   const formattedStart = (startDate: string) => {
     if (!startDate) return "";
@@ -26,10 +32,22 @@ export default function CourseCard({ course }: CourseCardProps) {
     return `${day} ${time}`;
   };
 
-  // 🔥 Optional: direct enroll handler
-  const handleEnroll = () => {
-    if (!course?._id) return;
-    window.location.href = `/courses/${course._id}?action=enroll`;
+  const handleEnroll = async () => {
+    if (!course?._id || isBuying) return;
+
+    setIsBuying(true);
+    try {
+      await PaymentAPI.createOrder({
+        amount: course.cost || 0,
+        courseId: course._id,
+      });
+      toast.success(`Course purchased for ${course.title}`);
+      window.location.href = `/courses/${course._id}`;
+    } catch {
+      toast.error("Unable to create the order right now.");
+    } finally {
+      setIsBuying(false);
+    }
   };
 
   return (
@@ -94,9 +112,10 @@ export default function CourseCard({ course }: CourseCardProps) {
         {/* Enroll Now */}
         <Button
           onClick={handleEnroll}
+          disabled={isBuying}
           className="!rounded-xl !h-[44px] !text-sm w-full"
         >
-          Enroll Now
+          {isBuying ? "Processing..." : "Enroll Now"}
         </Button>
 
       </div>

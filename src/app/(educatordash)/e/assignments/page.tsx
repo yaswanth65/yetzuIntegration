@@ -16,6 +16,8 @@ interface Session {
   title: string;
 }
 
+const toLocalDateInput = (value: Date) => value.toISOString().split("T")[0];
+
 export default function EducatorAssignmentsPage() {
   const [activeTab, setActiveTab] = useState<'All' | 'Pending' | 'Completed'>('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -171,11 +173,14 @@ function CreateAssignmentModal({ onClose, onSuccess }: { onClose: () => void; on
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
+    title: '',
+    description: '',
     sessionId: '',
     studentId: '',
     sessionType: 'Webinar',
     dueDate: ''
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -217,23 +222,42 @@ function CreateAssignmentModal({ onClose, onSuccess }: { onClose: () => void; on
     setError('');
 
     try {
+      if (!formData.title.trim()) {
+        throw new Error('Assignment title is required');
+      }
+      if (!formData.description.trim()) {
+        throw new Error('Assignment description is required');
+      }
+      if (!formData.studentId || !formData.sessionId) {
+        throw new Error('Student and session are required');
+      }
+      if (!formData.dueDate) {
+        throw new Error('Due date is required');
+      }
+      if (new Date(formData.dueDate).getTime() < new Date(toLocalDateInput(new Date())).getTime()) {
+        throw new Error('Due date cannot be in the past');
+      }
+
       const selectedStudent = students.find(s => s.id === formData.studentId);
       const selectedSession = sessions.find(s => s.id === formData.sessionId);
 
       const payload = new FormData();
-      payload.append('title', selectedSession?.title || 'Assignment');
-      payload.append('description', `${formData.sessionType} assignment`);
+      payload.append('title', formData.title.trim());
+      payload.append('description', formData.description.trim());
       payload.append('sessionType', formData.sessionType);
       payload.append('dueDate', formData.dueDate);
       payload.append('sessionId', formData.sessionId);
       payload.append('assignedStudents', JSON.stringify([formData.studentId]));
+      if (selectedFile) {
+        payload.append('file', selectedFile);
+      }
 
       await EducatorAPI.createAssignment(payload);
 
       const newAssignment: Assignment = {
         id: `ASSIGN-${Date.now()}`,
         assignmentId: `ASSIGN-${Date.now()}`,
-        sessionTitle: selectedSession?.title || "Assignment",
+        sessionTitle: formData.title.trim(),
         studentName: selectedStudent?.name || "Student",
         sessionType: formData.sessionType as SessionType,
         dueDate: formData.dueDate || 'TBD',
@@ -278,6 +302,29 @@ function CreateAssignmentModal({ onClose, onSuccess }: { onClose: () => void; on
               {error}
             </div>
           )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Assignment Title *</label>
+            <input
+              required
+              type="text"
+              value={formData.title}
+              onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter assignment title"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+            <textarea
+              required
+              value={formData.description}
+              onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[96px] resize-none"
+              placeholder="Write assignment instructions"
+            />
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Select Student *</label>
@@ -336,8 +383,20 @@ function CreateAssignmentModal({ onClose, onSuccess }: { onClose: () => void; on
               required
               value={formData.dueDate}
               onChange={e => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
+              min={toLocalDateInput(new Date())}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Attachment</label>
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              onChange={e => setSelectedFile(e.target.files?.[0] || null)}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <p className="text-xs text-gray-400 mt-1">Optional. Uploaded as multipart field `file`.</p>
           </div>
 
           <div className="flex gap-3 pt-4">
@@ -350,7 +409,14 @@ function CreateAssignmentModal({ onClose, onSuccess }: { onClose: () => void; on
             </button>
             <button
               type="submit"
-              disabled={submitting || !formData.studentId || !formData.sessionId || !formData.dueDate}
+              disabled={
+                submitting ||
+                !formData.title.trim() ||
+                !formData.description.trim() ||
+                !formData.studentId ||
+                !formData.sessionId ||
+                !formData.dueDate
+              }
               className="flex-1 px-4 py-2 bg-[#000520] text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />}

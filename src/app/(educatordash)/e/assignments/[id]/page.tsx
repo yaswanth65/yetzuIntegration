@@ -1,295 +1,374 @@
 "use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { 
-  CloudUpload, 
-  FileText, 
-  DownloadCloud, 
-  ChevronRight, 
-  Send,
-  Trash2,
-  Download
-} from 'lucide-react';
-import Image from 'next/image';
+import React, { useEffect, useMemo, useState, use } from "react";
+import Link from "next/link";
+import { FileText, DownloadCloud, ChevronRight, Send, Download, Loader2, AlertCircle } from "lucide-react";
+import Image from "next/image";
+import { EducatorAPI, asArray } from "@/lib/api";
+import { toast } from "react-hot-toast";
+
+type SubmissionView = {
+  id: string;
+  name: string;
+  url?: string;
+  studentName: string;
+  status: string;
+};
+
+type CommentView = {
+  id: string;
+  author: string;
+  date: string;
+  text: string;
+};
+
+type AssignmentDetailsView = {
+  id: string;
+  title: string;
+  description: string;
+  sessionTitle: string;
+  studentName: string;
+  resources: Array<{ id: string; name: string; url?: string }>;
+  submissions: SubmissionView[];
+  comments: CommentView[];
+  status: string;
+};
+
+const formatDateTime = (value?: string) => {
+  if (!value) return "Just now";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+};
+
+const mapAssignment = (item: any, assignmentId: string): AssignmentDetailsView => {
+  const studentName =
+    item.assignedStudents?.[0]?.name ||
+    item.studentName ||
+    item.student?.name ||
+    "Student";
+
+  return {
+    id: String(item.id || item._id || item.assignmentId || assignmentId),
+    title: item.title || "Assignment",
+    description: item.description || "No assignment description available.",
+    sessionTitle: item.sessionTitle || item.course?.title || item.title || "Session",
+    studentName,
+    resources: [
+      ...(item.documentUrl
+        ? [
+            {
+              id: "resource-primary",
+              name: item.documentPath?.split("/").pop() || `${item.title || "Assignment"} resource`,
+              url: item.documentUrl,
+            },
+          ]
+        : []),
+      ...asArray(item.resources).map((resource: any, index: number) => ({
+        id: String(resource.id || resource._id || index),
+        name: resource.name || resource.title || "Resource",
+        url: resource.url || resource.fileUrl || resource.documentUrl,
+      })),
+    ],
+    submissions: asArray(item.submissions).map((submission: any, index: number) => ({
+      id: String(submission.id || submission._id || index),
+      name: submission.fileName || submission.documentName || submission.name || "Submission.pdf",
+      url: submission.fileUrl || submission.documentUrl || submission.url,
+      studentName: submission.studentName || submission.student?.name || studentName,
+      status: String(submission.status || item.status || "pending"),
+    })),
+    comments: asArray(item.comments || item.feedbacks).map((comment: any, index: number) => ({
+      id: String(comment.id || comment._id || index),
+      author: comment.author || comment.name || "Mentor",
+      date: formatDateTime(comment.createdAt || comment.updatedAt || comment.date),
+      text: comment.text || comment.comment || "",
+    })),
+    status: String(item.status || "pending"),
+  };
+};
 
 export default function EducatorAssignmentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
-  // We simulate 3 states matching the 3 images provided by user:
-  // 1: initial empty state
-  // 2: file selected but not submitted
-  // 3: submitted
-  const [submissionState, setSubmissionState] = useState<1 | 2 | 3>(1);
-  const [commentText, setCommentText] = useState('');
-  
-  // Dummy comments history
-  const [comments, setComments] = useState<any[]>([
-    {
-      id: 1,
-      author: 'HelloQwerty',
-      date: '11 Jan 2024, 04:31 PM',
-      text: 'The inputs for those modules indicated are missing required variables for proper processing as referenced in standard practices. There is a margin of potential payload for varying degrees of offset parameters common in wide testing arrays.'
-    }
-  ]);
+  const unwrappedParams = use(params);
+  const assignmentId = unwrappedParams.id;
+  const [assignmentData, setAssignmentData] = useState<AssignmentDetailsView | null>(null);
+  const [commentText, setCommentText] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isApproving, setIsApproving] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleAddComment = () => {
-    if (commentText.trim()) {
-      setComments([...comments, {
-        id: Date.now(),
-        author: 'Prashant Oawal',
-        date: new Date().toLocaleString('en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-        text: commentText
-      }]);
-      setCommentText('');
+  useEffect(() => {
+    const fetchAssignment = async () => {
+      try {
+        setIsLoading(true);
+        setError("");
+        const response = await EducatorAPI.getAssignmentById(assignmentId);
+        setAssignmentData(mapAssignment(response, assignmentId));
+      } catch (fetchError: any) {
+        console.error("Failed to load educator assignment data", fetchError);
+        setAssignmentData(null);
+        setError(fetchError?.message || "Unable to load assignment.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAssignment();
+  }, [assignmentId]);
+
+  const submissionState = useMemo(() => {
+    const normalizedStatus = String(assignmentData?.status || "").toLowerCase();
+    if (["review done", "reviewed", "completed"].includes(normalizedStatus)) return 3;
+    if (assignmentData?.submissions.length) return 2;
+    return 1;
+  }, [assignmentData]);
+
+  const handleAddComment = async () => {
+    if (!commentText.trim() || !assignmentData) return;
+
+    try {
+      await EducatorAPI.addFeedback({ assignmentId: assignmentData.id, text: commentText });
+      setAssignmentData((current) =>
+        current
+          ? {
+              ...current,
+              comments: [
+                ...current.comments,
+                {
+                  id: crypto.randomUUID(),
+                  author: "You",
+                  date: formatDateTime(new Date().toISOString()),
+                  text: commentText,
+                },
+              ],
+            }
+          : current,
+      );
+      setCommentText("");
+      toast.success("Feedback added.");
+    } catch (commentError) {
+      console.error("Failed to add educator feedback", commentError);
+      toast.error("Failed to add feedback.");
     }
   };
+
+  const handleApprove = async () => {
+    if (!assignmentData?.submissions.length) return;
+
+    setIsApproving(true);
+    try {
+      await EducatorAPI.reviewSubmission({
+        submissionId: assignmentData.submissions[0].id,
+        status: "reviewed",
+        educatorRemark: "Reviewed by educator",
+      });
+      setAssignmentData((current) =>
+        current
+          ? {
+              ...current,
+              status: "review done",
+              submissions: current.submissions.map((submission) => ({
+                ...submission,
+                status: "reviewed",
+              })),
+            }
+          : current,
+      );
+      toast.success("Submission reviewed successfully.");
+    } catch (approveError) {
+      console.error("Failed to approve submission", approveError);
+      toast.error("Failed to review submission.");
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 p-6 flex items-center justify-center font-sans">
+        <div className="flex items-center gap-3 text-gray-500">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span>Loading assignment details...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!assignmentData || error) {
+    return (
+      <div className="min-h-screen bg-gray-100 p-6 flex items-center justify-center font-sans">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 max-w-lg text-center">
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-red-500 mx-auto mb-4">
+            <AlertCircle size={28} />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Unable to load assignment</h2>
+          <p className="text-sm text-gray-500">{error || "Assignment not found."}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 p-6 lg:p-10 font-sans">
       <div className="max-w-[1400px] mx-auto">
-        
-        {/* Breadcrumbs */}
         <div className="flex items-center gap-2 text-[13px] text-gray-500 mb-8 font-medium">
           <Link href="/e/sessions" className="hover:text-gray-900 transition-colors">
             Sessions
           </Link>
           <ChevronRight size={14} className="text-gray-400" />
-          <span className="text-gray-900 truncate max-w-lg">
-            Wellness Management of Acute Coronary Syndromes: Evidence-Based Guidelines
-          </span>
+          <span className="text-gray-900 truncate max-w-lg">{assignmentData.sessionTitle}</span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          
-          {/* Left Column (Title, Description, Upload Area) */}
           <div className="lg:col-span-2 space-y-8">
-            
             <div className="bg-white rounded-xl p-8 border border-gray-100 shadow-sm">
-              {/* Header / Title */}
               <div>
                 <div className="flex items-center gap-4 mb-4 flex-wrap">
-                  <h1 className="text-2xl font-bold text-gray-900">
-                    Advanced Insights into Cardiac Arrhythmias
-                  </h1>
+                  <h1 className="text-2xl font-bold text-gray-900">{assignmentData.title}</h1>
                   {submissionState === 2 && (
                     <span className="px-2.5 py-1 bg-orange-50 text-orange-600 outline outline-1 outline-orange-200 text-[10px] font-bold rounded uppercase tracking-wider">
-                      UNDER REVIEW
+                      NEEDS REVIEW
                     </span>
                   )}
                   {submissionState === 3 && (
-                    <span className="px-2.5 py-1 bg-red-50 text-red-600 outline outline-1 outline-red-200 text-[10px] font-bold rounded uppercase tracking-wider">
+                    <span className="px-2.5 py-1 bg-green-50 text-green-600 outline outline-1 outline-green-200 text-[10px] font-bold rounded uppercase tracking-wider">
                       REVIEW DONE
+                    </span>
+                  )}
+                  {submissionState === 1 && (
+                    <span className="px-2.5 py-1 bg-gray-50 text-gray-600 outline outline-1 outline-gray-200 text-[10px] font-bold rounded uppercase tracking-wider">
+                      PENDING SUBMISSION
                     </span>
                   )}
                 </div>
 
-                {/* Educator Profile */}
                 <div className="flex items-center gap-3 mt-4">
                   <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden relative border border-gray-100">
-                    <Image src="https://i.pravatar.cc/150?img=68" alt="Prashant Oawal" fill className="object-cover" />
+                    <Image src={`https://ui-avatars.com/api/?name=${encodeURIComponent(assignmentData.studentName)}&background=random`} alt={assignmentData.studentName} fill className="object-cover" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-gray-900 leading-tight">Prashant Oawal</h3>
-                    <p className="text-[13px] text-gray-500">educator</p>
+                    <h3 className="text-sm font-bold text-gray-900 leading-tight">Submitted By: {assignmentData.studentName}</h3>
+                    <p className="text-[13px] text-gray-500">Student</p>
                   </div>
                 </div>
               </div>
 
-              {/* Description */}
               <div className="pt-6 mt-6 border-t border-gray-100">
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
-                  DESCRIPTION
-                </h4>
-                <p className="text-[13px] text-gray-700 leading-[1.8] text-justify">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                </p>
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">DESCRIPTION</h4>
+                <p className="text-[13px] text-gray-700 leading-[1.8] text-justify">{assignmentData.description}</p>
               </div>
             </div>
 
-            {/* Upload Area / States */}
             <div className="bg-white rounded-xl p-8 border border-gray-100 shadow-sm">
-              
-              {submissionState === 1 && (
+              {submissionState === 1 ? (
+                <div className="text-center py-10">
+                  <h4 className="text-[15px] font-bold text-gray-500">Student has not submitted yet</h4>
+                </div>
+              ) : (
                 <>
-                  <h4 className="text-[15px] font-bold text-gray-900 mb-4">Upload Your submission here</h4>
-                  <div className="border border-blue-200 border-dashed rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#F8FAFC]">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-blue-600 shrink-0">
-                        <CloudUpload size={22} />
-                      </div>
-                      <div>
-                        <h5 className="text-[13px] font-bold text-gray-900">Drag and drop or choose file to be uploaded</h5>
-                        <p className="text-[11px] text-gray-500 mt-1 font-medium">• Only .docs or .pdf files up to 10 MB</p>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => setSubmissionState(2)} 
-                      className="whitespace-nowrap px-6 py-2.5 bg-white text-blue-600 border border-blue-100 rounded-xl text-[13px] font-bold hover:bg-blue-50 transition-colors shadow-sm"
-                    >
-                      Browse Files
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {submissionState === 2 && (
-                <>
-                  <h4 className="text-[15px] font-bold text-gray-900 mb-4">Upload Your submission here</h4>
-                  <div className="border border-blue-200 border-dashed rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#F8FAFC] mb-5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-blue-600 shrink-0">
-                        <CloudUpload size={22} />
-                      </div>
-                      <div>
-                        <h5 className="text-[13px] font-bold text-gray-900">Drag and drop or choose file to be uploaded</h5>
-                        <p className="text-[11px] text-gray-500 mt-1 font-medium">• Only .docs or .pdf files up to 10 MB</p>
-                      </div>
-                    </div>
-                    <button className="whitespace-nowrap px-6 py-2.5 bg-white text-blue-600 border border-blue-100 rounded-xl text-[13px] font-bold shadow-sm opacity-50 cursor-not-allowed">
-                      Browse Files
-                    </button>
-                  </div>
-
-                  {/* Pending file */}
-                  <div className="flex items-center justify-between p-4 border border-gray-100 rounded-xl mb-6 shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-blue-50/80 text-blue-600 rounded-lg shrink-0">
-                        <FileText size={20} />
-                      </div>
-                      <span className="text-[13px] font-bold text-gray-900">Session Article.pdf</span>
-                    </div>
-                    <button onClick={() => setSubmissionState(1)} className="text-gray-400 hover:text-red-500 transition-colors">
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-
-                  <div className="flex justify-end">
-                    <button 
-                      onClick={() => setSubmissionState(3)}
-                      className="px-8 py-2.5 bg-[#000520] text-white rounded-[12px] text-[13px] font-bold hover:bg-gray-900 transition-all shadow-sm"
-                    >
-                      Submit Assignment
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {submissionState === 3 && (
-                <>
-                  <h4 className="text-[15px] font-bold text-gray-900 mb-4">Your submissions</h4>
+                  <h4 className="text-[15px] font-bold text-gray-900 mb-4">Student Submissions</h4>
                   <div className="space-y-3">
-                    {[1, 2].map((i) => (
-                      <div key={i} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl shadow-sm">
+                    {assignmentData.submissions.map((file) => (
+                      <div key={file.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl shadow-sm bg-[#F8FAFC]">
                         <div className="flex items-center gap-3">
                           <div className="p-2.5 bg-blue-50/80 text-blue-600 rounded-lg shrink-0">
                             <FileText size={20} />
                           </div>
-                          <span className="text-[13px] font-bold text-gray-900">Reviewed Article.pdf</span>
+                          <span className="text-[13px] font-bold text-gray-900">{file.name}</span>
                         </div>
-                        <button className="text-gray-400 hover:text-gray-600 transition-colors">
+                        <a
+                          href={file.url || "#"}
+                          target={file.url ? "_blank" : undefined}
+                          rel="noreferrer"
+                          className="text-gray-400 hover:text-gray-900 transition-colors"
+                        >
                           <DownloadCloud size={20} />
-                        </button>
+                        </a>
                       </div>
                     ))}
                   </div>
-                  
-                  {/* Debug state control link - barely visible to not ruin UI but helpful */}
-                  <button onClick={() => setSubmissionState(1)} className="mt-8 text-[10px] text-white hover:text-gray-300">reset</button>
+
+                  {submissionState === 2 && (
+                    <div className="flex justify-end mt-6">
+                      <button
+                        onClick={handleApprove}
+                        disabled={isApproving}
+                        className="px-8 py-2.5 bg-[#042BFD] text-white rounded-[12px] text-[13px] font-bold hover:bg-blue-700 transition-all shadow-sm disabled:opacity-60 flex items-center gap-2"
+                      >
+                        {isApproving && <Loader2 size={14} className="animate-spin" />}
+                        {isApproving ? "Approving..." : "Approve Submission"}
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
             </div>
-
           </div>
 
-          {/* Right Column (Uploaded Assignments & Comments) */}
           <div className="lg:col-span-1 space-y-6">
-            
-            {/* Uploaded Assignments Box */}
             <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
-              <h3 className="text-[13px] font-bold text-gray-900 mb-5 flex items-center justify-between">
-                Uploaded Assignments :
-              </h3>
-              
+              <h3 className="text-[13px] font-bold text-gray-900 mb-5">Resources provided to student :</h3>
               <div className="space-y-3">
-                {/* File 1 */}
-                <div className="flex items-center justify-between p-3.5 bg-white border border-gray-100 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="p-2.5 bg-blue-50/80 text-blue-600 rounded-lg shrink-0 flex items-center justify-center">
-                      <FileText size={16} />
+                {assignmentData.resources.length === 0 ? (
+                  <p className="text-sm text-gray-500">No resources attached.</p>
+                ) : (
+                  assignmentData.resources.map((file) => (
+                    <div key={file.id} className="flex items-center justify-between p-3.5 bg-white border border-gray-100 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="p-2.5 bg-blue-50/80 text-blue-600 rounded-lg shrink-0 flex items-center justify-center">
+                          <FileText size={16} />
+                        </div>
+                        <span className="text-[13px] font-bold text-gray-900 truncate pr-4">{file.name}</span>
+                      </div>
+                      <a href={file.url || "#"} target={file.url ? "_blank" : undefined} rel="noreferrer" className="text-gray-400 hover:text-gray-600 transition-colors pr-1 shrink-0">
+                        <Download size={16} />
+                      </a>
                     </div>
-                    <span className="text-[13px] font-bold text-gray-900 truncate pr-4">Session Reading Material V...</span>
-                  </div>
-                  <button className="text-gray-400 hover:text-gray-600 transition-colors pr-1 shrink-0">
-                    <ChevronRight size={16} className="-rotate-90" />
-                  </button>
-                </div>
-
-                {/* File 2 */}
-                <div className="flex items-center justify-between p-3.5 bg-white border border-gray-100 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="p-2.5 bg-blue-50/80 text-blue-600 rounded-lg shrink-0 flex items-center justify-center">
-                      <FileText size={16} />
-                    </div>
-                    <span className="text-[13px] font-bold text-gray-900 truncate pr-4">Reference Article.pdf</span>
-                  </div>
-                  <button className="text-gray-400 hover:text-gray-600 transition-colors pr-1 shrink-0">
-                    <ChevronRight size={16} className="-rotate-90" />
-                  </button>
-                </div>
-
-                {/* File 3 */}
-                <div className="flex items-center justify-between p-3.5 bg-white border border-gray-100 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="p-2.5 bg-blue-50/80 text-blue-600 rounded-lg shrink-0 flex items-center justify-center">
-                      <FileText size={16} />
-                    </div>
-                    <span className="text-[13px] font-bold text-gray-900 truncate pr-4">Insights into Coronary.pdf</span>
-                  </div>
-                  <button className="text-gray-400 hover:text-gray-600 transition-colors pr-1 shrink-0">
-                    <ChevronRight size={16} className="-rotate-90" />
-                  </button>
-                </div>
+                  ))
+                )}
               </div>
             </div>
 
-            {/* Add Private Comment Box */}
-            <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
-              <h3 className="text-[13px] font-bold text-gray-900 mb-5">Add Private Comment</h3>
+            <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm flex flex-col max-h-[500px]">
+              <h3 className="text-[13px] font-bold text-gray-900 mb-5">Feedback / Comments</h3>
 
-              {submissionState === 3 && comments.map(c => (
-                <div key={c.id} className="bg-white border border-gray-100 rounded-xl p-4 mb-5 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
-                  <div className="flex justify-between items-start mb-2.5">
-                    <span className="font-bold text-[13px] text-gray-900">{c.author}</span>
-                    <span className="text-[10px] text-gray-400 font-medium">{c.date}</span>
+              <div className="flex-1 overflow-y-auto mb-4 space-y-3 pr-2">
+                {assignmentData.comments.length === 0 && <p className="text-xs text-gray-400">No feedback given yet.</p>}
+                {assignmentData.comments.map((comment) => (
+                  <div key={comment.id} className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+                    <div className="flex justify-between items-start mb-2.5">
+                      <span className="font-bold text-[13px] text-gray-900">{comment.author}</span>
+                      <span className="text-[10px] text-gray-400 font-medium">{comment.date}</span>
+                    </div>
+                    <p className="text-[11px] text-gray-600 leading-relaxed font-medium">{comment.text}</p>
                   </div>
-                  <p className="text-[11px] text-gray-600 leading-relaxed font-medium">
-                    {c.text}
-                  </p>
-                </div>
-              ))}
+                ))}
+              </div>
 
-              <div className="relative">
-                <input 
-                  type="text" 
+              <div className="relative mt-auto">
+                <input
+                  type="text"
                   value={commentText}
-                  onChange={e => setCommentText(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleAddComment()}
-                  placeholder="Enter here" 
-                  className="w-full text-[13px] font-medium border border-gray-200 rounded-[12px] py-3 pl-4 pr-12 focus:outline-none focus:ring-1 focus:border-blue-500 focus:ring-blue-500 bg-white placeholder-gray-400" 
+                  onChange={(event) => setCommentText(event.target.value)}
+                  onKeyDown={(event) => event.key === "Enter" && handleAddComment()}
+                  placeholder="Enter feedback here..."
+                  className="w-full text-[13px] font-medium border border-gray-200 rounded-[12px] py-3 pl-4 pr-12 focus:outline-none focus:ring-1 focus:border-blue-500 focus:ring-blue-500 bg-white placeholder-gray-400"
                 />
-                <button 
-                  onClick={handleAddComment}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                >
+                <button onClick={handleAddComment} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#042BFD] transition-colors">
                   <Send size={16} />
                 </button>
               </div>
               <p className="text-[10px] text-gray-400 mt-3.5 flex items-start gap-1 font-medium">
-                Private Comment are only visible to you and your mentor.
+                Feedback comments are visible to the student.
               </p>
             </div>
-
           </div>
-
         </div>
       </div>
     </div>

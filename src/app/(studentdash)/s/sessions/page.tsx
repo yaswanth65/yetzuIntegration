@@ -1,16 +1,38 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Search, Calendar, Clock, MoreVertical, ExternalLink } from "lucide-react";
-import Link from "next/link"; 
+import Link from "next/link";
 import RescheduleModal from "../../components/Reschedule";
-import { CourseAPI, StudentAPI, asArray } from "@/lib/api"; 
+import { StudentAPI, asArray } from "@/lib/api";
+
+type SessionTab = "upcoming" | "completed" | "missed";
+
+interface SessionCardData {
+  id: string;
+  courseId: string;
+  slug: string;
+  title: string;
+  type: string;
+  mentor: {
+    name: string;
+    role: string;
+    avatar: string;
+  };
+  date: string;
+  time: string;
+  badge: string | null;
+  badgeType: string;
+  tab: SessionTab;
+  isFocusToday: boolean;
+  startIso: string;
+}
 
 const getThemeStyles = (type: string, badgeType?: string) => {
   let badgeClasses = "";
   if (badgeType === "purple") badgeClasses = "bg-[#E0D4F5] text-[#7B42F6]";
   else if (badgeType === "orange") badgeClasses = "bg-[#FFEDD5] text-[#EA580C]";
-  else badgeClasses = "bg-gray-100 text-gray-600"; 
+  else badgeClasses = "bg-gray-100 text-gray-600";
 
   switch (type) {
     case "webinar":
@@ -34,11 +56,18 @@ const getThemeStyles = (type: string, badgeType?: string) => {
         icon: "/images/team.svg",
         badgeClasses,
       };
+    case "workshop":
+      return {
+        wrapperBorder: "from-[#B6E0C3] via-transparent to-[#B6E0C3]",
+        bgGradient: "from-[#ECFDF3] via-white via-40% to-white",
+        icon: "/images/video-chat.svg",
+        badgeClasses,
+      };
     case "missed":
       return {
         wrapperBorder: "from-[#FECDD3] via-transparent to-[#FECDD3]",
         bgGradient: "from-[#FFF0F2] via-white via-40% to-white",
-        icon: "/images/video-chat.svg", 
+        icon: "/images/video-chat.svg",
         badgeClasses,
       };
     default:
@@ -51,64 +80,108 @@ const getThemeStyles = (type: string, badgeType?: string) => {
   }
 };
 
+const parseDateValue = (value: any) => {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const inferSessionTab = (item: any, startDate: Date | null): SessionTab => {
+  const rawStatus = String(item.status || item.courseStatus || item.sessionStatus || "").toLowerCase();
+
+  if (rawStatus.includes("miss")) return "missed";
+  if (rawStatus.includes("complete")) return "completed";
+
+  if (!startDate) return "upcoming";
+  return startDate.getTime() < Date.now() ? "completed" : "upcoming";
+};
+
+const formatDateLabel = (date: Date | null) =>
+  date
+    ? date.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "TBD";
+
+const formatTimeLabel = (item: any, date: Date | null) => {
+  if (item.time) return String(item.time);
+
+  if (!date) return "TBD";
+
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+const normalizeSessionType = (item: any) =>
+  String(item.sessionType || item.type || item.courseType || "Webinar").toLowerCase();
+
+const mapStudentSession = (item: any, focusIds: Set<string>): SessionCardData => {
+  const id = String(item._id || item.id || item.courseId || item.sessionId || item.slug);
+  const startDate = parseDateValue(item.startDateTime || item.scheduledDate || item.date);
+  const tab = inferSessionTab(item, startDate);
+  const isFocusToday = focusIds.has(id);
+  const title = item.title || item.sessionTitle || item.courseTitle || "Untitled Session";
+  const mentorName = item.educatorName || item.educator?.name || item.mentorName || "Educator";
+
+  return {
+    id,
+    courseId: id,
+    slug: id,
+    title,
+    type: tab === "missed" ? "missed" : normalizeSessionType(item),
+    mentor: {
+      name: mentorName,
+      role: item.subtitle || item.educator?.role || item.category || "Session Mentor",
+      avatar:
+        item.educator?.avatar ||
+        item.educator?.profileImage ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(mentorName)}&background=042BFD&color=fff`,
+    },
+    date: formatDateLabel(startDate),
+    time: formatTimeLabel(item, startDate),
+    badge: isFocusToday && tab === "upcoming" ? "STARTS SOON" : null,
+    badgeType: isFocusToday && tab === "upcoming" ? "purple" : "gray",
+    tab,
+    isFocusToday,
+    startIso: startDate?.toISOString() || "",
+  };
+};
+
 export default function SessionsPage() {
-  const [sessions, setSessions] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<SessionCardData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"upcoming" | "completed" | "missed">("upcoming");
+  const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<SessionTab>("upcoming");
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
-  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
+  const [rescheduleSession, setRescheduleSession] = useState<SessionCardData | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchSessions = async () => {
+      setIsLoading(true);
+      setError("");
+
       try {
         const response = await StudentAPI.getOverview();
         const data = response?.data || response;
-        
-        const allSessions: any[] = [];
+        const enrolledCourses = asArray(data?.enrolledCourses || data?.courses);
+        const upcomingSessions = asArray(data?.upcomingSessions || data?.sessions);
+        const focusIds = new Set(
+          upcomingSessions.map((item: any) => String(item.courseId || item.id || item._id || item.sessionId)),
+        );
 
-        // 1. Process Enrolled Courses (General list) - These are the ONLY ones that should show here
-        const enrolled = asArray(data.enrolledCourses || []);
-        enrolled.forEach((c: any) => {
-          const startDate = c.startDateTime || c.date ? new Date(c.startDateTime || c.date) : new Date();
-          const dateStr = startDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-          const timeStr = c.time || startDate.toLocaleTimeString("en-US", { hour: 'numeric', minute: '2-digit', hour12: true });
-
-          allSessions.push({
-            id: c._id || c.id,
-            slug: c._id || c.id,
-            title: c.title || "Untitled Course",
-            type: (c.title || "").toLowerCase().includes('cohort') ? 'cohort' : 'webinar',
-            mentor: {
-              name: c.educatorName || c.educator?.name || "Educator",
-              role: c.subtitle || "Mentor",
-              avatar: c.educator?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.educatorName || "E")}&background=random`,
-            },
-            date: dateStr,
-            time: timeStr,
-            badge: null,
-            badgeType: "gray",
-            tab: "upcoming", 
-            isFocusToday: false
-          });
-        });
-
-        // 2. Process Upcoming Sessions (Specific focus) - Mark existing enrolled courses as "Today"
-        const upcoming = asArray(data.upcomingSessions || []);
-        upcoming.forEach((s: any) => {
-          const targetId = s.courseId || s.id || s._id;
-          const existing = allSessions.find(item => item.id === targetId);
-          if (existing) {
-             existing.isFocusToday = true;
-             existing.badge = "STARTS SOON";
-             existing.badgeType = "purple";
-          }
-        });
-
-        setSessions(allSessions);
-      } catch (error) {
-        console.error("Sessions fetch error:", error);
+        const mappedSessions = enrolledCourses.map((item: any) => mapStudentSession(item, focusIds));
+        setSessions(mappedSessions);
+      } catch (fetchError: any) {
+        console.error("Student sessions fetch failed", fetchError);
         setSessions([]);
+        setError(fetchError?.message || "Unable to load your sessions right now.");
       } finally {
         setIsLoading(false);
       }
@@ -117,117 +190,131 @@ export default function SessionsPage() {
     fetchSessions();
   }, []);
 
-  const filteredSessions = sessions.filter((s) => s.tab === activeTab);
-  const focusTodaySessions = filteredSessions.filter((s) => s.isFocusToday);
-  const otherSessions = filteredSessions.filter((s) => !s.isFocusToday);
-  
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setOpenDropdownId(null);
       }
-    }
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const renderCard = (session: any, isFocus: boolean) => {
+  const filteredSessions = useMemo(() => {
+    const loweredSearch = searchQuery.trim().toLowerCase();
+
+    return sessions.filter((session) => {
+      if (session.tab !== activeTab) return false;
+      if (!loweredSearch) return true;
+
+      return (
+        session.title.toLowerCase().includes(loweredSearch) ||
+        session.mentor.name.toLowerCase().includes(loweredSearch)
+      );
+    });
+  }, [activeTab, searchQuery, sessions]);
+
+  const focusTodaySessions = filteredSessions.filter((session) => session.isFocusToday);
+  const otherSessions = filteredSessions.filter((session) => !session.isFocusToday);
+
+  const renderCard = (session: SessionCardData, isFocus: boolean) => {
     const theme = getThemeStyles(session.type, session.badgeType);
     const isDropdownOpen = openDropdownId === session.id;
 
     return (
       <div
         key={session.id}
-        className={`relative rounded-[24px] p-[1.5px] bg-gradient-to-br ${theme.wrapperBorder} flex flex-col min-h-[320px] min-w-[280px] w-[85vw] md:min-w-0 md:w-auto shrink-0 snap-center md:snap-align-none transition-all hover:scale-[1.02]`}
+        className={`relative flex min-h-[320px] w-[85vw] shrink-0 snap-center flex-col rounded-[24px] bg-gradient-to-br p-[1.5px] transition-all hover:scale-[1.02] md:min-w-0 md:w-auto md:snap-align-none ${theme.wrapperBorder}`}
       >
-        <div className="relative flex-1 flex flex-col bg-white rounded-[22px] p-5 h-full shadow-sm border border-gray-100/50 overflow-hidden">
-          <div className={`absolute inset-0 rounded-[22px] bg-gradient-to-b ${theme.bgGradient} pointer-events-none z-0`}></div>
+        <div className="relative flex h-full flex-1 flex-col overflow-hidden rounded-[22px] border border-gray-100/50 bg-white p-5 shadow-sm">
+          <div className={`pointer-events-none absolute inset-0 z-0 rounded-[22px] bg-gradient-to-b ${theme.bgGradient}`}></div>
 
-          <div className="flex justify-between items-start mb-6 relative z-10">
-            <div className="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center border border-gray-50">
-              <img src={theme.icon} alt="Icon" className="w-8 h-8 object-contain" />
+          <div className="relative z-10 mb-6 flex items-start justify-between">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-gray-50 bg-white shadow-sm">
+              <img src={theme.icon} alt="Icon" className="h-8 w-8 object-contain" />
             </div>
-            {session.badge && (
-              <span className={`${theme.badgeClasses} text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-sm`}>
-                {session.badge.includes("STARTS") && <Clock size={12} />}
+            {session.badge ? (
+              <span className={`${theme.badgeClasses} flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider shadow-sm`}>
+                {session.badge.includes("STARTS") ? <Clock size={12} /> : null}
                 {session.badge}
               </span>
-            )}
+            ) : null}
           </div>
 
-          <div className="relative z-10 flex-1 flex flex-col">
-            <Link href={`sessions/${session.slug}`} className="hover:text-[#042BFD] transition-colors">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 leading-tight pr-2 line-clamp-2">
-                {session.title}
-              </h3>
+          <div className="relative z-10 flex flex-1 flex-col">
+            <Link href={`/s/sessions/${session.slug}`} className="transition-colors hover:text-[#042BFD]">
+              <h3 className="mb-4 line-clamp-2 pr-2 text-lg font-bold leading-tight text-gray-900">{session.title}</h3>
             </Link>
 
-            <div className="flex items-center gap-3 mb-6 mt-auto">
-              <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-gray-100 shadow-sm">
-                <img src={session.mentor.avatar} alt="Mentor" className="w-full h-full object-cover" />
+            <div className="mt-auto mb-6 flex items-center gap-3">
+              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-gray-100 shadow-sm">
+                <img src={session.mentor.avatar} alt="Mentor" className="h-full w-full object-cover" />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-bold text-gray-900 leading-none mb-1 truncate">{session.mentor.name}</p>
-                <p className="text-[11px] text-gray-500 truncate">{session.mentor.role}</p>
+                <p className="mb-1 truncate text-sm font-bold leading-none text-gray-900">{session.mentor.name}</p>
+                <p className="truncate text-[11px] text-gray-500">{session.mentor.role}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 bg-gray-50 rounded-xl px-4 py-3 mb-6 w-full border border-gray-100">
+            <div className="mb-6 flex w-full items-center gap-4 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
               <div className="flex items-center gap-2 text-xs font-bold text-gray-600">
-                <Calendar size={14} className="text-gray-400 shrink-0" /> <span className="truncate">{session.date}</span>
+                <Calendar size={14} className="shrink-0 text-gray-400" /> <span className="truncate">{session.date}</span>
               </div>
               <div className="flex items-center gap-2 text-xs font-bold text-gray-600">
-                <Clock size={14} className="text-gray-400 shrink-0" /> <span className="truncate">{session.time}</span>
+                <Clock size={14} className="shrink-0 text-gray-400" /> <span className="truncate">{session.time}</span>
               </div>
             </div>
 
-            <div className="flex justify-between items-center gap-3 relative">
-              <Link href={`sessions/${session.slug}`} className="flex-1">
-                <button className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 flex items-center justify-center gap-2 ${
-                  isFocus && activeTab === "upcoming" 
-                    ? "bg-[#021165] text-white hover:bg-[#031a9c] shadow-lg shadow-blue-900/10" 
-                    : "border-2 border-[#042BFD] text-[#042BFD] hover:bg-blue-50"
-                }`}>
+            <div className="relative flex items-center justify-between gap-3">
+              <Link href={`/s/sessions/${session.slug}`} className="flex-1">
+                <button
+                  className={`flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all active:scale-95 ${
+                    isFocus && activeTab === "upcoming"
+                      ? "bg-[#021165] text-white shadow-lg shadow-blue-900/10 hover:bg-[#031a9c]"
+                      : "border-2 border-[#042BFD] text-[#042BFD] hover:bg-blue-50"
+                  }`}
+                >
                   {isFocus && activeTab === "upcoming" ? "Join Session" : "View Details"}
                   <ExternalLink size={14} />
                 </button>
               </Link>
-              
-              <button 
+
+              <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setOpenDropdownId(isDropdownOpen ? null : session.id);
                 }}
-                className="w-10 h-10 border border-gray-200 rounded-xl text-gray-500 hover:bg-gray-50 flex items-center justify-center shrink-0 transition-all"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 text-gray-500 transition-all hover:bg-gray-50"
               >
                 <MoreVertical size={18} />
               </button>
 
-              {isDropdownOpen && (
-                <div 
+              {isDropdownOpen ? (
+                <div
                   ref={dropdownRef}
-                  className="absolute right-0 bottom-full mb-3 w-48 bg-white border border-gray-100 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-200 origin-bottom-right"
+                  className="animate-in fade-in zoom-in-95 absolute right-0 bottom-full z-50 mb-3 w-48 origin-bottom-right rounded-2xl border border-gray-100 bg-white py-2 shadow-2xl duration-200"
                 >
-                  <button 
-                    className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                  <button
+                    className="w-full px-4 py-2.5 text-left text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50"
                     onClick={() => {
                       setOpenDropdownId(null);
-                      setIsRescheduleOpen(true);
+                      setRescheduleSession(session);
                     }}
                   >
                     Reschedule
                   </button>
-                  <button 
-                    className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                  <button
+                    className="w-full px-4 py-2.5 text-left text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50"
                     onClick={() => {
-                      navigator.clipboard.writeText(window.location.origin + `/sessions/${session.slug}`);
+                      navigator.clipboard.writeText(`${window.location.origin}/s/sessions/${session.slug}`);
                       setOpenDropdownId(null);
                     }}
                   >
                     Copy Link
                   </button>
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
@@ -236,48 +323,50 @@ export default function SessionsPage() {
   };
 
   return (
-    <div className="bg-[#F8F9FA] min-h-screen font-sans">
-      {/* --- HEADER --- */}
+    <div className="min-h-screen bg-[#F8F9FA] font-sans">
       <div className="mb-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+        <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-medium text-[#021165]">Sessions</h1>
-            <p className="text-gray-500 text-sm mt-1">Track your upcoming and past learning sessions</p>
+            <h1 className="text-2xl font-medium text-[#021165] sm:text-3xl md:text-4xl">Sessions</h1>
+            <p className="mt-1 text-sm text-gray-500">Track your upcoming and past learning sessions</p>
           </div>
-          
+
           <div className="relative w-full md:w-[320px]">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
               <Search className="h-4 w-4 text-gray-400" strokeWidth={2} />
             </div>
             <input
               type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search sessions or mentors..."
-              className="block w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#042BFD]/10 focus:border-[#042BFD] transition-all shadow-sm"
+              className="block w-full rounded-2xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm placeholder-gray-400 shadow-sm transition-all focus:border-[#042BFD] focus:outline-none focus:ring-2 focus:ring-[#042BFD]/10"
             />
           </div>
         </div>
-        
-        {/* Tabs */}
-        <div className="flex items-center gap-4 sm:gap-8 border-b border-gray-200">
+
+        <div className="flex items-center gap-4 border-b border-gray-200 sm:gap-8">
           {(["upcoming", "completed", "missed"] as const).map((tab) => {
             const isActive = activeTab === tab;
-            let count = sessions.filter((s) => s.tab === tab).length;
+            const count = sessions.filter((session) => session.tab === tab).length;
 
             return (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`pb-4 flex items-center gap-2 border-b-2 transition-all -mb-[1px] capitalize text-sm sm:text-base ${
+                className={`-mb-[1px] flex items-center gap-2 border-b-2 pb-4 text-sm capitalize transition-all sm:text-base ${
                   isActive
-                    ? "border-[#042BFD] text-[#021165] font-bold"
-                    : "border-transparent text-gray-500 hover:text-gray-700 font-medium"
+                    ? "border-[#042BFD] font-bold text-[#021165]"
+                    : "border-transparent font-medium text-gray-500 hover:text-gray-700"
                 }`}
               >
                 {tab}
-                <span 
-                  className={`flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full text-[10px] font-bold ${
-                    isActive 
-                      ? tab === "missed" ? "bg-red-100 text-red-600" : "bg-[#042BFD] text-white" 
+                <span
+                  className={`flex h-[20px] min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold ${
+                    isActive
+                      ? tab === "missed"
+                        ? "bg-red-100 text-red-600"
+                        : "bg-[#042BFD] text-white"
                       : "bg-gray-100 text-gray-500"
                   }`}
                 >
@@ -289,77 +378,84 @@ export default function SessionsPage() {
         </div>
       </div>
 
-      {/* --- MAIN CONTENT AREA --- */}
-      <div className="max-w-[1600px] mx-auto">
+      <div className="mx-auto max-w-[1600px]">
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-[300px] bg-white rounded-3xl animate-pulse border border-gray-100" />
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((item) => (
+              <div key={item} className="h-[300px] animate-pulse rounded-3xl border border-gray-100 bg-white" />
             ))}
+          </div>
+        ) : error ? (
+          <div className="rounded-[24px] border border-red-200 bg-red-50 px-6 py-10 text-center">
+            <h3 className="text-lg font-bold text-gray-900">Unable to load sessions</h3>
+            <p className="mt-1 text-sm text-red-600">{error}</p>
           </div>
         ) : activeTab === "upcoming" ? (
           <div className="space-y-12">
-            {/* Focus For Today */}
-            {focusTodaySessions.length > 0 && (
+            {focusTodaySessions.length > 0 ? (
               <section>
-                <div className="flex items-center gap-4 mb-6">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] whitespace-nowrap">
+                <div className="mb-6 flex items-center gap-4">
+                  <span className="whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
                     Focus For Today
                   </span>
-                  <div className="flex-1 h-[1px] bg-gray-100"></div>
+                  <div className="h-[1px] flex-1 bg-gray-100"></div>
                 </div>
-                <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-x-auto pb-4 md:pb-0 snap-x no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
+                <div className="-mx-4 flex snap-x gap-6 overflow-x-auto px-4 pb-4 no-scrollbar md:mx-0 md:grid md:grid-cols-2 md:px-0 md:pb-0 lg:grid-cols-3">
                   {focusTodaySessions.map((session) => renderCard(session, true))}
                 </div>
               </section>
-            )}
+            ) : null}
 
-            {/* Upcoming Sessions */}
-            {otherSessions.length > 0 && (
+            {otherSessions.length > 0 ? (
               <section>
-                <div className="flex items-center gap-4 mb-6">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] whitespace-nowrap">
+                <div className="mb-6 flex items-center gap-4">
+                  <span className="whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
                     Upcoming Sessions
                   </span>
-                  <div className="flex-1 h-[1px] bg-gray-100"></div>
+                  <div className="h-[1px] flex-1 bg-gray-100"></div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {otherSessions.map((session) => renderCard(session, false))}
                 </div>
               </section>
-            )}
+            ) : null}
 
-            {focusTodaySessions.length === 0 && otherSessions.length === 0 && (
+            {focusTodaySessions.length === 0 && otherSessions.length === 0 ? (
               <div className="py-20 text-center">
-                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 text-gray-400">
                   <Calendar size={32} />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900">No upcoming sessions</h3>
-                <p className="text-gray-500 text-sm mt-1">Check back later or explore new courses</p>
+                <p className="mt-1 text-sm text-gray-500">Your enrolled sessions will appear here once they are scheduled.</p>
               </div>
-            )}
+            ) : null}
           </div>
         ) : (
-          /* Completed / Missed Tab View */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredSessions.map((session) => renderCard(session, false))}
-            
-            {filteredSessions.length === 0 && (
+
+            {filteredSessions.length === 0 ? (
               <div className="col-span-full py-20 text-center">
-                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 text-gray-400">
                   <Clock size={32} />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900">No sessions found</h3>
-                <p className="text-gray-500 text-sm mt-1">Sessions in this category will appear here</p>
+                <p className="mt-1 text-sm text-gray-500">Sessions in this category will appear here when they are available.</p>
               </div>
-            )}
+            ) : null}
           </div>
         )}
       </div>
 
-      <RescheduleModal 
-        isOpen={isRescheduleOpen} 
-        onClose={() => setIsRescheduleOpen(false)} 
+      <RescheduleModal
+        isOpen={Boolean(rescheduleSession)}
+        onClose={() => setRescheduleSession(null)}
+        courseId={rescheduleSession?.courseId}
+        sessionTitle={rescheduleSession?.title}
+        sessionDate={rescheduleSession?.date}
+        sessionTime={rescheduleSession?.time}
+        mentorName={rescheduleSession?.mentor.name}
+        sessionStartIso={rescheduleSession?.startIso}
       />
     </div>
   );
