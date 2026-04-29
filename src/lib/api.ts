@@ -137,10 +137,15 @@ export const CourseAPI = {
 export const PaymentAPI = {
   createOrder: async (payload: { amount: number; currency?: string; courseId: string; userId?: string }) => {
     try {
-      const response = await authApi.post("/api/payment/order", {
-        currency: "INR",
-        ...withUserId(payload),
-      });
+      const userId = getUserId();
+      const body = {
+        amount: payload.amount,
+        currency: payload.currency || "INR",
+        courseId: payload.courseId,
+        userId: userId
+      };
+      console.log("PaymentAPI.createOrder payload:", body);
+      const response = await authApi.post("/api/payment/order", body);
       return dataOf(response);
     } catch (error) {
       logApiFailure("PaymentAPI.createOrder", error, { payload });

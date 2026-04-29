@@ -73,23 +73,33 @@ export default function OverviewPage() {
 
   const loadDashboardData = async () => {
     try {
-      console.log("Fetching courses...");
-      const coursesRes = await CourseAPI.getAllCourses();
+      const [overviewRes, coursesRes] = await Promise.all([
+        StudentAPI.getOverview(),
+        CourseAPI.getAllCourses()
+      ]);
+      
+      console.log("Overview response:", overviewRes);
       console.log("Courses response:", coursesRes);
       
-      const catalogCourses = asArray(coursesRes?.courses || coursesRes?.data?.courses || []).map(mapCatalogCourse);
-      console.log("Catalog courses:", catalogCourses);
+      const overviewData = overviewRes?.data || overviewRes || {};
+      const allCourses = asArray(coursesRes?.courses || coursesRes?.data?.courses || []).map(mapCatalogCourse);
 
-      setAvailableCourses(catalogCourses.filter((course: any) => course.id && course.isActive));
-      setApiData({ allCourses: catalogCourses });
+      const enrolledCourseIds = asArray(overviewData?.userInfo?.enrolledCourses || []).map((c: any) => String(c.courseId));
+      const enrolledCourses = allCourses.filter((c: any) => enrolledCourseIds.includes(c.id));
+      const availableCourses = allCourses.filter((c: any) => !enrolledCourseIds.includes(c.id) && c.isActive);
+
+      setAvailableCourses(availableCourses);
+      setEnrolledCourseIds(enrolledCourseIds);
+      setApiData({ ...overviewData, enrolledCourses, allCourses });
     } catch (error: any) {
-      console.error("Failed to load courses:", error);
+      console.error("Failed to load dashboard:", error);
       setAvailableCourses([]);
+      setEnrolledCourseIds([]);
       setApiData({});
     }
   };
 
-  const handleEnroll = async (e: React.MouseEvent, course: any) => {
+const handleEnroll = async (e: React.MouseEvent, course: any) => {
     e.preventDefault();
     const courseId = String(course._id || course.id || "");
 
@@ -99,41 +109,26 @@ export default function OverviewPage() {
     }
 
     try {
-      const amount = Number(course.cost || course.price || 0);
-      await PaymentAPI.createOrder({
+      let amount = Number(course.cost || course.price || 0);
+      console.log("Enrolling - courseId:", courseId, "amount:", amount);
+      
+      // For free courses, use minimum amount 1 INR
+      if (amount <= 0) {
+        amount = 1;
+      }
+      
+      const result = await PaymentAPI.createOrder({
         amount: amount,
         courseId
       });
-      toast.success(`Enrollment started for ${course.title || course.type || "session"}.`);
-      setEnrolledCourseIds((prev) => Array.from(new Set([...prev, courseId])));
-      setApiData((previous: any) => {
-        const current = previous || {};
-        const currentUserInfo = current.userInfo || {};
-        const currentEnrolled = asArray(currentUserInfo.enrolledCourses || current.enrolledCourses);
-        const nextCourse = {
-          ...course,
-          _id: courseId,
-          id: courseId,
-          courseId,
-          educatorName: course.educatorName,
-          title: course.title,
-        };
-
-        return {
-          ...current,
-          userInfo: {
-            ...currentUserInfo,
-            totalEnrolledCourses: (currentUserInfo.totalEnrolledCourses || currentEnrolled.length || 0) + 1,
-            enrolledCourses: [nextCourse, ...currentEnrolled],
-          },
-          upcomingSessions: [nextCourse, ...asArray(current.upcomingSessions)],
-        };
-      });
-      router.push(`/s/sessions/${courseId}`);
+      console.log("Enrollment result:", result);
+      
+      toast.success(`Enrolled successfully in ${course.title || "course"}!`);
+      
+      await loadDashboardData();
     } catch (error: any) {
-      console.error("Dashboard enroll failed", error);
-      toast.error(error?.message || "Failed to start enrollment.");
-      router.push(`/courses/${courseId}`);
+      console.error("Enrollment failed", error?.response?.data);
+      toast.error(error?.response?.data?.message || error?.message || "Failed to enroll. Please try again.");
     }
   };
 
@@ -165,12 +160,18 @@ export default function OverviewPage() {
     );
   }
 
-  // --- PARSE API DATA ---
+// --- PARSE API DATA ---
   const safeData = apiData || {};
   const userInfo = safeData.userInfo || safeData.user || {};
-  const allCourses = asArray(safeData?.allCourses || []);
-  const discoverCourses = allCourses;
-  const upcomingSessions = allCourses.filter((c: any) => c.isActive).slice(0, 4).map((s: any, i: number) => {
+  
+  // Enrolled courses from overview API (user's purchased courses)
+  const enrolledCourses = asArray(safeData?.enrolledCourses || []);
+  
+  // Available courses to buy (from course list API)
+  const discoverCourses = availableCourses;
+  
+  // Upcoming sessions from enrolled courses
+  const upcomingSessions = enrolledCourses.slice(0, 4).map((s: any, i: number) => {
     const themes = ['purple', 'teal', 'orange'];
     return {
       ...s,
@@ -184,7 +185,7 @@ export default function OverviewPage() {
       date: s.dateLabel || "TBA",
       time: s.timeLabel || "TBA",
       theme: themes[i % themes.length]
-};
+    };
   });
   
   // 3. Pending Assignments Logic
@@ -204,7 +205,8 @@ export default function OverviewPage() {
   }));
 
   // --- DASHBOARD DISPLAY LOGIC ---
-  const isActuallyEmpty = allCourses.length === 0;
+  const allCourses = asArray(safeData?.allCourses || []);
+  const isActuallyEmpty = enrolledCourses.length === 0 && allCourses.length === 0;
 
   const courseName = userInfo.enrolledCourses?.[0]?.title || "your courses";
   const emptyMessage = isActuallyEmpty 
