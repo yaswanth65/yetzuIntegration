@@ -31,22 +31,24 @@ export default function EducatorAssignmentsPage() {
         setLoading(true);
         const response = await EducatorAPI.getAssignments();
         const apiAssignments = asArray(response).map((item: any, index: number) => ({
-          id: item.id || item._id || item.assignmentId || String(index),
+          id: item.id || item._id || item.assignmentId || `ASSIGN-${index + 1}`,
           assignmentId: item.assignmentId || item.id || item._id || `ASSIGN-${index + 1}`,
-          sessionTitle: item.sessionTitle || item.courseTitle || item.title || "Assignment",
-          studentName: item.studentName || item.student?.name || item.assignedToName || "Student",
+          sessionTitle: item.sessionTitle || item.courseTitle || item.title || "Session",
+          studentName: item.studentName || item.assignedToName || item.student?.name || "Student",
           sessionType: item.sessionType || item.type || "Webinar",
-          dueDate: item.dueDate || item.deadline || "TBD",
+          dueDate: item.dueDate || item.deadline || item.dueDate || "TBD",
           status: item.status === "reviewed" || item.status === "Review Done" ? "Review Done" : item.status === "submitted" || item.status === "Submitted" ? "Submitted" : "Pending",
           submissionDate: item.submissionDate || item.submittedAt || "-",
-          hasDownload: Boolean(item.hasDownload || item.fileUrl || item.documentUrl),
+          hasDownload: Boolean(item.hasDownload || item.fileUrl || item.documentUrl || (item.submissions && item.submissions.length > 0)),
+          submissions: item.submissions || [],
         }));
         if (apiAssignments.length > 0) {
           setAssignments(apiAssignments as Assignment[]);
         } else {
           setAssignments([]);
         }
-      } catch {
+      } catch (error) {
+        console.error("Failed to fetch assignments", error);
         setAssignments([]);
       } finally {
         setLoading(false);
@@ -255,8 +257,8 @@ function CreateAssignmentModal({ onClose, onSuccess }: { onClose: () => void; on
       await EducatorAPI.createAssignment(payload);
 
       const newAssignment: Assignment = {
-        id: `ASSIGN-${Date.now()}`,
-        assignmentId: `ASSIGN-${Date.now()}`,
+        id: `new-${Date.now()}`,
+        assignmentId: formData.title.trim().substring(0, 8).toUpperCase().replace(/\s/g, '-'),
         sessionTitle: formData.title.trim(),
         studentName: selectedStudent?.name || "Student",
         sessionType: formData.sessionType as SessionType,

@@ -1,17 +1,20 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import OverViewStats from "./components/OverViewStats";
 import RevenueChart from "./components/RevenueChart";
 import LiveActivityFeed from "./components/LiveActivityFeed";
 import AlertIssues from "./components/AlertIssues";
 import RecentSession from "../../components/SessionTable";
 import SupportTickets from "./components/SupportTickets";
+import SessionDetailsPanel from "../../components/SessionDetailsPanel";
 import { Session } from "@/app/(admindash)/types/SessionType";
 import { AdminAPI, asArray } from "@/lib/api";
 
 export default function AdminDashboardPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
 
 useEffect(() => {
     const fetchSessions = async () => {
@@ -20,13 +23,26 @@ useEffect(() => {
         setSessions(asArray(response).map((item: any, index: number) => {
           const rawDate = item.date || item.scheduledDate || item.startDateTime || item.createdAt;
           const status = item.status || item.Status || "Scheduled";
+          
+          let studentsCount = 0;
+          const stu = item.students;
+          if (typeof stu === 'number' && !isNaN(stu)) {
+            studentsCount = stu;
+          } else if (Array.isArray(stu)) {
+            studentsCount = stu.length;
+          } else if (typeof item.attendees === 'number' && !isNaN(item.attendees)) {
+            studentsCount = item.attendees;
+          } else if (typeof item.enrolledCount === 'number' && !isNaN(item.enrolledCount)) {
+            studentsCount = item.enrolledCount;
+          }
+          
           return {
             id: item.sessionCode || item.id || item._id || `SESSION-${index + 1}`,
             title: item.title || item.sessionType || "Session",
             type: item.sessionType || item.type || "Webinar",
             educator: item.educator?.name || item.educatorName || item.mentorName || "Educator",
-            students: item.students || item.attendees || item.enrolledCount || 0,
-            attendees: item.attendees || item.students || item.enrolledCount || 0,
+            students: studentsCount,
+            attendees: studentsCount,
             date: rawDate ? new Date(rawDate).toLocaleDateString() : "TBD",
             dateTime: rawDate || undefined,
             startTime: item.startTime || "09:00 AM",
@@ -75,13 +91,29 @@ useEffect(() => {
       <div className="space-y-4">
         <div className="flex items-center justify-between px-2">
            <h2 className="text-xl font-bold text-gray-900 tracking-tight">Recent Sessions</h2>
-           <button className="text-xs font-bold text-[#042BFD] uppercase tracking-widest hover:underline">View Schedule</button>
+           <Link href="/a/sessions" className="text-xs font-bold text-[#042BFD] uppercase tracking-widest hover:underline">View Schedule</Link>
         </div>
-        <RecentSession data={sessions} />
+        <RecentSession data={sessions} onRowClick={setSelectedSession} selectedSessionId={selectedSession?.id} />
       </div>
 
       {/* --- TICKETS SECTION --- */}
       <SupportTickets />
+
+      {/* --- DETAILS PANEL OVERLAY --- */}
+      {selectedSession && (
+        <>
+          <div 
+            className="fixed inset-0 bg-[#021165]/40 backdrop-blur-sm z-[60] transition-opacity" 
+            onClick={() => setSelectedSession(null)} 
+          />
+          <div className="fixed top-0 right-0 bottom-0 w-full max-w-[500px] bg-white z-[70] shadow-2xl animate-in slide-in-from-right duration-500">
+            <SessionDetailsPanel 
+              session={selectedSession} 
+              onClose={() => setSelectedSession(null)} 
+            />
+          </div>
+        </>
+      )}
       
       <div className="pb-10" />
     </div>

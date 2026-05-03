@@ -296,9 +296,10 @@ export default function CreateSession({ onBack, onCreated }: CreateSessionProps)
       formData.append("currency", currency);
       formData.append("billingInterval", "one_time");
       formData.append("educatorId", selectedEducator);
-      formData.append("enrollmentType", enrollmentType);
-      formData.append("studentIds", JSON.stringify(selectedStudents));
-      formData.append("selectedStudents", JSON.stringify(selectedStudents));
+       formData.append("enrollmentType", enrollmentType);
+       // Note: selectedStudents is NOT enrollment - students enroll only after payment
+       formData.append("studentIds", JSON.stringify(selectedStudents));
+       formData.append("selectedStudents", JSON.stringify(selectedStudents));
       formData.append("bundleSessionIds", JSON.stringify(selectedBundleSessions));
       formData.append("platform", sessionPlatform);
       formData.append("mode", mode);

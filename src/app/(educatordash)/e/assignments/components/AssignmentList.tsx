@@ -12,6 +12,9 @@ interface AssignmentListProps {
 
 const ITEMS_PER_PAGE = 10;
 
+// Helper to shorten ID (show first 8 chars)
+const shortId = (id: string) => id ? `${id.substring(0, 8)}...` : 'N/A';
+
 export default function AssignmentList({ assignments, loading: externalLoading }: AssignmentListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [internalLoading] = useState(false);
@@ -30,30 +33,30 @@ export default function AssignmentList({ assignments, loading: externalLoading }
   };
 
   const getStatusDisplay = (status: string) => {
-    switch (status) {
-      case 'Submitted':
+    switch (status?.toLowerCase()) {
+      case 'submitted':
+      case 'reviewed':
+      case 'review done':
         return (
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-green-200 bg-green-50/50 text-green-600 text-xs font-semibold">
             <CheckCircle2 size={14} />
             Submitted
           </div>
         );
-      case 'Pending':
+      case 'pending':
+      case 'pending submission':
         return (
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-yellow-200 bg-yellow-50/50 text-yellow-600 text-xs font-semibold">
             <Clock size={14} />
             Pending
           </div>
         );
-      case 'Review Done':
+      default:
         return (
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-blue-200 bg-blue-50/50 text-blue-600 text-xs font-semibold">
-            <CheckCircle2 size={14} />
-            Review Done
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-gray-200 bg-gray-50/50 text-gray-600 text-xs font-semibold">
+            {status || 'Unknown'}
           </div>
         );
-      default:
-        return null;
     }
   };
 
@@ -84,20 +87,19 @@ export default function AssignmentList({ assignments, loading: externalLoading }
         <table className="w-full text-left border-collapse">
           <thead className="sticky top-0 bg-white z-10">
             <tr className="text-xs text-gray-500 border-b border-gray-100 uppercase tracking-wider">
-              <th className="font-semibold py-4 px-4 whitespace-nowrap">Assignment ID</th>
-              <th className="font-semibold py-4 px-4 whitespace-nowrap">Session</th>
+              <th className="font-semibold py-4 px-4 whitespace-nowrap">ID</th>
+              <th className="font-semibold py-4 px-4 whitespace-nowrap">Session Title</th>
               <th className="font-semibold py-4 px-4 whitespace-nowrap">Student Name</th>
               <th className="font-semibold py-4 px-4 whitespace-nowrap">Session Type</th>
-              <th className="font-semibold py-4 px-4 whitespace-nowrap">Due Date</th>
+              <th className="font-semibold py-4 px-4 whitespace-nowrap">Deadline</th>
               <th className="font-semibold py-4 px-4 whitespace-nowrap">Status</th>
-              <th className="font-semibold py-4 px-4 whitespace-nowrap">Submission Date</th>
               <th className="font-semibold py-4 px-4 text-center whitespace-nowrap">Actions</th>
             </tr>
           </thead>
           <tbody>
             {assignments.length === 0 ? (
               <tr>
-                <td colSpan={8} className="text-center py-12 text-gray-500">
+                <td colSpan={7} className="text-center py-12 text-gray-500">
                   <p className="text-lg font-medium">No assignments found</p>
                   <p className="text-sm text-gray-400 mt-1">Create your first assignment to get started</p>
                 </td>
@@ -111,7 +113,7 @@ export default function AssignmentList({ assignments, loading: externalLoading }
                   }`}
                 >
                   <td className="py-4 px-4 text-sm font-medium text-blue-600 whitespace-nowrap">
-                    {assignment.assignmentId}
+                    {shortId(assignment.id)}
                   </td>
                   <td className="py-4 px-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                     {assignment.sessionTitle}
@@ -123,21 +125,18 @@ export default function AssignmentList({ assignments, loading: externalLoading }
                     {getSessionTypeStyle(assignment.sessionType)}
                   </td>
                   <td className="py-4 px-4 text-sm text-gray-500 whitespace-nowrap">
-                    {assignment.dueDate}
+                    {assignment.dueDate !== 'TBD' ? new Date(assignment.dueDate).toLocaleDateString() : 'TBD'}
                   </td>
                   <td className="py-4 px-4 whitespace-nowrap">
                     {getStatusDisplay(assignment.status)}
                   </td>
-                  <td className="py-4 px-4 text-sm text-gray-500 whitespace-nowrap">
-                    {assignment.submissionDate}
-                  </td>
                   <td className="py-4 px-4 whitespace-nowrap">
                     <div className="flex items-center justify-end gap-3 min-w-[80px]">
-                      <Link href={`/e/assignments/${assignment.id}`} className="text-gray-400 hover:text-gray-600 transition-colors">
+                      <Link href={`/e/assignments/${assignment.id}`} className="text-gray-400 hover:text-gray-600 transition-colors" title="View Details">
                         <Eye size={18} />
                       </Link>
                       {assignment.hasDownload && (
-                        <button className="text-gray-400 hover:text-gray-600 transition-colors">
+                        <button className="text-gray-400 hover:text-gray-600 transition-colors" title="Download">
                           <DownloadCloud size={18} />
                         </button>
                       )}

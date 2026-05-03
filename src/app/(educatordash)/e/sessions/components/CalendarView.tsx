@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { Session } from '../types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { shortenId } from '@/lib/utils/shortenId';
 
 type CalendarViewType = 'Day' | 'Week' | 'Month';
 
@@ -200,7 +201,7 @@ export default function CalendarView({ sessions }: CalendarViewProps) {
           height: height,
         }}
       >
-        <div className="font-semibold text-[10px] text-gray-800 truncate">{session.id}</div>
+        <div className="font-semibold text-[10px] text-gray-800 truncate" title={session.id}>{shortenId(session.id, 6)}</div>
         <div className="text-[9px] text-gray-600 truncate mt-0.5">{session.title}</div>
         <div className="text-[9px] text-gray-500 mt-0.5">{session.attendees} Students</div>
         <div className="text-[9px] text-gray-500">{session.startTime} - {session.endTime}</div>
@@ -333,7 +334,7 @@ export default function CalendarView({ sessions }: CalendarViewProps) {
                     <div className="space-y-1">
                       {daySessions.slice(0, 2).map(session => (
                         <div key={session.id} className={`p-1 text-[10px] truncate rounded ${getSessionColor(session.type).split(' ')[0]}`}>
-                          <span className="font-medium">{session.id}</span>
+                          <span className="font-medium" title={session.id}>{shortenId(session.id, 6)}</span>
                         </div>
                       ))}
                       {daySessions.length > 2 && (

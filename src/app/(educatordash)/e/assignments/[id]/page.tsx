@@ -49,48 +49,68 @@ const formatDateTime = (value?: string) => {
 };
 
 const mapAssignment = (item: any, assignmentId: string): AssignmentDetailsView => {
+  const payload = item?.data ?? item;
+  const base = payload?.assignment ?? payload?.data ?? payload;
+
+  const toDownloadUrl = (value?: string) => {
+    if (!value) return undefined;
+    const url = String(value);
+    if (/^https?:\/\//i.test(url)) return url;
+    return `https://rvleyzlrzxdkgfyqrvzy.supabase.co/storage/v1/object/public/${url.replace(/^\/+/, "")}`;
+  };
+
   const studentName =
-    item.assignedStudents?.[0]?.name ||
-    item.studentName ||
-    item.student?.name ||
+    base.assignedStudents?.[0]?.name ||
+    base.studentName ||
+    base.student?.name ||
     "Student";
 
   return {
-    id: String(item.id || item._id || item.assignmentId || assignmentId),
-    title: item.title || "Assignment",
-    description: item.description || "No assignment description available.",
-    sessionTitle: item.sessionTitle || item.course?.title || item.title || "Session",
+    id: String(base.id || base._id || base.assignmentId || assignmentId),
+    title: base.title || "Assignment",
+    description: base.description || "No assignment description available.",
+    sessionTitle: base.sessionTitle || base.course?.title || base.title || "Session",
     studentName,
     resources: [
-      ...(item.documentUrl
+      ...(base.documentUrl
         ? [
             {
               id: "resource-primary",
-              name: item.documentPath?.split("/").pop() || `${item.title || "Assignment"} resource`,
-              url: item.documentUrl,
+              name: base.documentPath?.split("/").pop() || `${base.title || "Assignment"} resource`,
+              url: toDownloadUrl(base.documentUrl),
             },
           ]
-        : []),
-      ...asArray(item.resources).map((resource: any, index: number) => ({
+        : base.documentPath
+          ? [
+              {
+                id: "resource-primary",
+                name: base.documentPath?.split("/").pop() || `${base.title || "Assignment"} resource`,
+                url: toDownloadUrl(base.documentPath),
+              },
+            ]
+          : []),
+      ...asArray(base.resources || payload?.resources || base.files || base.attachments).map((resource: any, index: number) => ({
         id: String(resource.id || resource._id || index),
         name: resource.name || resource.title || "Resource",
-        url: resource.url || resource.fileUrl || resource.documentUrl,
+        url: toDownloadUrl(resource.url || resource.fileUrl || resource.documentUrl || resource.path || resource.documentPath),
       })),
     ],
-    submissions: asArray(item.submissions).map((submission: any, index: number) => ({
+    submissions: asArray(base.submissions || payload?.submissions || base.submittedFiles || base.documents).map(
+      (submission: any, index: number) => ({
       id: String(submission.id || submission._id || index),
       name: submission.fileName || submission.documentName || submission.name || "Submission.pdf",
-      url: submission.fileUrl || submission.documentUrl || submission.url,
+        url: toDownloadUrl(submission.fileUrl || submission.documentUrl || submission.url || submission.documentPath || submission.path),
       studentName: submission.studentName || submission.student?.name || studentName,
-      status: String(submission.status || item.status || "pending"),
-    })),
-    comments: asArray(item.comments || item.feedbacks).map((comment: any, index: number) => ({
+      status: String(submission.status || base.status || "pending"),
+    }),
+    ),
+    comments: asArray(base.comments || base.feedbacks || payload?.comments).map((comment: any, index: number) => ({
       id: String(comment.id || comment._id || index),
       author: comment.author || comment.name || "Mentor",
       date: formatDateTime(comment.createdAt || comment.updatedAt || comment.date),
       text: comment.text || comment.comment || "",
     })),
-    status: String(item.status || "pending"),
+    status: String(base.status || payload?.status || "pending"),
   };
 };
 
@@ -108,8 +128,16 @@ export default function EducatorAssignmentDetailsPage({ params }: { params: Prom
       try {
         setIsLoading(true);
         setError("");
+        // Fetch assignment details - uses GET /api/educator/assignments/{{id}} (from Postman)
+        // Returns: assignment details + all student submissions with submitted files
         const response = await EducatorAPI.getAssignmentById(assignmentId);
-        setAssignmentData(mapAssignment(response, assignmentId));
+        const mappedData = mapAssignment(response, assignmentId);
+        
+        // Log for debugging
+        console.log("Educator assignment details:", mappedData);
+        console.log("Student submissions:", mappedData.submissions);
+        
+        setAssignmentData(mappedData);
       } catch (fetchError: any) {
         console.error("Failed to load educator assignment data", fetchError);
         setAssignmentData(null);
@@ -312,11 +340,12 @@ export default function EducatorAssignmentDetailsPage({ params }: { params: Prom
           </div>
 
           <div className="lg:col-span-1 space-y-6">
+            {/* Educator PDF Section - Resources uploaded by educator */}
             <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
-              <h3 className="text-[13px] font-bold text-gray-900 mb-5">Resources provided to student :</h3>
+              <h3 className="text-[13px] font-bold text-gray-900 mb-5">Educator PDF (Resources Uploaded)</h3>
               <div className="space-y-3">
                 {assignmentData.resources.length === 0 ? (
-                  <p className="text-sm text-gray-500">No resources attached.</p>
+                  <p className="text-sm text-gray-500">No resources uploaded.</p>
                 ) : (
                   assignmentData.resources.map((file) => (
                     <div key={file.id} className="flex items-center justify-between p-3.5 bg-white border border-gray-100 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
@@ -326,7 +355,13 @@ export default function EducatorAssignmentDetailsPage({ params }: { params: Prom
                         </div>
                         <span className="text-[13px] font-bold text-gray-900 truncate pr-4">{file.name}</span>
                       </div>
-                      <a href={file.url || "#"} target={file.url ? "_blank" : undefined} rel="noreferrer" className="text-gray-400 hover:text-gray-600 transition-colors pr-1 shrink-0">
+                      <a 
+                        href={file.url || "#"} 
+                        target={file.url ? "_blank" : undefined} 
+                        rel="noreferrer" 
+                        className="text-gray-400 hover:text-gray-600 transition-colors pr-1 shrink-0"
+                        title="Download Resource"
+                      >
                         <Download size={16} />
                       </a>
                     </div>

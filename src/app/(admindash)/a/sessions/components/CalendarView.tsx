@@ -8,13 +8,14 @@ type CalendarViewType = 'Day' | 'Week' | 'Month';
 
 interface CalendarViewProps {
   data: Session[];
+  onSessionClick?: (session: Session) => void;
 }
 
 const HOUR_HEIGHT = 80;
 const FIRST_HOUR = 7;
 const LAST_HOUR = 20;
 
-export default function CalendarView({ data }: CalendarViewProps) {
+export default function CalendarView({ data, onSessionClick }: CalendarViewProps) {
   const [viewType, setViewType] = useState<CalendarViewType>('Week');
   const [currentDate, setCurrentDate] = useState(() => {
     const today = new Date();
@@ -176,22 +177,25 @@ export default function CalendarView({ data }: CalendarViewProps) {
 
   const renderSessionCard = (session: Session, parentHeight: number) => {
     const { duration } = parseSessionTimes(session);
-    const height = duration * HOUR_HEIGHT - 8;
+    const height = Math.max(duration * HOUR_HEIGHT - 8, 40);
     const colorClass = getSessionColor(session.type);
     
     return (
       <div
         key={session.id}
-        className={`absolute left-1 right-1 ${colorClass} border-l-4 rounded-r-lg p-2 z-10 overflow-hidden`}
+        onClick={() => onSessionClick?.(session)}
+        className={`absolute left-1 right-1 ${colorClass} border-l-4 rounded-r-lg p-2 z-10 overflow-hidden cursor-pointer hover:shadow-md transition-shadow`}
         style={{
           top: 4,
           height: height,
         }}
       >
-        <div className="font-semibold text-[10px] text-gray-800 truncate">{session.title || session.type}</div>
+        <div className="font-semibold text-[10px] text-gray-800 truncate">{session.title || "Untitled Session"}</div>
         <div className="text-[9px] text-gray-600 truncate mt-0.5">{session.educator}</div>
-        <div className="text-[9px] text-gray-500 mt-0.5">{session.attendees || session.students} Students</div>
-        <div className="text-[9px] text-gray-500">{session.startTime} - {session.endTime}</div>
+        <div className="text-[9px] text-gray-500 mt-0.5">{session.students || 0} Students</div>
+        {session.startTime && session.endTime && (
+          <div className="text-[9px] text-gray-500">{session.startTime} - {session.endTime}</div>
+        )}
       </div>
     );
   };

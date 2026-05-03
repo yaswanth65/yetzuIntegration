@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Play, ClipboardList, BookOpen, Clock, TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
-import { EducatorAPI } from '@/lib/api';
+import { EducatorAPI, asArray } from '@/lib/api';
 
 interface StatCard {
   title: string;
@@ -58,33 +58,53 @@ export default function StatCards() {
       try {
         setLoading(true);
         setError(false);
-        const response = await EducatorAPI.getOverview();
-        const data = response?.data || response;
+        
+        // Fetch data from working APIs (not broken getOverview)
+        const [assignmentsRes, sessionsRes] = await Promise.allSettled([
+          EducatorAPI.getAssignments(),
+          EducatorAPI.getSessions()
+        ]);
+
+        const assignments = assignmentsRes.status === 'fulfilled' ? asArray(assignmentsRes.value) : [];
+        const sessions = sessionsRes.status === 'fulfilled' ? asArray(sessionsRes.value) : [];
+
+        // Calculate stats
+        const pendingAssignments = assignments.filter((a: any) => 
+          a.status === 'pending' || a.status === 'Pending' || !a.status
+        ).length;
+
+        const scheduledSessions = sessions.filter((s: any) => {
+          const date = new Date(s.date || s.startDateTime || s.createdAt);
+          return date > new Date(); // Future sessions
+        }).length;
+
+        // Count unique students from assignments
+        const studentIds = new Set();
+        assignments.forEach((a: any) => {
+          if (a.studentId || a.assignedTo) {
+            studentIds.add(a.studentId || a.assignedTo);
+          }
+        });
         
         setCards((prev) => prev.map((card) => {
           const title = card.title.toLowerCase();
           let value = card.value;
-          let trend = 0;
           
           if (title.includes("scheduled")) {
-            const sessions = data?.scheduledSessions ?? data?.todaySessions?.length ?? data?.sessionsToday ?? 0;
-            value = String(sessions).padStart(2, "0");
-            trend = data?.sessionsTrend ?? 0;
+            value = String(scheduledSessions).padStart(2, "0");
           }
           if (title.includes("pending")) {
-            value = String(data?.pendingAssignments ?? data?.pendingSubmissions ?? data?.assignmentsPending ?? 0);
-            trend = data?.pendingTrend ?? 0;
+            value = String(pendingAssignments);
           }
           if (title.includes("students")) {
-            value = String(data?.activeStudents ?? data?.studentsCount ?? data?.students?.length ?? 0);
-            trend = data?.studentsTrend ?? 0;
+            value = String(studentIds.size || sessions.length);
           }
           if (title.includes("hours")) {
-            value = String(data?.hoursTaught ?? data?.totalHours ?? 0);
-            trend = data?.hoursTrend ?? 0;
+            // Cannot calculate without actual hours data - keep default
+            value = "0.0";
           }
           
-          return { ...card, value, trend };
+          return { ...card, value };
         }));
       } catch {
         setError(true);
@@ -108,6 +128,26 @@ export default function StatCards() {
             </div>
             <div className="flex items-center justify-center">
               <Loader2 className="w-6 h-6 animate-spin text-gray-300" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {cards.map((item, i) => (
+          <div key={i} className="bg-white rounded-2xl p-5 md:p-6 border border-red-100 flex flex-col justify-between h-[140px]">
+            <div className="flex justify-between items-start">
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">{item.title}</p>
+              <div className={`w-10 h-10 rounded-xl ${item.iconBg} flex items-center justify-center ${item.iconColor}`}>
+                <item.icon size={20} />
+              </div>
+            </div>
+            <div className="flex items-center justify-center">
+              <p className="text-xs text-red-500 font-medium">Failed to load</p>
             </div>
           </div>
         ))}

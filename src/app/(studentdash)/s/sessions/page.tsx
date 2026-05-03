@@ -5,6 +5,7 @@ import { Search, Calendar, Clock, MoreVertical, ExternalLink } from "lucide-reac
 import Link from "next/link";
 import RescheduleModal from "../../components/Reschedule";
 import { StudentAPI, asArray } from "@/lib/api";
+import { getImageUrl } from "@/lib/utils/imageUtils";
 
 type SessionTab = "upcoming" | "completed" | "missed";
 
@@ -26,6 +27,8 @@ interface SessionCardData {
   tab: SessionTab;
   isFocusToday: boolean;
   startIso: string;
+  webinerLink?: string;
+  thumbnail?: string;
 }
 
 const getThemeStyles = (type: string, badgeType?: string) => {
@@ -168,15 +171,41 @@ export default function SessionsPage() {
       setError("");
 
       try {
-        const response = await StudentAPI.getOverview();
-        const data = response?.data || response;
-        const enrolledCourses = asArray(data?.enrolledCourses || data?.courses);
-        const upcomingSessions = asArray(data?.upcomingSessions || data?.sessions);
-        const focusIds = new Set(
-          upcomingSessions.map((item: any) => String(item.courseId || item.id || item._id || item.sessionId)),
-        );
+        const enrolledRes = await StudentAPI.getEnrolledCourses();
+        const enrolledData = enrolledRes?.data || enrolledRes;
+        const enrolledList = asArray(enrolledData?.enrolledCourses || enrolledData?.courses || enrolledData);
+        
+        const now = new Date();
+        const mappedSessions = enrolledList.map((item: any) => {
+          const course = item.course || item;
+          const educator = course.educatorData || {};
+          const startIso = course.startDateTime || item.startDateTime || "";
+          const startDate = startIso ? new Date(startIso) : null;
+          const isPast = startDate ? startDate.getTime() < now.getTime() : false;
+          
+          return {
+            id: course.id || item.courseId || item.id || "",
+            courseId: item.courseId || course.id,
+            slug: course.id || item.courseId || item.id || "",
+            title: course.title || "Untitled Session",
+            type: course.subtitle || "Webinar",
+            mentor: {
+              name: educator.name || "Educator",
+              role: educator.email || "Session Mentor",
+              avatar: educator.name ? `https://ui-avatars.com/api/?name=${encodeURIComponent(educator.name)}&background=042BFD&color=fff` : "/images/educator.png",
+            },
+            date: startDate ? startDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "TBD",
+            time: startIso ? new Date(startIso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : "TBD",
+            badge: null,
+            badgeType: "gray",
+            tab: (isPast ? "completed" : "upcoming") as SessionTab,
+            isFocusToday: false,
+            startIso,
+            webinerLink: course.webinerLink || "",
+            thumbnail: getImageUrl(course.thumbnail || ""),
+          };
+        });
 
-        const mappedSessions = enrolledCourses.map((item: any) => mapStudentSession(item, focusIds));
         setSessions(mappedSessions);
       } catch (fetchError: any) {
         console.error("Student sessions fetch failed", fetchError);
@@ -267,18 +296,34 @@ export default function SessionsPage() {
             </div>
 
             <div className="relative flex items-center justify-between gap-3">
-              <Link href={`/s/sessions/${session.slug}`} className="flex-1">
-                <button
-                  className={`flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all active:scale-95 ${
-                    isFocus && activeTab === "upcoming"
+              {session.webinerLink && activeTab === "upcoming" ? (
+                <a
+                  href={session.webinerLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all active:scale-95 ${
+                    isFocus
                       ? "bg-[#021165] text-white shadow-lg shadow-blue-900/10 hover:bg-[#031a9c]"
-                      : "border-2 border-[#042BFD] text-[#042BFD] hover:bg-blue-50"
+                      : "bg-[#042BFD] text-white hover:bg-[#0325D7]"
                   }`}
                 >
-                  {isFocus && activeTab === "upcoming" ? "Join Session" : "View Details"}
+                  Join Session
                   <ExternalLink size={14} />
-                </button>
-              </Link>
+                </a>
+              ) : (
+                <Link href={`/s/sessions/${session.slug}`} className="flex-1">
+                  <button
+                    className={`flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all active:scale-95 ${
+                      isFocus && activeTab === "upcoming"
+                        ? "bg-[#021165] text-white shadow-lg shadow-blue-900/10 hover:bg-[#031a9c]"
+                        : "border-2 border-[#042BFD] text-[#042BFD] hover:bg-blue-50"
+                    }`}
+                  >
+                    {isFocus && activeTab === "upcoming" ? "Join Session" : "View Details"}
+                    <ExternalLink size={14} />
+                  </button>
+                </Link>
+              )}
 
               <button
                 onClick={(e) => {

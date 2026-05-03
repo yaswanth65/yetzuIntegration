@@ -32,19 +32,36 @@ export default function CourseCard({ course }: CourseCardProps) {
     return `${day} ${time}`;
   };
 
-  const handleEnroll = async () => {
+const handleEnroll = async () => {
     if (!course?._id || isBuying) return;
 
     setIsBuying(true);
     try {
-      await PaymentAPI.createOrder({
-        amount: course.cost || 0,
-        courseId: course._id,
+      let amount = Number(course.cost || 0);
+      if (amount <= 0) amount = 1;
+      
+      // Step 1: Create order
+      const orderResult = await PaymentAPI.createOrder({
+        amount: amount,
+        sessionId: course._id,
       });
-      toast.success(`Course purchased for ${course.title}`);
+
+      console.log("Order created:", orderResult);
+
+      // Step 2: Verify payment (triggers webhook → enrollment)
+      const userId = orderResult?.userId || "";
+      await PaymentAPI.verifyPayment({
+        userId: userId,
+        sessionId: course._id,
+        amount: amount,
+      });
+
+      toast.success(`Successfully enrolled in ${course.title}!`);
+      
+      // Step 3: Redirect to enrolled courses or refresh
       window.location.href = `/courses/${course._id}`;
     } catch {
-      toast.error("Unable to create the order right now.");
+      toast.error("Unable to complete enrollment. Please try again.");
     } finally {
       setIsBuying(false);
     }

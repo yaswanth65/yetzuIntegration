@@ -40,7 +40,7 @@ import Button from "@/components/ui/Button";
 import MainHeading from "@/components/Typography/MainHeading";
 import AvatarStack from "@/components/ui/AvatarStack";
 import SubHeading from "@/components/Typography/SubHeading";
-import { PaymentAPI } from "@/lib/api";
+import { PaymentAPI, StudentAPI } from "@/lib/api";
 
 export default function CourseDetailPage() {
   const params = useParams();
@@ -57,24 +57,38 @@ export default function CourseDetailPage() {
     return shuffled.slice(0, 3);
   }, [allCourses, courseId, Math.random()]);
 
-  const handleBuyNow = async () => {
+const handleBuyNow = async () => {
     if (!course || isCreatingOrder) return;
     setIsCreatingOrder(true);
     try {
-      const response = await PaymentAPI.createOrder({
-        amount: course.cost,
-        courseId,
+      let amount = Number(course.cost || 0);
+      if (amount <= 0) amount = 1;
+      
+      // Step 1: Create order
+      const orderResult = await PaymentAPI.createOrder({
+        amount: amount,
+        sessionId: courseId,
       });
-      const order = response?.data || response?.order || response;
-      if (order?.checkoutUrl) {
-        window.location.href = order.checkoutUrl;
-      } else if (order?.short_url) {
-        window.location.href = order.short_url;
-      } else {
-        alert("Order created successfully. Please continue payment from your dashboard.");
-      }
-    } catch {
-      alert("Unable to create the payment order. Please try again.");
+      
+      console.log("Order created:", orderResult);
+      
+      // Step 2: Get user ID and verify payment (triggers webhook → enrollment)
+      const userId = orderResult?.userId || "";
+      const paymentResult = await PaymentAPI.verifyPayment({
+        userId: userId,
+        sessionId: courseId,
+        amount: amount,
+      });
+      
+      console.log("Payment verified:", paymentResult);
+      
+      alert(`Enrolled successfully in ${course.title}! Check your dashboard for session details.`);
+      
+      // Optionally redirect to dashboard
+      // router.push("/s/dashboard");
+    } catch (error: any) {
+      console.error("Payment failed:", error);
+      alert(error?.message || "Unable to complete enrollment. Please try again.");
     } finally {
       setIsCreatingOrder(false);
     }

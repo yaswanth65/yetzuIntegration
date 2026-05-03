@@ -15,6 +15,7 @@ import {
   Trash2,
   X
 } from 'lucide-react';
+import { shortenId } from "@/lib/utils/shortenId";
 
 const organizationsData = [
   { id: 'ORG-001', name: 'Stanford Institute', type: 'Research Lab', students: 320, active: 290, activePercent: 91, plan: 'Premium', revenue: '$28,400', status: 'Active', date: 'Jan 5, 2026' },
@@ -246,7 +247,7 @@ export default function AllOrganizationsPage() {
                   filteredData.map((org) => (
                     <tr key={org.id} className="hover:bg-gray-50/50 transition-colors group">
                       <td className="py-4 px-5 w-12"><input type="checkbox" className="rounded text-blue-600 border-gray-300 w-[14px] h-[14px]" /></td>
-                      <td className="py-4 pr-5 text-[13px] font-medium text-gray-500">{org.id}</td>
+                      <td className="py-4 pr-5 text-[13px] font-medium text-gray-500" title={org.id}>{shortenId(org.id)}</td>
                       <td className="py-4 px-5">
                         <Link href={`/a/organisation/${org.id}`} className="flex flex-col hover:opacity-80">
                           <span className="text-[14px] font-semibold text-blue-600 hover:underline leading-tight">{org.name}</span>

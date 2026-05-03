@@ -12,8 +12,12 @@ import {
   Download,
   MoreVertical,
   ArrowLeft,
+  Plus,
+  X,
+  Loader2,
 } from "lucide-react";
 import { CourseAPI, StudentAPI, asArray } from "@/lib/api";
+import { getImageUrl } from "@/lib/utils/imageUtils";
 import RescheduleModal from "@/app/(studentdash)/components/Reschedule";
 
 interface SessionDetail {
@@ -33,7 +37,7 @@ interface SessionDetail {
   };
   joinUrl?: string;
   startIso?: string;
-  assignments: Array<{ id: string; title: string; due: string }>;
+  assignments: Array<{ id: string; title: string; due: string; documentUrl?: string; documentPath?: string; submittedFiles?: Array<{ id: string; name: string; url?: string }>; status?: string }>;
   resources: Array<{ id: string; title: string; url?: string }>;
 }
 
@@ -103,6 +107,8 @@ const toAssignmentList = (course: any, assignments: any[]) => {
     id: String(assignment.id || assignment._id || assignment.assignmentId || index),
     title: assignment.title || assignment.assignmentTitle || "Assignment",
     due: assignment.dueDate || assignment.deadline || "TBD",
+    documentUrl: assignment.documentUrl || assignment.fileUrl || assignment.url,
+    documentPath: assignment.documentPath || assignment.path,
   }));
 
   if (directAssignments.length > 0) return directAssignments;
@@ -111,6 +117,8 @@ const toAssignmentList = (course: any, assignments: any[]) => {
     id: String(assignment.id || assignment._id || assignment.assignmentId || index),
     title: assignment.title || assignment.assignmentTitle || assignment.sessionTitle || "Assignment",
     due: assignment.dueDate || assignment.deadline || "TBD",
+    documentUrl: assignment.documentUrl || assignment.fileUrl || assignment.url,
+    documentPath: assignment.documentPath || assignment.path,
   }));
 };
 
@@ -134,107 +142,228 @@ export default function SessionSlugPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [showUploadAssignment, setShowUploadAssignment] = useState(false);
+  const [uploadAssignmentId, setUploadAssignmentId] = useState("");
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadComment, setUploadComment] = useState("");
+  const [uploadLoading, setUploadLoading] = useState(false);
 
   useEffect(() => {
-    const fetchCourseDetails = async () => {
+    const fetchSessionDetails = async () => {
       setIsLoading(true);
+      setSessionData(null);
       setError("");
 
       try {
-        const [overviewResponse, assignmentResponse] = await Promise.all([
-          StudentAPI.getOverview(),
-          StudentAPI.getAssignments().catch(() => ({ data: [] })),
-        ]);
-
-        const overviewData = overviewResponse?.data || overviewResponse;
-        const overviewItems = [
-          ...asArray(overviewData?.enrolledCourses),
-          ...asArray(overviewData?.upcomingSessions),
-          ...asArray(overviewData?.sessions),
-        ];
-
-        const overviewMatch = overviewItems.find(
-          (item: any) => String(item._id || item.id || item.courseId || item.sessionId) === slug,
+        // Fetch enrolled sessions
+        const enrolledRes = await StudentAPI.getEnrolledSessions();
+        const enrolledData = enrolledRes?.data || enrolledRes;
+        
+        const sessionList = asArray(
+          enrolledData?.enrolledCourses || 
+          enrolledData?.enrolledSessions ||
+          enrolledData?.sessions || 
+          enrolledData?.list || 
+          enrolledData?.courses || 
+          enrolledData || []
         );
-
-        let coursePayload: any = overviewMatch || null;
-
-        try {
-          const courseResponse = await CourseAPI.getCourseById(slug);
-          coursePayload = courseResponse?.course || courseResponse || coursePayload;
-        } catch (courseError) {
-          if (!coursePayload) {
-            throw courseError;
+        
+        // Find current session
+        const sessionMatch = sessionList.find(
+          (item: any) => {
+            const ids = [
+              String(item.sessionId || ""),
+              String(item._id || ""),
+              String(item.id || ""),
+              String(item.courseId || ""),
+              String(item.course?.id || ""),
+              String(item.course?._id || ""),
+              String(item.session?.id || ""),
+              String(item.session?._id || "")
+            ].filter(Boolean);
+            return ids.some(id => id === slug);
           }
+        );
+
+        if (!sessionMatch) {
+          throw new Error("Session not found. Please check your enrollment.");
         }
 
-        if (!coursePayload) {
-          throw new Error("Session details were not found.");
-        }
-
+        const fullCourseData = sessionMatch.fullCourseData || sessionMatch;
+        
         const startDate = parseDateValue(
-          coursePayload.startDateTime || coursePayload.scheduledDate || coursePayload.date,
+          sessionMatch.sessionTime || 
+          fullCourseData.startDateTime || 
+          fullCourseData.scheduledDate || 
+          fullCourseData.date ||
+          sessionMatch.startDateTime
         );
-        const title = coursePayload.title || coursePayload.sessionTitle || coursePayload.courseTitle || "Session";
+        
+        const educator = sessionMatch.educator || fullCourseData.educator || {};
+        const mentorName = educator.name || 
+          sessionMatch.educatorName || 
+          fullCourseData.educator?.name || 
+          fullCourseData.mentorName || 
+          "Educator";
+        
+        const title = sessionMatch.courseTitle || 
+          fullCourseData.title || 
+          sessionMatch.sessionTitle || 
+          fullCourseData.courseTitle || 
+          "Session";
+        
         const courseId = String(
-          coursePayload._id || coursePayload.id || coursePayload.courseId || coursePayload.sessionId || slug,
+          sessionMatch.courseId || 
+          fullCourseData._id || 
+          fullCourseData.id || 
+          sessionMatch.sessionId || 
+          sessionMatch._id ||
+          sessionMatch.id || 
+          slug
         );
-        const relatedAssignments = matchAssignmentsToCourse(courseId, title, asArray(assignmentResponse));
-        const mentorName =
-          coursePayload.educatorName || coursePayload.educator?.name || coursePayload.mentorName || "Educator";
+
+        // Fetch ALL student assignments (like assignments page does)
+        let studentScopedAssignments: any[] = [];
+        try {
+          const studentAssignmentsResult: any = await StudentAPI.getAssignments();
+          studentScopedAssignments = asArray(studentAssignmentsResult?.data || studentAssignmentsResult);
+        } catch (e) {
+          console.warn("Student assignments unavailable", e);
+        }
+
+        // Get educator assignments from this session
+        const educatorAssignments = asArray(fullCourseData?.assignments || sessionMatch.assignments || []);
+        
+        // Helper to get assignment ID
+        const getAssignmentId = (assignment: any): string =>
+          String(assignment?.id || assignment?._id || assignment?.assignmentId || "");
+        
+        // Build merged assignments list (like assignments page)
+        const mergedById = new Map<string, any>();
+        
+        // Add educator assignments first
+        for (const item of educatorAssignments) {
+          if (!item) continue;
+          const id = getAssignmentId(item);
+          if (!id) continue;
+          mergedById.set(id, {
+            id,
+            title: item.title || item.assignmentTitle || "Assignment",
+            due: item.dueDate || item.deadline || "TBD",
+            documentUrl: item.documentUrl || item.fileUrl || item.url,
+            documentPath: item.documentPath || item.path,
+            submittedFiles: [],
+            status: "",
+          });
+        }
+        
+        // Merge with student assignments (submissions)
+        for (const item of studentScopedAssignments) {
+          const id = getAssignmentId(item);
+          if (!id) continue;
+          
+          // Check if this student assignment belongs to current session
+          const itemCourseId = String(item.courseId || item.sessionId || item.course?._id || "");
+          if (itemCourseId && itemCourseId !== courseId) continue;
+          
+          const existing = mergedById.get(id) || {};
+          const submittedFiles = asArray(item.submittedFiles || item.submissions || item.documents || []).map(
+            (file: any, idx: number) => ({
+              id: String(file.id || file._id || file.submissionId || idx),
+              name: file.name || file.fileName || file.documentName || "Submission.pdf",
+              url: file.url || file.fileUrl || file.documentUrl,
+            })
+          );
+          
+          mergedById.set(id, {
+            ...existing,
+            ...item,
+            id,
+            submittedFiles: submittedFiles.length > 0 ? submittedFiles : (existing.submittedFiles || []),
+            status: String(item.status || existing.status || ""),
+          });
+        }
+        
+        const assignmentsWithSubmissions = Array.from(mergedById.values());
 
         setSessionData({
           courseId,
           title,
-          type: String(coursePayload.type || coursePayload.sessionType || "Session"),
+          type: String(
+            sessionMatch.sessionType || 
+            sessionMatch.type || 
+            fullCourseData.type || 
+            fullCourseData.sessionType || 
+            sessionMatch.subtitle || 
+            fullCourseData.subtitle || 
+            "Session"
+          ),
           mentor: {
             name: mentorName,
-            role: coursePayload.subtitle || coursePayload.educator?.role || coursePayload.category || "Session Mentor",
-            avatar:
-              coursePayload.educator?.avatar ||
-              coursePayload.educator?.profileImage ||
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(mentorName)}&background=042BFD&color=fff`,
+            role: educator.email || 
+              sessionMatch.subtitle || 
+              fullCourseData.subtitle || 
+              educator.role || 
+              fullCourseData.category || 
+              "Session Mentor",
+            avatar: mentorName
+              ? `https://ui-avatars.com/api/?name=${encodeURIComponent(mentorName)}&background=042BFD&color=fff`
+              : "/images/educator.png",
           },
           stats: {
             date: formatDate(startDate),
-            time: formatTimeRange(coursePayload, startDate),
-            duration: formatDuration(coursePayload, startDate),
-            attendees: `${coursePayload.enrolledCount || coursePayload.attendees || coursePayload.maxStudents || 0} attendees`,
+            time: formatTimeRange(sessionMatch, startDate),
+            duration: formatDuration(sessionMatch, startDate),
+            attendees: `${sessionMatch.enrolledCount || fullCourseData.enrolledCount || sessionMatch.attendees || sessionMatch.maxStudents || 0} attendees`,
           },
-          joinUrl:
-            coursePayload.meetingUrl ||
-            coursePayload.meetingLink ||
-            coursePayload.joinUrl ||
-            coursePayload.sessionLink ||
-            coursePayload.link,
+          joinUrl: sessionMatch.joinUrl ||
+            sessionMatch.fullCourseData?.joinUrl ||
+            sessionMatch.webinerLink ||
+            sessionMatch.cohortLink ||
+            sessionMatch.mentorshipLink ||
+            sessionMatch.meetingUrl ||
+            sessionMatch.meetingLink ||
+            fullCourseData.joinUrl ||
+            fullCourseData.webinerLink,
           startIso: startDate?.toISOString(),
-          assignments: toAssignmentList(coursePayload, relatedAssignments),
-          resources: toResourceList(coursePayload),
+          assignments: assignmentsWithSubmissions,
+          resources: toResourceList(fullCourseData || sessionMatch),
         });
       } catch (fetchError: any) {
         console.error("Student session detail fetch failed", fetchError);
         setSessionData(null);
-        setError(fetchError?.message || "Unable to load this session.");
+        setError(fetchError?.message || "Unable to load this session. Please try again later.");
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (slug) {
-      fetchCourseDetails();
-    }
+    fetchSessionDetails();
   }, [slug]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    };
+  const handleAssignmentUpload = async () => {
+    if (!uploadAssignmentId || !uploadFile) {
+      alert("Please select an assignment and upload a file.");
+      return;
+    }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    setUploadLoading(true);
+    try {
+      await StudentAPI.submitAssignment(uploadAssignmentId, uploadFile, uploadComment);
+      alert("Assignment submitted successfully! Educator will be able to see your submission.");
+      setShowUploadAssignment(false);
+      setUploadAssignmentId("");
+      setUploadComment("");
+      setUploadFile(null);
+      // Refresh session data to show updated submissions
+      // fetchSessionDetails();
+    } catch (error: any) {
+      console.error("Failed to submit assignment", error);
+      alert(error?.message || "Failed to submit assignment.");
+    } finally {
+      setUploadLoading(false);
+    }
+  };
 
   const pageUrl = useMemo(() => (typeof window !== "undefined" ? `${window.location.origin}/s/sessions/${slug}` : ""), [slug]);
 
@@ -435,6 +564,77 @@ export default function SessionSlugPage() {
             </div>
 
             <div className="flex flex-1 flex-col gap-3 md:gap-4">
+              {!showUploadAssignment && sessionData.assignments.length > 0 && (
+                <button
+                  onClick={() => {
+                    setUploadAssignmentId(sessionData.assignments[0]?.id || "");
+                    setShowUploadAssignment(true);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#111827] text-white rounded-xl text-sm font-medium hover:bg-gray-900 transition-colors"
+                >
+                  <Plus size={16} />
+                  Submit Assignment
+                </button>
+              )}
+
+              {showUploadAssignment && (
+                <div className="p-4 bg-gray-50 rounded-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-gray-900 text-sm">Submit Assignment</h4>
+                    <button onClick={() => setShowUploadAssignment(false)} className="text-gray-400 hover:text-gray-600">
+                      <X size={16} />
+                    </button>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Assignment</label>
+                    <select
+                      value={uploadAssignmentId}
+                      onChange={(e) => setUploadAssignmentId(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    >
+                      {sessionData.assignments.map((a: any) => (
+                        <option key={a.id} value={a.id}>{a.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Comment (optional)</label>
+                    <textarea
+                      value={uploadComment}
+                      onChange={(e) => setUploadComment(e.target.value)}
+                      placeholder="Add any comments..."
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none h-16"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">File</label>
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    />
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowUploadAssignment(false)}
+                      className="flex-1 py-2 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-100"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleAssignmentUpload}
+                      disabled={uploadLoading || !uploadFile}
+                      className="flex-1 py-2 bg-[#111827] text-white rounded-lg text-sm font-medium hover:bg-gray-900 disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {uploadLoading && <Loader2 size={14} className="animate-spin" />}
+                      {uploadLoading ? 'Submitting...' : 'Submit'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {sessionData.assignments.length > 0 ? (
                 sessionData.assignments.map((assignment) => (
                   <div
@@ -450,10 +650,52 @@ export default function SessionSlugPage() {
                         <span className="inline-block rounded-full bg-[#F8FAFC] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-600 md:px-3 md:py-1.5 md:text-[11px]">
                           DUE: {assignment.due}
                         </span>
+                        {assignment.status && ["submitted", "completed", "review done", "reviewed", "graded"].includes(String(assignment.status).toLowerCase()) && (
+                          <span className="ml-2 inline-block rounded-full bg-[#ECFDF5] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#059669] md:px-3 md:py-1.5 md:text-[11px]">
+                            SUBMITTED
+                          </span>
+                        )}
                       </div>
                     </div>
 
-                    <div className="mt-auto flex w-full justify-end md:w-auto">
+                    {assignment.submittedFiles && assignment.submittedFiles.length > 0 && (
+                      <div className="mb-3 rounded-xl bg-[#F8FAFC] p-3">
+                        <p className="mb-2 text-xs font-semibold text-gray-700">Your Submissions:</p>
+                        {assignment.submittedFiles.map((file: any) => (
+                          <div key={file.id} className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-2 mb-2">
+                            <span className="text-xs text-gray-700 truncate">{file.name}</span>
+                            {file.url && (
+                              <a href={file.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:text-blue-800">
+                                <Download size={14} />
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="mt-auto flex w-full gap-2 justify-end md:w-auto">
+                      {assignment.documentUrl ? (
+                        <a
+                          href={assignment.documentUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-1 px-3 py-2 text-xs bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                        >
+                          <Download size={14} />
+                          Download
+                        </a>
+                      ) : assignment.documentPath ? (
+                        <a
+                          href={`https://rvleyzlrzxdkgfyqrvzy.supabase.co/storage/v1/object/public/${assignment.documentPath}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-1 px-3 py-2 text-xs bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                        >
+                          <Download size={14} />
+                          Download
+                        </a>
+                      ) : null}
                       <Link href={`/s/assignments/${assignment.id}`} className="w-full md:w-auto">
                         <button className="w-full rounded-xl border border-gray-200 px-5 py-2.5 text-[14px] font-medium text-gray-900 transition-colors hover:bg-gray-50 md:w-auto">
                           Open Workspace
@@ -462,7 +704,7 @@ export default function SessionSlugPage() {
                     </div>
                   </div>
                 ))
-              ) : (
+              ) : !showUploadAssignment && (
                 <div className="rounded-2xl border border-dashed border-gray-200 px-6 py-10 text-center text-sm text-gray-500">
                   No assignments have been published for this session yet.
                 </div>

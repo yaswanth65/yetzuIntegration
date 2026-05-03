@@ -1,0 +1,17 @@
+{
+  "event": "payment.captured",
+  "payload": {
+    "payment": {
+      "entity": {
+        "id": "pay_test123",
+        "order_id": "order_test123",
+        "amount": 49900,
+        "currency": "INR",
+        "notes": {
+          "userId": "user-123",
+          "sessionId": "session-456"
+        }
+      }
+    }
+  }
+}

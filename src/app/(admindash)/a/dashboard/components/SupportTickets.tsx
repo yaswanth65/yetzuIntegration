@@ -1,8 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Eye, Clock, MessageSquare, AlertCircle, CheckCircle2, XCircle, MoreVertical } from "lucide-react";
 import { AdminAPI, asArray } from "@/lib/api";
+import { shortenId } from "@/lib/utils/shortenId";
 
 type Priority = "High" | "Medium" | "Low";
 type Status = "In Review" | "Submitted" | "Completed" | "Rejected";
@@ -33,6 +36,7 @@ const getStatusStyles = (status: Status) => {
 };
 
 export default function SupportTickets() {
+  const router = useRouter();
   const [supportItems, setSupportItems] = useState<SupportItem[]>([]);
 
   useEffect(() => {
@@ -66,9 +70,9 @@ export default function SupportTickets() {
           <h2 className="text-xl font-bold text-gray-900 leading-none">Support Tickets</h2>
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">Open Issues & Requests</p>
         </div>
-        <button className="px-4 py-2 text-xs font-bold text-[#042BFD] bg-blue-50 hover:bg-blue-100 rounded-xl transition-all uppercase tracking-widest">
+        <Link href="/a/support" className="px-4 py-2 text-xs font-bold text-[#042BFD] bg-blue-50 hover:bg-blue-100 rounded-xl transition-all uppercase tracking-widest">
           View All
-        </button>
+        </Link>
       </div>
 
       {/* Desktop Table */}
@@ -93,7 +97,7 @@ export default function SupportTickets() {
               const StatusIcon = status.icon;
               return (
                 <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group/row">
-                  <td className="px-8 py-5 text-sm font-bold text-gray-900">#{item.id}</td>
+                  <td className="px-8 py-5 text-sm font-bold text-gray-900" title={item.id}>#{shortenId(item.id)}</td>
                   <td className="px-8 py-5">
                     <p className="text-sm font-medium text-gray-600 line-clamp-1">{item.description}</p>
                     <p className="text-[10px] text-gray-400 mt-1 font-bold uppercase tracking-tighter">{item.raisedOn}</p>
@@ -111,11 +115,11 @@ export default function SupportTickets() {
                   </td>
                   <td className="px-8 py-5 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button className="p-2 text-gray-400 hover:text-[#042BFD] hover:bg-blue-50 rounded-lg transition-all">
+                      <button 
+                        onClick={() => router.push(`/a/support/${item.id}`)}
+                        className="p-2 text-gray-400 hover:text-[#042BFD] hover:bg-blue-50 rounded-lg transition-all"
+                      >
                         <Eye size={18} />
-                      </button>
-                      <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg">
-                        <MoreVertical size={18} />
                       </button>
                     </div>
                   </td>
@@ -136,7 +140,7 @@ export default function SupportTickets() {
           return (
             <div key={item.id} className="p-6 active:bg-gray-50 transition-colors">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-black text-[#021165] bg-blue-50 px-2 py-1 rounded-lg">#{item.id}</span>
+                <span className="text-xs font-black text-[#021165] bg-blue-50 px-2 py-1 rounded-lg" title={item.id}>#{shortenId(item.id)}</span>
                 <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${getPriorityStyles(item.priority)}`}>
                   {item.priority}
                 </span>

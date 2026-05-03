@@ -7,6 +7,7 @@ import CalendarView from './components/CalendarView';
 import SessionDetailsDrawer from './components/SessionDetailsDrawer';
 import { Session } from './types';
 import { EducatorAPI, asArray } from '@/lib/api';
+import { shortenId } from '@/lib/utils/shortenId';
 
 export default function EducatorSessionsPage() {
     const [activeTab, setActiveTab] = useState<'All' | 'Upcoming' | 'Completed' | 'Missed'>('All');
@@ -32,11 +33,24 @@ export default function EducatorSessionsPage() {
                 const apiSessions = asArray(response).map((item: any, index: number) => {
                     const rawDate = item.date || item.scheduledDate || item.startDateTime || item.createdAt;
                     const dateTime = rawDate ? new Date(rawDate) : new Date();
+                    
+                    let studentsCount = 0;
+                    const stu = item.students;
+                    if (typeof stu === 'number' && !isNaN(stu)) {
+                      studentsCount = stu;
+                    } else if (Array.isArray(stu)) {
+                      studentsCount = stu.length;
+                    } else if (typeof item.attendees === 'number' && !isNaN(item.attendees)) {
+                      studentsCount = item.attendees;
+                    } else if (typeof item.enrolledCount === 'number' && !isNaN(item.enrolledCount)) {
+                      studentsCount = item.enrolledCount;
+                    }
+                    
                     return {
                         id: item.id || item._id || item.sessionId || String(index),
                         title: item.title || item.sessionTitle || item.courseTitle || "Session",
                         type: item.type || item.sessionType || "Webinar",
-                        attendees: item.attendees || item.students || item.enrolledCount || 0,
+                        attendees: studentsCount,
                         date: rawDate ? dateTime.toLocaleDateString() : "TBD",
                         dateTime,
                         startTime: item.startTime || item.time || dateTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -69,7 +83,13 @@ export default function EducatorSessionsPage() {
             // 2. Filter by Search
             if (searchQuery.trim() !== '') {
                 const query = searchQuery.toLowerCase();
-                if (!session.id.toLowerCase().includes(query) && !session.educator.toLowerCase().includes(query)) {
+                const shortId = shortenId(session.id).toLowerCase();
+                if (
+                    !session.title.toLowerCase().includes(query) &&
+                    !shortId.includes(query) &&
+                    !session.id.toLowerCase().includes(query) &&
+                    !session.educator.toLowerCase().includes(query)
+                ) {
                     return false;
                 }
             }
@@ -116,7 +136,7 @@ export default function EducatorSessionsPage() {
                         </div>
                         <input
                             type="text"
-                            placeholder="Search by session ID or educator"
+                            placeholder="Search sessions, titles, or educators..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full h-10 pl-10 pr-4 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"

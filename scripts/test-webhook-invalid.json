@@ -1,0 +1,14 @@
+{
+  "event": "payment.captured",
+  "payload": {
+    "payment": {
+      "entity": {
+        "id": "pay_invalid",
+        "order_id": "order_invalid",
+        "amount": 49900,
+        "currency": "INR",
+        "notes": {}
+      }
+    }
+  }
+}

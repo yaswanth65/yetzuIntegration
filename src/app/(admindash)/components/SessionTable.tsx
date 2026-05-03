@@ -1,6 +1,9 @@
 "use client";
 
 import { Session } from "@/app/(admindash)/types/SessionType";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { shortenId } from "@/lib/utils/shortenId";
 
 interface Props {
   data: Session[];
@@ -61,13 +64,14 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function SessionTable({data,showHeader = true, title, onRowClick, selectedSessionId, className = "mt-10" }: Props) {
+    const router = useRouter();
 
     return (
         <div className={`bg-white rounded-2xl border-2 border-gray-100 overflow-hidden w-full ${className}`}>
             {showHeader && (
               <div className="flex items-center justify-between p-6">
                 <h1 className="font-semibold">{title || "Recent Sessions"}</h1>
-                <p className="text-blue-600 text-sm font-semibold">View All</p>
+                <Link href="/a/sessions" className="text-blue-600 text-sm font-semibold hover:underline">View All</Link>
             </div>
             )}
 
@@ -75,7 +79,7 @@ export default function SessionTable({data,showHeader = true, title, onRowClick,
                 <table className="w-full text-sm table-auto">
                     <thead>
                         <tr className="bg-gray-100 border-b border-t border-gray-200">
-                            {["Session ID", "Type", "Educator", "Students", "Date", "Status", "Actions"].map((col, idx) => (
+                            {["Code", "Title", "Type", "Educator", "Students", "Date", "Status", "Actions"].map((col, idx) => (
                                 <th key={idx} className="font-medium text-[14px] text-gray-600 px-7 py-4 text-left">
                                     {col}
                                 </th>
@@ -86,16 +90,22 @@ export default function SessionTable({data,showHeader = true, title, onRowClick,
                     <tbody className="divide-y divide-gray-200">
                         {(!data || data.length === 0) ? (
                           <tr>
-                            <td colSpan={7} className="px-7 py-8 text-center text-gray-500">
+                            <td colSpan={8} className="px-7 py-8 text-center text-gray-500">
                               No sessions found
                             </td>
                           </tr>
                         ) : data.map((item, idx) => (
                             <tr 
-                              key={idx} 
-                              className={`transition-colors hover:bg-gray-50 ${selectedSessionId === item.id ? "bg-blue-50/50" : ""}`}
+                                key={idx} 
+                                className={`transition-colors hover:bg-gray-50 cursor-pointer ${selectedSessionId === item.id ? "bg-blue-50/50" : ""}`}
+                                onClick={() => onRowClick && onRowClick(item)}
                             >
-                                <td className="px-7 py-4 font-semibold">{String(item.id)}</td>
+                                <td className="px-7 py-4">
+                                  <div className="font-medium text-sm text-gray-900 font-mono" title={String(item.sessionCode || item.id)}>{shortenId(String(item.sessionCode || item.id))}</div>
+                                </td>
+                                <td className="px-7 py-4">
+                                  <div className="font-semibold text-sm text-gray-900">{item.title || "Untitled"}</div>
+                                </td>
                                 <td className="px-7 py-4 text-gray-500">{String(item.type)}</td>
                                 <td className="px-7 py-4">{String(item.educator)}</td>
                                 <td className="px-7 py-4 text-gray-500">{Number(item.students)}</td>
@@ -103,7 +113,14 @@ export default function SessionTable({data,showHeader = true, title, onRowClick,
                                 <td className="px-7 py-4"><StatusBadge status={item.status} /></td>
                                 <td className="px-7 py-4">
                                   <button 
-                                    onClick={() => onRowClick && onRowClick(item)}
+                                    onClick={(e) => { 
+                                      e.stopPropagation(); 
+                                      if (onRowClick) {
+                                        onRowClick(item); 
+                                      } else {
+                                        router.push("/a/sessions");
+                                      }
+                                    }}
                                     className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                   >
                                     <EyeIcon/>

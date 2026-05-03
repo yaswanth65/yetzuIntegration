@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AlertCircle, AlertTriangle, Info, ChevronRight } from "lucide-react";
 import { AdminAPI, asArray } from "@/lib/api";
 
@@ -47,6 +48,7 @@ const getAlertStyles = (type: AlertType) => {
 };
 
 export default function AlertIssues() {
+    const router = useRouter();
     const [alerts, setAlerts] = useState<AlertItems[]>([]);
 
     useEffect(() => {
@@ -95,6 +97,7 @@ export default function AlertIssues() {
                     return (
                         <div 
                             key={data.id} 
+                            onClick={() => router.push(`/a/analytics`)}
                             className={`flex items-center gap-4 p-4 rounded-2xl border ${styles.bg} ${styles.border} hover:${styles.shadow} transition-all duration-300 group/alert cursor-pointer`}
                         >
                             <div className={`p-2 rounded-xl bg-white shadow-sm ${styles.text}`}>
@@ -110,7 +113,10 @@ export default function AlertIssues() {
                 })}
             </div>
 
-            <button className="w-full mt-8 py-3 text-xs font-bold text-[#021165] hover:bg-gray-50 rounded-2xl border border-gray-100 transition-all uppercase tracking-widest">
+            <button 
+                onClick={() => router.push("/a/analytics")}
+                className="w-full mt-8 py-3 text-xs font-bold text-[#021165] hover:bg-gray-50 rounded-2xl border border-gray-100 transition-all uppercase tracking-widest"
+            >
                 Resolve All
             </button>
         </div>

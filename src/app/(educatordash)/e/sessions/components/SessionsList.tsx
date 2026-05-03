@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { Session } from '../types';
 import { Eye, Users, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { shortenId } from '@/lib/utils/shortenId';
 
 interface SessionsListProps {
   sessions: Session[];
@@ -74,7 +75,7 @@ export default function SessionsList({ sessions, onViewDetails, loading: externa
                     index === paginatedSessions.length - 1 ? 'border-none' : ''
                   }`}
                 >
-                  <td className="py-4 px-4 font-medium text-gray-900 whitespace-nowrap">{session.id}</td>
+                  <td className="py-4 px-4 font-medium text-gray-900 whitespace-nowrap" title={session.id}>{shortenId(session.id)}</td>
                   <td className="py-4 px-4 text-gray-600 whitespace-nowrap">{session.title}</td>
                   <td className="py-4 px-4 text-gray-600 whitespace-nowrap">{session.type}</td>
                   <td className="py-4 px-4 text-center text-gray-600 whitespace-nowrap">{session.attendees}</td>

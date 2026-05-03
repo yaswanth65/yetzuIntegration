@@ -3,6 +3,7 @@
 import React from "react";
 import { Filter, ArrowRight, Download, Menu } from "lucide-react";
 import { PENDING_ASSIGNMENTS } from "../constants";
+import { shortenId } from "@/lib/utils/shortenId";
 
 
 // Updated Data with 'uploadOn' field included
@@ -75,8 +76,8 @@ const AssignmentsTable: React.FC = () => {
                 key={index}
                 className="hover:bg-gray-50/80 transition-colors group"
               >
-                <td className="py-4 px-6 text-xs text-gray-500 font-medium whitespace-nowrap">
-                  {item.id}
+                <td className="py-4 px-6 text-xs text-gray-500 font-medium whitespace-nowrap" title={item.id}>
+                  {shortenId(item.id)}
                 </td>
                 <td className="py-4 px-6 text-xs font-semibold text-gray-500 whitespace-nowrap">
                   {item.title}

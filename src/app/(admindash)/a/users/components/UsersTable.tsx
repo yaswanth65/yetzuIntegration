@@ -1,6 +1,7 @@
 import React from "react";
 import { MoreHorizontal } from "lucide-react";
 import { User } from "./types";
+import { shortenId } from "@/lib/utils/shortenId";
 
 interface UsersTableProps {
   users: User[];
@@ -62,8 +63,8 @@ export function UsersTable({ users }: UsersTableProps) {
                       />
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
-                    {user.id}
+                  <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap" title={user.id}>
+                    {shortenId(user.id)}
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-slate-900 whitespace-nowrap">
                     {user.name}

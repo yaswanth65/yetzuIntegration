@@ -2,8 +2,6 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import {
-  ChevronLeft,
-  ChevronRight,
   Video,
   FileText,
   User,
@@ -37,7 +35,6 @@ interface FocusItem {
 
 export default function FocusWeekly() {
   const [items, setItems] = useState<FocusItem[]>([]);
-  const [weekOffset, setWeekOffset] = useState(0);
   const [loading, setLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<FocusItem | null>(null);
   const router = useRouter();
@@ -45,35 +42,54 @@ export default function FocusWeekly() {
   const fetchFocusData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await EducatorAPI.getOverview();
-      const data = response?.data || response;
-      const sessions = asArray(data?.todaySessions || data?.upcomingSessions || data?.sessions);
-      const assignments = asArray(data?.pendingAssignments || data?.pendingSubmissions || data?.assignments);
+      
+      // Fetch from working APIs (not broken getOverview)
+      const [sessionsRes, assignmentsRes] = await Promise.allSettled([
+        EducatorAPI.getSessions(),
+        EducatorAPI.getAssignments()
+      ]);
+
+      const sessions = sessionsRes.status === 'fulfilled' ? asArray(sessionsRes.value) : [];
+      const assignments = assignmentsRes.status === 'fulfilled' ? asArray(assignmentsRes.value) : [];
+      
+      // Get upcoming sessions (future dates)
+      const now = new Date();
+      const upcomingSessions = sessions
+        .filter((s: any) => {
+          const date = new Date(s.date || s.startDateTime || s.createdAt);
+          return date > now;
+        })
+        .slice(0, 2);
+
+      // Get pending assignments
+      const pendingAssignments = assignments
+        .filter((a: any) => a.status === 'pending' || a.status === 'Pending' || !a.status)
+        .slice(0, 2);
       
       const nextItems: any[] = [
-        ...sessions.slice(0, 2).map((session: any, index: number) => ({
+        ...upcomingSessions.map((session: any, index: number) => ({
           id: `session-${session.id || session._id || index}`,
-          title: session.title || session.sessionTitle || "Upcoming Session",
+          title: session.title || session.sessionTitle || session.courseTitle || "Upcoming Session",
           badgeLabel: index === 0 ? "TODAY" : null,
           badgeColor: "bg-[#7C3AED] text-white",
-          watermarkIcon: "/admin-dashboard/cam.svg",
+          watermarkIcon: "/images/video-chat.svg",
           watermarkColor: "text-[#7C3AED]/10",
-          date: session.date || session.scheduledDate || new Date().toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }),
+          date: new Date(session.date || session.startDateTime || Date.now()).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }),
           time: session.time || session.startTime || null,
-          buttonText: session.joinUrl ? "Join Now" : "View Details",
-          buttonType: session.joinUrl ? "solid" : "outline",
+          buttonText: "View Details",
+          buttonType: "outline" as const,
           gradientFrom: "from-[#F3E8FF]",
           type: "session" as const,
           sessionId: session.id || session._id,
         })),
-        ...assignments.slice(0, 2).map((assignment: any, index: number) => ({
-          id: `assignment-${assignment.id || assignment._id || index}`,
+        ...pendingAssignments.map((assignment: any) => ({
+          id: `assignment-${assignment.id || assignment._id}`,
           title: assignment.title || assignment.assignmentTitle || "Pending Assignment",
           badgeLabel: "DUE SOON",
           badgeColor: "bg-[#FEF3C7] text-[#D97706]",
-          watermarkIcon: "/admin-dashboard/file-edit-line.svg",
+          watermarkIcon: "/images/file-format-orange.svg",
           watermarkColor: "text-[#10B981]/10",
-          date: `Due on: ${assignment.dueDate || "TBD"}`,
+          date: `Due: ${assignment.deadline || assignment.dueDate || "TBD"}`,
           time: null,
           buttonText: "View Details",
           buttonType: "outline" as const,
@@ -92,10 +108,7 @@ export default function FocusWeekly() {
 
   useEffect(() => {
     fetchFocusData();
-  }, [fetchFocusData, weekOffset]);
-
-  const handlePrevWeek = () => setWeekOffset(prev => prev - 1);
-  const handleNextWeek = () => setWeekOffset(prev => prev + 1);
+  }, [fetchFocusData]);
 
   const handleCardClick = (item: FocusItem) => {
     if (item.type === "session") {
@@ -117,20 +130,6 @@ export default function FocusWeekly() {
           <h2 className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">
             Focus for this week
           </h2>
-          <div className="flex gap-2">
-            <button 
-              onClick={handlePrevWeek}
-              className="w-7 h-7 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={handleNextWeek}
-              className="w-7 h-7 rounded border border-gray-200 flex items-center justify-center text-gray-800 hover:bg-gray-50 transition-colors"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
         </div>
 
         {loading ? (

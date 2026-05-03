@@ -808,18 +808,25 @@ export default function DashNavbar({
   useEffect(() => {
     const fetchNavbarData = async () => {
       try {
-        const [overviewRes, notifRes]: any[] = await Promise.all([
-          StudentAPI.getOverview(),
-          StudentAPI.getNotifications(),
-        ]);
-        const userInfo = overviewRes?.data?.userInfo || overviewRes?.userInfo || overviewRes?.data?.user || overviewRes?.user;
-        if (userInfo) {
-          setFormData({
-            fullName: userInfo.name || "",
-            email: userInfo.email || "",
-            phone: userInfo.mobileno || userInfo.phone || ""
-          });
-          setPaymentData(prev => ({ ...prev, cardHolder: userInfo.name || "" }));
+        // Use getNotifications only - getOverview returns 500 error
+        // User info is available from auth context or cookies
+        const notifRes = await StudentAPI.getNotifications();
+        
+        // Try to get user info from auth API (me endpoint)
+        try {
+          const meRes: any = await StudentAPI.me?.();
+          const userInfo = meRes?.data?.user || meRes?.user || meRes?.data || meRes;
+          if (userInfo) {
+            setFormData({
+              fullName: userInfo.name || "",
+              email: userInfo.email || "",
+              phone: userInfo.mobileno || userInfo.phone || ""
+            });
+            setPaymentData(prev => ({ ...prev, cardHolder: userInfo.name || "" }));
+          }
+        } catch {
+          // If me() doesn't exist or fails, continue without user info
+          console.warn("Could not fetch user info from /me endpoint");
         }
 
         const apiNotifications = asArray(notifRes?.data?.notifications || notifRes?.notifications || notifRes?.data || notifRes);

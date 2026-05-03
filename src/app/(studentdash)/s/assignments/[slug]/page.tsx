@@ -112,20 +112,70 @@ const getBadgeDetails = (dueDateStr: string, status: string) => {
 };
 
 const mapAssignmentDetails = (item: any, assignmentId: string): AssignmentView => {
+  const payload = item?.data ?? item;
+  const base = payload?.assignment ?? payload;
+
+  const toDownloadUrl = (value?: string) => {
+    if (!value) return undefined;
+    const url = String(value);
+    if (/^https?:\/\//i.test(url)) return url;
+    // Many APIs return a Supabase storage path; keep consistent with existing pages.
+    return `https://rvleyzlrzxdkgfyqrvzy.supabase.co/storage/v1/object/public/${url.replace(/^\/+/, "")}`;
+  };
+
   const mentorName =
-    item.educatorName ||
-    item.mentorName ||
-    item.educator?.name ||
-    item.assignedBy ||
+    base.educatorName ||
+    base.mentorName ||
+    base.educator?.name ||
+    base.assignedBy ||
     "Educator";
 
-  const resourceSource = [
-    ...asArray(item.resources),
-    ...asArray(item.files),
-    ...asArray(item.attachments),
+  const resourceSource = [...asArray(base.resources), ...asArray(base.files), ...asArray(base.attachments)];
+
+  const primaryDocumentUrl = base.documentUrl || base.fileUrl || base.url;
+  const primaryDocumentPath = base.documentPath || base.path;
+  const primaryDocumentName =
+    base.documentPath?.split("/").pop() || base.documentName || base.fileName || `${base.title || "Assignment"} resource`;
+
+  const sessionResources = asArray(base.sessionResources || base.courseResources || base.session?.resources || base.course?.resources);
+
+  const combinedResources = [
+    ...(primaryDocumentUrl || primaryDocumentPath
+      ? [
+          {
+            id: "resource-primary",
+            name: primaryDocumentName,
+            url: primaryDocumentUrl ? toDownloadUrl(primaryDocumentUrl) : toDownloadUrl(primaryDocumentPath),
+          },
+        ]
+      : []),
+    ...resourceSource,
+    ...sessionResources,
   ];
 
-  const submittedFiles = asArray(item.submittedFiles || item.submissions || item.documents).map(
+  const normalizeResourceUrl = (value?: string) => (value ? String(value).trim() : "");
+  const uniqueResources = new Map<string, { id: string; name: string; url?: string }>();
+  combinedResources.forEach((resource: any, index: number) => {
+    const name = resource?.name || resource?.title || resource?.fileName || resource?.documentName || "Resource Document";
+    const url =
+      resource?.url ||
+      resource?.fileUrl ||
+      resource?.documentUrl ||
+      resource?.path ||
+      resource?.documentPath ||
+      undefined;
+    const downloadUrl = toDownloadUrl(url);
+    const key = `${name}::${normalizeResourceUrl(url)}`;
+    if (!uniqueResources.has(key)) {
+      uniqueResources.set(key, {
+        id: String(resource?.id || resource?._id || resource?.resourceId || index),
+        name,
+        url: downloadUrl,
+      });
+    }
+  });
+
+  const submittedFiles = asArray(base.submittedFiles || base.submissions || base.documents || payload?.submissions).map(
     (file: any, index: number) => ({
       id: String(file.id || file._id || file.submissionId || index),
       name: file.name || file.fileName || file.documentName || "Submission.pdf",
@@ -133,7 +183,7 @@ const mapAssignmentDetails = (item: any, assignmentId: string): AssignmentView =
     }),
   );
 
-  const comments = asArray(item.comments || item.feedbacks || item.activity).map((comment: any, index: number) => ({
+  const comments = asArray(base.comments || base.feedbacks || base.activity || payload?.comments).map((comment: any, index: number) => ({
     id: String(comment.id || comment._id || index),
     author: comment.author || comment.name || comment.educatorName || mentorName,
     date: formatDateTime(comment.createdAt || comment.updatedAt || comment.date),
@@ -141,25 +191,22 @@ const mapAssignmentDetails = (item: any, assignmentId: string): AssignmentView =
   }));
 
   return {
-    id: String(item.id || item._id || item.assignmentId || assignmentId),
-    title: item.title || item.assignmentTitle || item.sessionTitle || "Untitled Assignment",
-    dueDate: item.dueDate || item.deadline || "",
-    description: item.description || item.details || "No assignment description available.",
+    id: String(base.id || base._id || base.assignmentId || assignmentId),
+    title: base.title || base.assignmentTitle || base.sessionTitle || "Untitled Assignment",
+    dueDate: base.dueDate || base.deadline || "",
+    description: base.description || base.details || "No assignment description available.",
     mentor: {
       name: mentorName,
-      session: item.sessionTitle || item.sessionName || item.courseTitle || item.course?.title || "Assignment Session",
+      session:
+        base.sessionTitle || base.sessionName || base.courseTitle || base.course?.title || payload?.courseTitle || "Assignment Session",
       avatar:
-        item.educator?.avatar ||
+        base.educator?.avatar ||
         `https://ui-avatars.com/api/?name=${encodeURIComponent(mentorName)}&background=random`,
     },
-    resources: resourceSource.map((resource: any, index: number) => ({
-      id: String(resource.id || resource._id || index),
-      name: resource.name || resource.title || resource.fileName || "Resource Document",
-      url: resource.url || resource.fileUrl || resource.documentUrl,
-    })),
+    resources: Array.from(uniqueResources.values()),
     comments,
     submittedFiles,
-    status: String(item.status || ""),
+    status: String(base.status || payload?.status || ""),
   };
 };
 
@@ -183,12 +230,143 @@ export default function AssignmentSlugPage() {
       try {
         setIsLoading(true);
         setError("");
-        const response = await StudentAPI.getAssignments();
-        const assignments = asArray(response?.data || response);
-        const match = assignments.find(
-          (assignment: any) =>
-            String(assignment.id || assignment._id || assignment.assignmentId) === assignmentId,
-        );
+
+        const extractEnrolledCourses = (response: any): any[] => {
+          const payload = response?.data ?? response;
+          return asArray(
+            payload?.enrolledCourses ||
+              payload?.enrolledSessions ||
+              payload?.sessions ||
+              payload?.list ||
+              payload?.courses ||
+              payload ||
+              [],
+          );
+        };
+
+        const getCourseId = (course: any): string =>
+          String(
+            course?.courseId ||
+              course?._id ||
+              course?.id ||
+              course?.sessionId ||
+              course?.course?._id ||
+              course?.course?.id ||
+              course?.session?._id ||
+              course?.session?.id ||
+              "",
+          );
+
+        const getCourseTitle = (course: any): string =>
+          String(course?.courseTitle || course?.sessionTitle || course?.title || course?.course?.title || "");
+
+        const getAssignmentId = (assignment: any): string =>
+          String(assignment?.id || assignment?._id || assignment?.assignmentId || assignment?.assignment_id || "");
+
+        const getAssignmentCourseId = (assignment: any): string =>
+          String(
+            assignment?.courseId ||
+              assignment?.sessionId ||
+              assignment?.course?._id ||
+              assignment?.course?.id ||
+              assignment?.session?._id ||
+              assignment?.session?.id ||
+              "",
+          );
+
+        const toResourceList = (course: any) =>
+          [
+            ...asArray(course?.resources),
+            ...asArray(course?.files),
+            ...asArray(course?.materials),
+            ...asArray(course?.documents),
+          ].map((resource: any, index: number) => ({
+            id: String(resource.id || resource._id || index),
+            name: resource.title || resource.name || resource.fileName || "Resource",
+            url: resource.url || resource.fileUrl || resource.documentUrl || resource.path,
+          }));
+
+        const flattenAssignmentsFromCourse = (course: any) => {
+          const fullCourse = course?.fullCourseData || course;
+          const courseId = getCourseId(fullCourse) || getCourseId(course);
+          const courseTitle = getCourseTitle(fullCourse) || getCourseTitle(course);
+          const educatorName =
+            fullCourse?.educator?.name || course?.educator?.name || course?.mentor?.name || course?.educatorName || "Educator";
+          const sessionResources = toResourceList(fullCourse);
+
+          const list = asArray(fullCourse?.assignments || course?.assignments || fullCourse?.course?.assignments || []);
+          return list
+            .map((assignment: any) => {
+              const id = getAssignmentId(assignment);
+              if (!id) return null;
+              return {
+                id,
+                title: assignment?.title || assignment?.assignmentTitle || "Untitled Assignment",
+                dueDate: assignment?.dueDate || assignment?.deadline || assignment?.createdAt || "",
+                status: String(assignment?.status || ""),
+                courseId: String(courseId || getAssignmentCourseId(assignment)),
+                courseTitle,
+                educatorName,
+                documentUrl: assignment?.documentUrl || assignment?.fileUrl || assignment?.url,
+                documentPath: assignment?.documentPath || assignment?.path,
+                courseResources: sessionResources,
+              };
+            })
+            .filter(Boolean);
+        };
+
+        const enrolledResult = await StudentAPI.getEnrolledSessions();
+        const enrolledCourses = extractEnrolledCourses(enrolledResult);
+        const enrolledCourseIds = new Set(enrolledCourses.map(getCourseId).filter(Boolean));
+
+        const courseDerivedAssignments = enrolledCourses.flatMap(flattenAssignmentsFromCourse);
+        const courseAssignmentIds = new Set(courseDerivedAssignments.map((a: any) => String(a.id)).filter(Boolean));
+
+        let studentScopedAssignments: any[] = [];
+        try {
+          const studentAssignmentsResult: any = await StudentAPI.getAssignments();
+          studentScopedAssignments = asArray(studentAssignmentsResult?.data || studentAssignmentsResult);
+        } catch (studentAssignmentsError) {
+          console.warn("Student assignments list unavailable; using course-derived list", studentAssignmentsError);
+        }
+
+        const filteredStudentAssignments = studentScopedAssignments.filter((assignment: any) => {
+          const id = getAssignmentId(assignment);
+          const courseId = getAssignmentCourseId(assignment);
+          if (id && courseAssignmentIds.has(id)) return true;
+          if (courseId && enrolledCourseIds.has(courseId)) return true;
+
+          const linkedTitle = String(
+            assignment?.courseTitle || assignment?.sessionTitle || assignment?.sessionName || "",
+          ).toLowerCase();
+          if (!linkedTitle) return false;
+          return enrolledCourses.some((course: any) => getCourseTitle(course).toLowerCase() === linkedTitle);
+        });
+
+        const mergedById = new Map<string, any>();
+        for (const item of courseDerivedAssignments) {
+          if (!item) continue;
+          mergedById.set(String(item.id), item);
+        }
+        for (const item of filteredStudentAssignments) {
+          const id = getAssignmentId(item);
+          if (!id) continue;
+          const existing = mergedById.get(id) || {};
+          mergedById.set(id, {
+            ...existing,
+            ...item,
+            id,
+            courseId: existing.courseId || getAssignmentCourseId(item),
+            courseTitle:
+              existing.courseTitle || item?.courseTitle || item?.sessionTitle || item?.sessionName || item?.course?.title,
+            educatorName: existing.educatorName || item?.educatorName || item?.mentorName || item?.educator?.name,
+            dueDate: item?.dueDate || item?.deadline || existing.dueDate,
+            courseResources: existing.courseResources,
+          });
+        }
+
+        const mergedAssignments = Array.from(mergedById.values());
+        const match = mergedAssignments.find((assignment: any) => String(assignment.id) === assignmentId);
 
         if (!match) {
           throw new Error("Assignment not found.");

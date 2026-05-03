@@ -1,5 +1,6 @@
 import React from 'react';
 import { Edit2, ExternalLink } from 'lucide-react';
+import { shortenId } from "@/lib/utils/shortenId";
 
 const SummaryCard = ({ value, label, valueColor, subtitle }: { value: string, label: string, valueColor: string, subtitle?: string }) => (
   <div className="bg-white rounded-xl border border-gray-100 p-6 flex flex-col justify-center shadow-sm">
@@ -44,8 +45,8 @@ export default function SessionsTab() {
             <tbody className="divide-y divide-gray-100">
               {sessions.map((session, idx) => (
                 <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                  <td className="py-4 px-5 text-sm text-gray-500 font-medium">
-                    {session.id}
+                  <td className="py-4 px-5 text-sm text-gray-500 font-medium" title={session.id}>
+                    {shortenId(session.id)}
                   </td>
                   <td className="py-4 px-5 text-sm font-semibold text-gray-900">
                     {session.name}

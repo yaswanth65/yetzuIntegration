@@ -1,0 +1,17 @@
+{
+  "event": "payment.failed",
+  "payload": {
+    "payment": {
+      "entity": {
+        "id": "pay_failed",
+        "order_id": "order_failed",
+        "amount": 49900,
+        "currency": "INR",
+        "notes": {
+          "userId": "user-123",
+          "sessionId": "session-456"
+        }
+      }
+    }
+  }
+}

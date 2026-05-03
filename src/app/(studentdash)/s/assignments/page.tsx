@@ -85,14 +85,158 @@ export default function AssignmentPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const extractEnrolledCourses = (response: any): any[] => {
+    const payload = response?.data ?? response;
+    return asArray(
+      payload?.enrolledCourses ||
+        payload?.enrolledSessions ||
+        payload?.sessions ||
+        payload?.list ||
+        payload?.courses ||
+        payload ||
+        [],
+    );
+  };
+
+  const getCourseId = (course: any): string =>
+    String(
+      course?.courseId ||
+        course?._id ||
+        course?.id ||
+        course?.sessionId ||
+        course?.session?._id ||
+        course?.session?.id ||
+        course?.course?._id ||
+        course?.course?.id ||
+        "",
+    );
+
+  const getCourseTitle = (course: any): string =>
+    String(course?.courseTitle || course?.sessionTitle || course?.title || course?.course?.title || "");
+
+  const getEducatorName = (course: any): string =>
+    String(
+      course?.educator?.name ||
+        course?.mentor?.name ||
+        course?.educatorName ||
+        course?.mentorName ||
+        course?.fullCourseData?.educator?.name ||
+        "Educator",
+    );
+
+  const getAssignmentId = (assignment: any): string =>
+    String(assignment?.id || assignment?._id || assignment?.assignmentId || assignment?.assignment_id || "");
+
+  const getAssignmentCourseId = (assignment: any): string =>
+    String(
+      assignment?.courseId ||
+        assignment?.sessionId ||
+        assignment?.course?._id ||
+        assignment?.course?.id ||
+        assignment?.session?._id ||
+        assignment?.session?.id ||
+        "",
+    );
+
+  const flattenAssignmentsFromCourse = (course: any) => {
+    const fullCourse = course?.fullCourseData || course;
+    const courseId = getCourseId(fullCourse) || getCourseId(course);
+    const courseTitle = getCourseTitle(fullCourse) || getCourseTitle(course) || "General Session";
+    const educatorName = getEducatorName(fullCourse) || getEducatorName(course);
+
+    const list = asArray(
+      fullCourse?.assignments ||
+        course?.assignments ||
+        fullCourse?.course?.assignments ||
+        course?.course?.assignments ||
+        [],
+    );
+
+    return list
+      .map((assignment: any) => {
+        const id = getAssignmentId(assignment);
+        if (!id) return null;
+
+        return {
+          id,
+          title: assignment?.title || assignment?.assignmentTitle || "Untitled Assignment",
+          dueDate: assignment?.dueDate || assignment?.deadline || assignment?.due || assignment?.createdAt || "",
+          status: String(assignment?.status || ""),
+          courseId: String(courseId || getAssignmentCourseId(assignment)),
+          courseTitle,
+          educatorName,
+          documentUrl: assignment?.documentUrl || assignment?.fileUrl || assignment?.url,
+          documentPath: assignment?.documentPath || assignment?.path,
+        };
+      })
+      .filter(Boolean);
+  };
+
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
         setIsLoading(true);
         setError("");
-        const response: any = await StudentAPI.getAssignments();
-        const apiData = asArray(response?.data || response);
-        setAssignments(apiData.map(mapAssignment));
+
+        const enrolledResult = await StudentAPI.getEnrolledSessions();
+        const enrolledCourses = extractEnrolledCourses(enrolledResult);
+        const enrolledCourseIds = new Set(enrolledCourses.map(getCourseId).filter(Boolean));
+
+        const courseDerivedAssignments = enrolledCourses.flatMap(flattenAssignmentsFromCourse);
+        const courseAssignmentIds = new Set(courseDerivedAssignments.map((a: any) => String(a.id)).filter(Boolean));
+
+        let studentScopedAssignments: any[] = [];
+        try {
+          const studentAssignmentsResult: any = await StudentAPI.getAssignments();
+          studentScopedAssignments = asArray(studentAssignmentsResult?.data || studentAssignmentsResult);
+        } catch (studentAssignmentsError) {
+          console.warn("Falling back to enrolled course assignments only", studentAssignmentsError);
+        }
+
+        const filteredStudentAssignments = studentScopedAssignments.filter((assignment: any) => {
+          const assignmentId = String(
+            assignment?.id || assignment?._id || assignment?.assignmentId || assignment?.assignment_id || "",
+          );
+          const assignmentCourseId = getAssignmentCourseId(assignment);
+
+          if (assignmentId && courseAssignmentIds.has(assignmentId)) return true;
+          if (assignmentCourseId && enrolledCourseIds.has(assignmentCourseId)) return true;
+
+          const linkedTitle = String(
+            assignment?.courseTitle || assignment?.sessionTitle || assignment?.sessionName || "",
+          ).toLowerCase();
+          if (!linkedTitle) return false;
+          return enrolledCourses.some((course: any) => getCourseTitle(course).toLowerCase() === linkedTitle);
+        });
+
+        const mergedById = new Map<string, any>();
+        for (const item of courseDerivedAssignments) {
+          if (!item) continue;
+          mergedById.set(String(item.id), item);
+        }
+        for (const item of filteredStudentAssignments) {
+          const id = String(item?.id || item?._id || item?.assignmentId || item?.assignment_id || "");
+          if (!id) continue;
+          const existing = mergedById.get(id) || {};
+          mergedById.set(id, {
+            ...existing,
+            ...item,
+            id,
+            courseId: existing.courseId || getAssignmentCourseId(item),
+            courseTitle:
+              existing.courseTitle ||
+              item?.courseTitle ||
+              item?.sessionTitle ||
+              item?.sessionName ||
+              item?.course?.title,
+            educatorName:
+              existing.educatorName || item?.educatorName || item?.mentorName || item?.educator?.name,
+            dueDate: item?.dueDate || item?.deadline || existing.dueDate,
+          });
+        }
+
+        const mergedAssignments = Array.from(mergedById.values());
+        setAssignments(mergedAssignments.map(mapAssignment));
       } catch (fetchError: any) {
         console.error("Student assignments fetch failed", fetchError);
         setAssignments([]);
