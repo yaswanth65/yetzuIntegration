@@ -654,7 +654,8 @@ import {
   Calendar,
   Award,
   CheckCircle2,
-  Send
+  Send,
+  Ticket
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
@@ -883,7 +884,7 @@ export default function DashNavbar({
   const displayAvatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.fullName || sessionUser?.name || 'Student')}&background=random`;
 
   return (
-    <nav className="bg-white border-b border-gray-100 h-20 fixed w-full top-0 z-40 lg:pl-64 transition-all duration-300">
+    <nav className="bg-white border-b border-gray-100 h-20 fixed w-full top-0 z-40 lg:pl-[260px] transition-all duration-300">
       <div className="h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         
         {/* LEFT: Mobile Logo */}
@@ -1020,6 +1021,18 @@ export default function DashNavbar({
               </div>
             )}
           </div>
+
+          {/* ── Tickets (Mobile) ── */}
+          <Link
+            href="/s/tickets"
+            className={`p-2 rounded-xl border transition-colors sm:hidden ${
+              pathname?.includes("/s/tickets")
+                ? "bg-white border-[#042BFD] text-[#042BFD]"
+                : "text-gray-500 hover:bg-gray-50 border-gray-100"
+            }`}
+          >
+            <Ticket className="h-5 w-5" strokeWidth={1.5} />
+          </Link>
 
           {/* ── Chat ── */}
         

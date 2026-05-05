@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { X, LayoutDashboard, Calendar, FileText, MessageSquare, LogOut } from "lucide-react";
+import { X, LayoutDashboard, Calendar, FileText, MessageSquare, Ticket, LogOut } from "lucide-react";
 import { useLogoutMutation } from "@/lib/queries/identityService/useIdentityService";
 import useSession from "@/hooks/useSession";
 
@@ -13,6 +13,7 @@ const menuItems = [
   { name: "Sessions", path: "/e/sessions", icon: Calendar },
   { name: "Assignments", path: "/e/assignments", icon: FileText },
   { name: "Chat", path: "/e/chat", icon: MessageSquare },
+  { name: "Tickets", path: "/e/tickets", icon: Ticket },
 ];
 
 interface SidebarProps {

@@ -37,7 +37,7 @@ export default function CreateOrganizationPage() {
   };
 
   return (
-    <div className="w-full min-h-[calc(100vh-64px)] bg-[#FDFDFD] flex flex-col relative pb-24">
+    <div className="w-full flex flex-col relative pb-24">
       {/* Header */}
       <div className="w-full px-6 py-5 flex items-center justify-between border-b border-gray-100 bg-white">
         <Link href="/a/organisation" className="flex items-center gap-2 text-slate-800 font-bold hover:text-blue-600 transition-colors">

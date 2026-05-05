@@ -391,8 +391,8 @@ export default function SessionSlugPage() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-white p-0 pb-10 font-sans md:mt-4 md:bg-[#F8F9FA] md:p-8 md:pb-8">
-      <div className="mx-auto max-w-[1600px]">
+    <div className="bg-white p-0 pb-10 font-sans md:bg-transparent md:p-0 md:pb-8">
+      <div>
         <div className="mb-6 flex items-center gap-2 px-4 pt-6 text-[18px] font-semibold text-gray-900 md:hidden">
           <Link href="/s/sessions" className="flex items-center gap-2">
             <ArrowLeft size={20} />

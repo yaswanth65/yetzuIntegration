@@ -1,47 +1,158 @@
-import React, { useState, useEffect } from 'react';
-import { X, Search, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X, CheckCircle2 } from 'lucide-react';
+import { AdminAPI } from '@/lib/api';
 
 interface EditCouponModalProps {
   isOpen: boolean;
   onClose: () => void;
   couponData: any | null;
+  onSuccess?: () => void;
 }
 
-export default function EditCouponModal({ isOpen, onClose, couponData }: EditCouponModalProps) {
-  const [applyTo, setApplyTo] = useState('all');
-  const [specificProducts, setSpecificProducts] = useState<string[]>([]);
-  const [productSearch, setProductSearch] = useState('');
+const applyToOptions = [
+  { value: 'all-cohort', label: 'All Cohort' },
+  { value: 'all-1-1', label: 'All 1-1 Session' },
+  { value: 'all-webinar', label: 'All Webinar' },
+  { value: 'all-workshop', label: 'All Workshop' },
+  { value: 'specific-cohort', label: 'Specific Cohort' },
+  { value: 'specific-1-1', label: 'Specific 1-1 Session' },
+  { value: 'specific-webinar', label: 'Specific Webinar' },
+  { value: 'specific-workshop', label: 'Specific Workshop' },
+];
+
+export default function EditCouponModal({ isOpen, onClose, couponData, onSuccess }: EditCouponModalProps) {
+  const [applyTo, setApplyTo] = useState('all-cohort');
+  const [loading, setLoading] = useState(false);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [selectedSession, setSelectedSession] = useState('');
   
+  // Form state
+  const [code, setCode] = useState('');
+  const [name, setName] = useState('');
+  const [discountType, setDiscountType] = useState('fixed');
+  const [discountValue, setDiscountValue] = useState('');
+  const [status, setStatus] = useState('active');
+  
+  const fetchSessions = useCallback(async (type: string) => {
+    try {
+      setSessionsLoading(true);
+      let sessionType = '';
+      
+      if (type === 'specific-cohort') sessionType = 'cohort';
+      else if (type === 'specific-1-1') sessionType = '1-1';
+      else if (type === 'specific-webinar') sessionType = 'webinar';
+      else if (type === 'specific-workshop') sessionType = 'workshop';
+      
+      const response = await AdminAPI.getSessions({ 
+        page: 1, 
+        limit: 100,
+        ...(sessionType && { sessionType })
+      });
+      
+      const sessionList = Array.isArray(response?.data) ? response.data :
+                        Array.isArray(response) ? response : [];
+      setSessions(sessionList);
+    } catch (error) {
+      console.error('Failed to fetch sessions:', error);
+      setSessions([]);
+    } finally {
+      setSessionsLoading(false);
+    }
+  }, []);
+
   // Update local state when couponData changes
   useEffect(() => {
     if (couponData) {
-      // Mock some specific states based on type
-      if (couponData.type === 'Buy X Get Y Free') {
-        setApplyTo('specific');
-      } else {
-        setApplyTo('all');
-        setSpecificProducts([]);
+      setCode(couponData.code || '');
+      setName(couponData.name || '');
+      setDiscountType(couponData.discountType || 'fixed');
+      setDiscountValue(couponData.discountValue?.toString() || '');
+      setStatus(couponData.status || 'active');
+      setApplyTo(couponData.applyTo || 'all-cohort');
+      setSelectedSession(couponData.sessionId || '');
+      
+      if (couponData.type === 'Buy X Get Y Free' || couponData.discountType === 'bogo') {
+        setApplyTo('specific-cohort');
       }
     }
   }, [couponData]);
 
+  useEffect(() => {
+    if (applyTo.startsWith('specific-')) {
+      fetchSessions(applyTo);
+    } else {
+      setSessions([]);
+      setSelectedSession('');
+    }
+  }, [applyTo, fetchSessions]);
+
   if (!isOpen || !couponData) return null;
 
-  // Derive logic from mock data type
-  const isBuyXGetY = couponData.type === 'Buy X Get Y Free';
+  const isBuyXGetY = couponData.type === 'Buy X Get Y Free' || couponData.discountType === 'bogo';
   const couponTypeName = isBuyXGetY ? 'Buy X Get Y Coupon' : 
                          (couponData.name === 'First Order' ? 'Single Use Coupon' : 'Site Wide Coupon');
 
-  const handleAddProduct = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && productSearch.trim() !== '') {
-      e.preventDefault();
-      setSpecificProducts([...specificProducts, productSearch.trim()]);
-      setProductSearch('');
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      const couponId = couponData.id || couponData._id;
+      
+      // Map applyTo value to session type
+      let sessionType = '';
+      if (applyTo === 'all-cohort' || applyTo === 'specific-cohort') sessionType = 'cohort';
+      else if (applyTo === 'all-1-1' || applyTo === 'specific-1-1') sessionType = '1-1';
+      else if (applyTo === 'all-webinar' || applyTo === 'specific-webinar') sessionType = 'webinar';
+      else if (applyTo === 'all-workshop' || applyTo === 'specific-workshop') sessionType = 'workshop';
+
+      const payload = {
+        name,
+        code,
+        discountType,
+        discountValue: parseFloat(discountValue) || 0,
+        status,
+        applyTo,
+        sessionType,
+        ...(applyTo.startsWith('specific-') && selectedSession && { sessionId: selectedSession }),
+      };
+
+      await AdminAPI.updateCoupon(couponId, payload);
+      
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onClose();
+      }
+    } catch (error) {
+      console.error('Failed to update coupon:', error);
+      alert('Failed to update coupon. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleRemoveProduct = (index: number) => {
-    setSpecificProducts(specificProducts.filter((_, i) => i !== index));
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this coupon?')) {
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const couponId = couponData.id || couponData._id;
+      
+      await AdminAPI.deleteCoupon(couponId);
+      
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onClose();
+      }
+    } catch (error) {
+      console.error('Failed to delete coupon:', error);
+      alert('Failed to delete coupon. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,15 +179,16 @@ export default function EditCouponModal({ isOpen, onClose, couponData }: EditCou
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto flex-1">
           <div className="space-y-6">
-            
-            {/* Row 1: Code and Name */}
+             
+            {/* Row1: Code and Name */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-slate-700">Coupon Code</label>
                 <div className="relative">
                   <input 
                     type="text" 
-                    defaultValue={couponData.code}
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
                     className="w-full pl-4 pr-10 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
                   <CheckCircle2 className="w-5 h-5 text-green-500 absolute right-3 top-1/2 -translate-y-1/2" />
@@ -86,75 +198,26 @@ export default function EditCouponModal({ isOpen, onClose, couponData }: EditCou
                 <label className="block text-sm font-medium text-slate-700">Coupon Name</label>
                 <input 
                   type="text" 
-                  defaultValue={couponData.name}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
 
-            {/* Row 2: Offers */}
-            {!isBuyXGetY ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">Offer Type</label>
-                  <select 
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                    defaultValue={couponData.type === '% Discount' ? 'percentage' : 'fixed'}
-                  >
-                    <option value="percentage">Percentage Discount</option>
-                    <option value="fixed">Fixed Amount</option>
-                    <option value="shipping">Free Shipping</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">Value</label>
-                  <input 
-                    type="number" 
-                    defaultValue={couponData.type === '% Discount' ? '20' : '500'}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-700">Offer</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-600 font-medium">Buy</span>
-                      <input 
-                        type="number" 
-                        defaultValue="1"
-                        className="w-full pl-12 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-700">Get</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-600 font-medium">Get</span>
-                      <input 
-                        type="number" 
-                        defaultValue="1"
-                        className="w-full pl-12 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-700">Discount Type on Get item</label>
-                    <select 
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                      defaultValue="free"
-                    >
-                      <option value="free">Free</option>
-                      <option value="percentage">Percentage</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Row 2: Status */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-slate-700">Status</label>
+              <select 
+                className="w-full md:w-1/2 px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="expired">Expired</option>
+              </select>
+            </div>
 
             {/* Row 3: Apply To */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -165,76 +228,38 @@ export default function EditCouponModal({ isOpen, onClose, couponData }: EditCou
                   value={applyTo}
                   onChange={(e) => setApplyTo(e.target.value)}
                 >
-                  <option value="all">All Products</option>
-                  <option value="specific">Specific Products</option>
-                  <option value="categories">Specific Categories</option>
+                  {applyToOptions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
                 </select>
               </div>
 
-              {isBuyXGetY && (
+              {/* Sessions Dropdown for Specific Types */}
+              {applyTo.startsWith('specific-') && (
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">Get Item</label>
+                  <label className="block text-sm font-medium text-slate-700">
+                    Select {applyToOptions.find(o => o.value === applyTo)?.label.replace('Specific ', '')}
+                  </label>
                   <select 
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                    defaultValue="specific"
+                    value={selectedSession}
+                    onChange={(e) => setSelectedSession(e.target.value)}
+                    disabled={sessionsLoading}
                   >
-                    <option value="all">All Products</option>
-                    <option value="specific">Specific Products</option>
+                    <option value="">{sessionsLoading ? 'Loading sessions...' : 'Select a session'}</option>
+                    {sessions.map(session => (
+                      <option key={session.id || session._id} value={session.id || session._id}>
+                        {session.title || session.name || 'Session'}
+                      </option>
+                    ))}
                   </select>
                 </div>
               )}
-            </div>
 
-            {/* Row 4: Search Products */}
-            {(applyTo === 'specific' || applyTo === 'categories') && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <label className="block text-[13px] font-medium text-gray-500">Select Products</label>
-                  <div className="relative">
-                    <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input 
-                      type="text" 
-                      placeholder="Search for products..."
-                      value={productSearch}
-                      onChange={(e) => setProductSearch(e.target.value)}
-                      onKeyDown={handleAddProduct}
-                      className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  {specificProducts.length > 0 && (
-                    <div className="pt-2">
-                      <p className="text-xs text-gray-500 mb-2">Selected:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {specificProducts.map((prod, index) => (
-                          <div key={index} className="flex items-center gap-1.5 bg-blue-50 text-[#0F172B] px-3 py-1.5 rounded-md text-xs font-medium border border-blue-100">
-                            {prod}
-                            <button onClick={() => handleRemoveProduct(index)} className="hover:bg-blue-100 rounded-full p-0.5 transition-colors">
-                              <X className="w-3 h-3 text-[#0F172B]" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                {isBuyXGetY && (
-                  <div className="space-y-3">
-                    <label className="block text-[13px] font-medium text-gray-500">Select Get Products</label>
-                    <div className="relative">
-                      <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                      <input 
-                        type="text" 
-                        placeholder="Search for products..."
-                        className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Row 5: Dates */}
+               {/* Remove old product search section - now using sessions */}
+             </div>
+             
+            {/* Row 4: Dates */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-slate-700">Active Dates</label>
@@ -253,9 +278,6 @@ export default function EditCouponModal({ isOpen, onClose, couponData }: EditCou
                     defaultValue="2024-04-12"
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-gray-600"
                   />
-                  <div className="w-12 border border-gray-200 rounded-lg flex items-center justify-center p-2 text-gray-500 bg-gray-50/50">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                  </div>
                 </div>
               </div>
             </div>
@@ -277,21 +299,27 @@ export default function EditCouponModal({ isOpen, onClose, couponData }: EditCou
 
         {/* Modal Footer */}
         <div className="flex justify-between items-center p-6 border-t border-gray-100 bg-[#FAFAFA] rounded-b-2xl">
-          <button className="text-sm font-semibold text-red-500 hover:text-red-700 hover:underline transition-colors uppercase tracking-wider">
+          <button 
+            onClick={handleDelete}
+            disabled={loading}
+            className="text-sm font-semibold text-red-500 hover:text-red-700 hover:underline transition-colors uppercase tracking-wider disabled:opacity-50"
+          >
             Delete Coupon
           </button>
           <div className="flex gap-3">
             <button 
               onClick={onClose}
-              className="px-5 py-2 text-sm font-medium text-slate-700 hover:bg-gray-100 rounded-lg transition-colors border border-transparent hover:border-gray-200"
+              disabled={loading}
+              className="px-5 py-2 text-sm font-medium text-slate-700 hover:bg-gray-100 rounded-lg transition-colors border border-transparent hover:border-gray-200 disabled:opacity-50"
             >
               Cancel
             </button>
             <button 
-              onClick={onClose}
-              className="px-6 py-2 bg-[#0F172B] hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
+              onClick={handleSave}
+              disabled={loading}
+              className="px-6 py-2 bg-[#0F172B] hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
             >
-              Save
+              {loading ? 'Saving...' : 'Save'}
             </button>
           </div>
         </div>

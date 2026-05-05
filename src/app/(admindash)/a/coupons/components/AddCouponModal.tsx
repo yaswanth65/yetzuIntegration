@@ -1,21 +1,129 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, CheckCircle2, Calendar } from 'lucide-react';
+import { AdminAPI } from '@/lib/api';
 
 interface AddCouponModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export default function AddCouponModal({ isOpen, onClose }: AddCouponModalProps) {
+const applyToOptions = [
+  { value: 'all-cohort', label: 'All Cohort' },
+  { value: 'all-1-1', label: 'All 1-1 Session' },
+  { value: 'all-webinar', label: 'All Webinar' },
+  { value: 'all-workshop', label: 'All Workshop' },
+  { value: 'specific-cohort', label: 'Specific Cohort' },
+  { value: 'specific-1-1', label: 'Specific 1-1 Session' },
+  { value: 'specific-webinar', label: 'Specific Webinar' },
+  { value: 'specific-workshop', label: 'Specific Workshop' },
+];
+
+export default function AddCouponModal({ isOpen, onClose, onSuccess }: AddCouponModalProps) {
   const [promoType, setPromoType] = useState('₹ Discount');
-  const [applyTo, setApplyTo] = useState('All Products');
+  const [applyTo, setApplyTo] = useState('all-cohort');
   const [noEndDate, setNoEndDate] = useState(false);
   const [limitTotalUses, setLimitTotalUses] = useState(false);
   const [limitPerCustomer, setLimitPerCustomer] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [selectedSession, setSelectedSession] = useState('');
+
+  const fetchSessions = useCallback(async (type: string) => {
+    try {
+      setSessionsLoading(true);
+      let sessionType = '';
+      
+      if (type === 'specific-cohort') sessionType = 'cohort';
+      else if (type === 'specific-1-1') sessionType = '1-1';
+      else if (type === 'specific-webinar') sessionType = 'webinar';
+      else if (type === 'specific-workshop') sessionType = 'workshop';
+      
+      const response = await AdminAPI.getSessions({ 
+        page: 1, 
+        limit: 100,
+        ...(sessionType && { sessionType })
+      });
+      
+      const sessionList = Array.isArray(response?.data) ? response.data :
+                        Array.isArray(response) ? response : [];
+      setSessions(sessionList);
+    } catch (error) {
+      console.error('Failed to fetch sessions:', error);
+      setSessions([]);
+    } finally {
+      setSessionsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (applyTo.startsWith('specific-')) {
+      fetchSessions(applyTo);
+    } else {
+      setSessions([]);
+      setSelectedSession('');
+    }
+  }, [applyTo, fetchSessions]);
+
+  const [formData, setFormData] = useState({
+    code: 'SUMMER50',
+    name: 'Summer Promo',
+    discountValue: '500',
+    startDate: '2024-04-20',
+    endDate: '',
+    maxUses: '100',
+  });
 
   if (!isOpen) return null;
 
   const promoTypes = ['₹ Discount', '% Discount', 'Sale Price', 'Buy X Get Y Free'];
+
+  const handleCreate = async () => {
+    try {
+      setLoading(true);
+      
+      const discountType = promoType === '% Discount' ? 'percentage' : 'fixed';
+      const discountValue = parseFloat(formData.discountValue) || 0;
+      const maxUses = limitTotalUses ? parseInt(formData.maxUses) : undefined;
+
+      // Map applyTo value to session type
+      let sessionType = '';
+      if (applyTo === 'all-cohort' || applyTo === 'specific-cohort') sessionType = 'cohort';
+      else if (applyTo === 'all-1-1' || applyTo === 'specific-1-1') sessionType = '1-1';
+      else if (applyTo === 'all-webinar' || applyTo === 'specific-webinar') sessionType = 'webinar';
+      else if (applyTo === 'all-workshop' || applyTo === 'specific-workshop') sessionType = 'workshop';
+
+      const payload = {
+        name: formData.name,
+        code: formData.code,
+        discountType,
+        discountValue,
+        maxUses,
+        status: 'active',
+        applyTo,
+        sessionType,
+        ...(applyTo.startsWith('specific-') && selectedSession && { sessionId: selectedSession }),
+      };
+
+      await AdminAPI.createCoupon(payload);
+      
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onClose();
+      }
+    } catch (error) {
+      console.error('Failed to create coupon:', error);
+      alert('Failed to create coupon. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateFormData = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
@@ -34,7 +142,7 @@ export default function AddCouponModal({ isOpen, onClose }: AddCouponModalProps)
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto flex-1">
           <div className="space-y-6">
-            
+             
             {/* Promo Type Selection */}
             <div className="space-y-3">
               <label className="block text-sm font-medium text-slate-700">
@@ -72,7 +180,8 @@ export default function AddCouponModal({ isOpen, onClose }: AddCouponModalProps)
                 <div className="relative">
                   <input 
                     type="text" 
-                    defaultValue="SUMMER50"
+                    value={formData.code}
+                    onChange={(e) => updateFormData('code', e.target.value)}
                     className="w-full pl-4 pr-10 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 font-medium"
                   />
                   <CheckCircle2 className="w-5 h-5 text-green-500 absolute right-3 top-1/2 -translate-y-1/2" />
@@ -82,7 +191,8 @@ export default function AddCouponModal({ isOpen, onClose }: AddCouponModalProps)
                 <label className="block text-sm font-medium text-slate-700">Coupon Name</label>
                 <input 
                   type="text" 
-                  defaultValue="Summer Promo"
+                  value={formData.name}
+                  onChange={(e) => updateFormData('name', e.target.value)}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800"
                 />
               </div>
@@ -121,7 +231,8 @@ export default function AddCouponModal({ isOpen, onClose }: AddCouponModalProps)
                   )}
                   <input 
                     type="number" 
-                    defaultValue="500"
+                    value={formData.discountValue}
+                    onChange={(e) => updateFormData('discountValue', e.target.value)}
                     className={`w-full py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 ${promoType !== '% Discount' ? 'pl-10 pr-4' : 'px-4'}`}
                   />
                   {promoType === '% Discount' && (
@@ -139,11 +250,33 @@ export default function AddCouponModal({ isOpen, onClose }: AddCouponModalProps)
                 value={applyTo}
                 onChange={(e) => setApplyTo(e.target.value)}
               >
-                <option value="All Products">All Products</option>
-                <option value="Specific Products">Specific Products</option>
-                <option value="Specific Categories">Specific Categories</option>
+                {applyToOptions.map(option => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
               </select>
             </div>
+
+            {/* Sessions Dropdown for Specific Types */}
+            {applyTo.startsWith('specific-') && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700">
+                  Select {applyToOptions.find(o => o.value === applyTo)?.label.replace('Specific ', '')}
+                </label>
+                <select 
+                  className="w-full md:w-1/2 px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  value={selectedSession}
+                  onChange={(e) => setSelectedSession(e.target.value)}
+                  disabled={sessionsLoading}
+                >
+                  <option value="">{sessionsLoading ? 'Loading sessions...' : 'Select a session'}</option>
+                  {sessions.map(session => (
+                    <option key={session.id || session._id} value={session.id || session._id}>
+                      {session.title || session.name || 'Session'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Row 4: Valid Between */}
             <div className="space-y-3 pt-2">
@@ -154,7 +287,8 @@ export default function AddCouponModal({ isOpen, onClose }: AddCouponModalProps)
                   <div className="relative">
                     <input 
                       type="date" 
-                      defaultValue="2024-04-20"
+                      value={formData.startDate}
+                      onChange={(e) => updateFormData('startDate', e.target.value)}
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-600 outline-none select-none [&::-webkit-calendar-picker-indicator]:hidden"
                     />
                     <Calendar className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -166,6 +300,8 @@ export default function AddCouponModal({ isOpen, onClose }: AddCouponModalProps)
                     <input 
                       type="date" 
                       disabled={noEndDate}
+                      value={formData.endDate}
+                      onChange={(e) => updateFormData('endDate', e.target.value)}
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-600 outline-none select-none [&::-webkit-calendar-picker-indicator]:hidden"
                     />
                     <Calendar className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -199,7 +335,8 @@ export default function AddCouponModal({ isOpen, onClose }: AddCouponModalProps)
                         <input 
                           type="number" 
                           placeholder="e.g. 100"
-                          defaultValue="100"
+                          value={formData.maxUses}
+                          onChange={(e) => updateFormData('maxUses', e.target.value)}
                           className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
                       )}
@@ -230,10 +367,11 @@ export default function AddCouponModal({ isOpen, onClose }: AddCouponModalProps)
             Cancel
           </button>
           <button 
-            onClick={onClose}
-            className="px-6 py-2 bg-[#0F172B] hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
+            onClick={handleCreate}
+            disabled={loading}
+            className="px-6 py-2 bg-[#0F172B] hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
           >
-            Create Coupon
+            {loading ? 'Creating...' : 'Create Coupon'}
           </button>
         </div>
         

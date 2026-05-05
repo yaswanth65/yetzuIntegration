@@ -5,7 +5,7 @@ export default function ContactHeader() {
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center w-full gap-4 pb-6 border-b border-gray-100">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">Form Submissions</h1>
+        <h1 className="text-2xl font-medium text-[#021165] sm:text-3xl md:text-4xl">Form Submissions</h1>
         <p className="text-sm text-gray-500 mt-1">
           Review and reply to all user-submitted requests from contact and post publication support forms.
         </p>

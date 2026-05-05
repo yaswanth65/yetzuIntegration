@@ -10,8 +10,8 @@ export default function Header() {
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">Analytics</h1>
-        <p className="text-xs text-gray-500 mt-0.5">Key platform metrics · Last 30 days</p>
+        <h1 className="text-2xl font-medium text-[#021165] sm:text-3xl md:text-4xl">Analytics</h1>
+        <p className="text-sm text-gray-500 mt-1">Key platform metrics · Last 30 days</p>
       </div>
       <div className="flex flex-wrap items-center gap-1.5">
         {periods.map((p) => (

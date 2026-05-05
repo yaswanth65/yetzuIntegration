@@ -218,6 +218,7 @@ import {
     Award,
     DollarSign,
     Send,
+    Ticket,
     ChevronDown,
     Headphones,
     Menu,
@@ -253,6 +254,7 @@ const getStudentNav = (basePath: string): NavItem[] => [
     { label: "Assignments", href: `${basePath}/assignments`, icon: FileText },
     { label: "Certificates", href: `${basePath}/certificate`, icon: Award },
     { label: "Chat", href: `${basePath}/chat`, icon: Send },
+    { label: "Tickets", href: `${basePath}/tickets`, icon: Ticket },
 ];
 
 const getEducatorNav = (basePath: string): NavItem[] => [

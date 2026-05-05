@@ -1,13 +1,33 @@
 import React from "react";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { User } from "./types";
 import { shortenId } from "@/lib/utils/shortenId";
+import { AdminAPI } from "@/lib/api";
+import { toast } from "react-hot-toast";
 
 interface UsersTableProps {
   users: User[];
+  onRefresh?: () => void;
 }
 
-export function UsersTable({ users }: UsersTableProps) {
+export function UsersTable({ users, onRefresh }: UsersTableProps) {
+  const handleDelete = async (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to delete user "${userName}"?`)) return;
+    try {
+      await AdminAPI.deleteUser(userId);
+      toast.success("User deleted successfully");
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error("Failed to delete user:", error);
+      toast.error("Failed to delete user");
+    }
+  };
+
+  const handleEdit = (user: User) => {
+    // Placeholder for edit functionality
+    toast(`Edit user: ${user.name}`);
+  };
+
   return (
     <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
       <div className="overflow-x-auto">
@@ -101,9 +121,25 @@ export function UsersTable({ users }: UsersTableProps) {
                     {user.sessions}
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-400 text-right whitespace-nowrap">
-                    <button className="p-1 rounded-md hover:bg-slate-100 transition-colors">
-                      <MoreHorizontal className="w-5 h-5 text-slate-400" />
-                    </button>
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => handleEdit(user)}
+                        className="p-1 rounded-md hover:bg-slate-100 transition-colors text-slate-400 hover:text-blue-600"
+                        title="Edit"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(user.id, user.name)}
+                        className="p-1 rounded-md hover:bg-slate-100 transition-colors text-slate-400 hover:text-red-600"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      <button className="p-1 rounded-md hover:bg-slate-100 transition-colors">
+                        <MoreHorizontal className="w-5 h-5 text-slate-400" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -113,7 +149,7 @@ export function UsersTable({ users }: UsersTableProps) {
                   colSpan={9}
                   className="px-6 py-12 text-center text-sm text-slate-500"
                 >
-                  No users found matching your search.
+                  No users found matching your criteria.
                 </td>
               </tr>
             )}

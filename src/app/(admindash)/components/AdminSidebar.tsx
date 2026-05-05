@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React from "react";
-import { X, LayoutDashboard, Calendar, BarChart3, Building2, Users, FileEdit, BookOpen, MessageSquare, Ticket, LogOut } from "lucide-react";
+import { X, LayoutDashboard, Calendar, BarChart3, Building2, Users, FileEdit, BookOpen, MessageSquare, Ticket, LifeBuoy, LogOut } from "lucide-react";
 import { useLogoutMutation } from "@/lib/queries/identityService/useIdentityService";
 import useSession from "@/hooks/useSession";
 
@@ -18,6 +18,7 @@ const menuItems = [
   { name: "Blogs", path: "/a/blogs", icon: BookOpen },
   { name: "Contact Submissions", path: "/a/contact", icon: MessageSquare },
   { name: "Coupon Management", path: "/a/coupons", icon: Ticket },
+  { name: "Tickets", path: "/a/tickets", icon: LifeBuoy },
 ];
 
 interface AdminSidebarProps {

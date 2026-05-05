@@ -11,8 +11,7 @@ import SectionLabel from '@/app/(admindash)/a/analytics/components/SectionLabel'
 
 export default function AnalyticsPage() {
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6 overflow-x-hidden w-full">
-      <div className="max-w-7xl mx-auto w-full">
+    <div className="p-4 md:p-6 overflow-x-hidden w-full">
 
         {/* Header */}
         <Header />
@@ -54,8 +53,6 @@ export default function AnalyticsPage() {
         <div className="mb-6 w-full">
           <FeatureUsageChart />
         </div>
-
-      </div>
     </div>
   );
 }

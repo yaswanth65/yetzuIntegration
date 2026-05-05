@@ -46,8 +46,8 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-1 bg-[#F9FAFB] min-h-screen font-['Inter']">
-      <div className="mx-auto bg-white rounded-[20px] shadow-none border border-gray-100 overflow-hidden">
+    <div className="font-sans">
+      <div className="max-w-[800px] bg-white rounded-[20px] shadow-none border border-gray-100 overflow-hidden">
         {/* Header Banner */}
         <div className="h-48 bg-gradient-to-r from-blue-100 via-blue-200 to-blue-400 relative">
           <button className="absolute top-4 right-4 p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 transition-colors">

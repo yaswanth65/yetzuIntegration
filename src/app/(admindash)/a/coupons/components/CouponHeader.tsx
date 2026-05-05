@@ -14,7 +14,7 @@ export default function CouponHeader({ onNewCoupon }: CouponHeaderProps) {
           <span>&gt;</span>
           <span className="font-semibold text-slate-900">Coupon Management</span>
         </div>
-        <h1 className="text-xl font-semibold text-slate-900">Coupon Management</h1>
+        <h1 className="text-2xl font-medium text-[#021165] sm:text-3xl md:text-4xl">Coupon Management</h1>
         <p className="text-sm text-gray-500 mt-1">
           Boost sales by giving customers special offers and discounts.
         </p>

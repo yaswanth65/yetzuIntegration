@@ -1,114 +1,40 @@
 import React from 'react';
 import { Search, Filter, MoreVertical } from 'lucide-react';
 
-const mockCoupons = [
-  {
-    id: 1,
-    name: 'First Order',
-    discountTitle: '₹500.00 OFF',
-    discountSubtitle: 'on orders over ₹999.00',
-    type: '₹ Discount',
-    code: 'SUBMIT500',
-    uses: '0',
-    status: 'Active',
-  },
-  {
-    id: 2,
-    name: 'First Order',
-    discountTitle: '20% OFF',
-    discountSubtitle: 'on orders over 2,499.00',
-    type: '% Discount',
-    code: 'SUBMIT500',
-    uses: '0',
-    status: 'Expired',
-  },
-  {
-    id: 3,
-    name: 'First Order',
-    discountTitle: 'Only ₹500',
-    discountSubtitle: '',
-    type: 'Sale Price',
-    code: 'SUBMIT500',
-    uses: '0',
-    status: 'Active',
-  },
-  {
-    id: 4,
-    name: 'April Fools',
-    discountTitle: 'Buy 1 Get 1 Free',
-    discountSubtitle: 'All products',
-    type: 'Buy X Get Y Free',
-    code: 'SUBMIT500',
-    uses: '0',
-    status: 'Active',
-  },
-  {
-    id: 5,
-    name: 'April Fools',
-    discountTitle: '₹500.00 OFF',
-    discountSubtitle: 'on orders over ₹999.00',
-    type: '₹ Discount',
-    code: 'SUBMIT500',
-    uses: '0',
-    status: 'Expired',
-  },
-  {
-    id: 6,
-    name: 'April Fools',
-    discountTitle: 'Buy 1 Get 1 Free',
-    discountSubtitle: 'All products',
-    type: 'Buy X Get Y Free',
-    code: 'SUBMIT500',
-    uses: '0',
-    status: 'Active',
-  },
-  {
-    id: 7,
-    name: 'April Fools',
-    discountTitle: '₹500.00 OFF',
-    discountSubtitle: 'on orders over ₹999.00',
-    type: '₹ Discount',
-    code: 'SUBMIT500',
-    uses: '0',
-    status: 'Active',
-  },
-  {
-    id: 8,
-    name: 'April Fools',
-    discountTitle: 'Buy 1 Get 1 Free',
-    discountSubtitle: 'All products',
-    type: 'Buy X Get Y Free',
-    code: 'SUBMIT500',
-    uses: '0',
-    status: 'Active',
-  },
-  {
-    id: 9,
-    name: 'April Fools',
-    discountTitle: '₹500.00 OFF',
-    discountSubtitle: 'on orders over ₹999.00',
-    type: '₹ Discount',
-    code: 'SUBMIT500',
-    uses: '0',
-    status: 'Expired',
-  },
-  {
-    id: 10,
-    name: 'April Fools',
-    discountTitle: 'Only ₹500',
-    discountSubtitle: '',
-    type: 'Sale Price',
-    code: 'SUBMIT500',
-    uses: '0',
-    status: 'Active',
-  },
-];
-
 interface CouponTableProps {
+  coupons: any[];
+  loading: boolean;
   onEdit: (coupon: any) => void;
 }
 
-export default function CouponTable({ onEdit }: CouponTableProps) {
+export default function CouponTable({ coupons, loading, onEdit }: CouponTableProps) {
+  const getDiscountDisplay = (coupon: any) => {
+    const discountType = coupon.discountType || '';
+    const discountValue = coupon.discountValue || 0;
+    
+    if (discountType === 'percentage') {
+      return { title: `${discountValue}% OFF`, subtitle: '' };
+    } else if (discountType === 'fixed') {
+      return { title: `₹${discountValue}.00 OFF`, subtitle: `on orders over ₹999.00` };
+    }
+    return { title: coupon.name || '', subtitle: '' };
+  };
+
+  const getTypeDisplay = (coupon: any) => {
+    const discountType = coupon.discountType || '';
+    if (discountType === 'percentage') return '% Discount';
+    if (discountType === 'fixed') return '₹ Discount';
+    return discountType || 'Discount';
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-2xl border border-gray-200 mt-6 w-full p-8 text-center">
+        <p className="text-sm text-gray-500">Loading coupons...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-2xl border border-gray-200 mt-6 w-full">
       {/* Top Search & Filter */}
@@ -142,47 +68,58 @@ export default function CouponTable({ onEdit }: CouponTableProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {mockCoupons.map((coupon) => (
-              <tr key={coupon.id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="py-4 px-6 text-sm font-medium text-slate-700">
-                  {coupon.name}
-                </td>
-                <td className="py-4 px-6 text-sm text-slate-600">
-                  <div className="flex flex-col">
-                    <span>{coupon.discountTitle}</span>
-                    {coupon.discountSubtitle && (
-                      <span className="text-gray-400">{coupon.discountSubtitle}</span>
-                    )}
-                  </div>
-                </td>
-                <td className="py-4 px-6 text-sm font-medium text-slate-600">
-                  {coupon.type}
-                </td>
-                <td className="py-4 px-6 text-sm font-medium text-slate-700">
-                  {coupon.code}
-                </td>
-                <td className="py-4 px-6 text-sm text-slate-600">
-                  {coupon.uses}
-                </td>
-                <td className="py-4 px-6">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                    coupon.status === 'Active' 
-                      ? 'bg-[#ECFDF5] text-[#10B981]' 
-                      : 'bg-[#FEF2F2] text-[#EF4444]'
-                  }`}>
-                    {coupon.status}
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-center">
-                  <button 
-                    onClick={() => onEdit(coupon)}
-                    className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors inline-flex justify-center items-center"
-                  >
-                    <MoreVertical className="w-5 h-5" />
-                  </button>
+            {coupons.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="py-8 text-center text-sm text-gray-500">
+                  No coupons found
                 </td>
               </tr>
-            ))}
+            ) : (
+              coupons.map((coupon) => {
+                const discount = getDiscountDisplay(coupon);
+                return (
+                  <tr key={coupon.id || coupon._id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="py-4 px-6 text-sm font-medium text-slate-700">
+                      {coupon.name}
+                    </td>
+                    <td className="py-4 px-6 text-sm text-slate-600">
+                      <div className="flex flex-col">
+                        <span>{discount.title}</span>
+                        {discount.subtitle && (
+                          <span className="text-gray-400">{discount.subtitle}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 text-sm font-medium text-slate-600">
+                      {getTypeDisplay(coupon)}
+                    </td>
+                    <td className="py-4 px-6 text-sm font-medium text-slate-700">
+                      {coupon.code}
+                    </td>
+                    <td className="py-4 px-6 text-sm text-slate-600">
+                      {coupon.uses || '0'}
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                        coupon.status === 'active' || coupon.status === 'Active'
+                          ? 'bg-[#ECFDF5] text-[#10B981]' 
+                          : 'bg-[#FEF2F2] text-[#EF4444]'
+                      }`}>
+                        {coupon.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <button 
+                        onClick={() => onEdit(coupon)}
+                        className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors inline-flex justify-center items-center"
+                      >
+                        <MoreVertical className="w-5 h-5" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

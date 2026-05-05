@@ -7,7 +7,7 @@ import {
 import { formService } from "./formService";
 import { ContactFormPayload } from "./types";
 
-const { postContactInfo } = formService;
+const { postContactInfo, getContacts, createContact } = formService;
 
 const usePostContactInfo = (): UseMutationResult<
   any,
@@ -19,4 +19,24 @@ const usePostContactInfo = (): UseMutationResult<
   });
 };
 
-export { usePostContactInfo };
+const useGetContacts = (params?: {
+  page?: number;
+  limit?: number;
+}): UseQueryResult<any, unknown> => {
+  return useQuery<any, unknown>({
+    queryKey: ["adminContacts", params],
+    queryFn: () => getContacts(params),
+  });
+};
+
+const useCreateContact = (): UseMutationResult<
+  any,
+  unknown,
+  ContactFormPayload
+> => {
+  return useMutation<any, unknown, ContactFormPayload>({
+    mutationFn: createContact,
+  });
+};
+
+export { usePostContactInfo, useGetContacts, useCreateContact };

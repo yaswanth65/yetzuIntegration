@@ -61,11 +61,11 @@ const getStatusBadge = (status: string) => {
 
 export default function HelpAndSupportPage() {
   return (
-    <div className="w-full min-h-screen bg-[#F8F9FA] font-sans flex flex-col">
+    <div className="font-sans flex flex-col">
       
       {/* --- FULL WIDTH WHITE HEADER --- */}
       <div className="bg-white px-6 md:px-10 py-4 border-b border-gray-200 shrink-0">
-        <div className="max-w-[1600px] mx-auto">
+        <div>
           <h1 className="text-[26px] font-bold text-gray-900 mb-1">Help & Support</h1>
           {/* Subtitle explicitly matches the design text provided */}
           <p className="text-[14px] text-gray-500">Complete record of all your sessions</p>
@@ -73,7 +73,7 @@ export default function HelpAndSupportPage() {
       </div>
 
       {/* --- MAIN GRAY CONTENT AREA --- */}
-      <div className="flex-1 p-4 md:p-10 max-w-[1600px] mx-auto w-full">
+      <div className="flex-1 p-4 md:p-10 w-full">
         
         {/* --- TOP ACTION CARDS --- */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

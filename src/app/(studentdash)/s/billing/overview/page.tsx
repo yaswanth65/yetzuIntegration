@@ -124,7 +124,7 @@ const getMetricIconStyles = (colorScheme: string) => {
 
 export default function PaymentsOverviewPage() {
   return (
-    <div className="w-full min-h-screen bg-[#F8F9FA] font-sans flex flex-col">
+    <div className="font-sans">
       {/* --- HEADER --- */}
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-medium text-[#021165]">

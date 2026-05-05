@@ -266,7 +266,7 @@ export default function AssignmentPage() {
   const completedCount = assignments.filter((assignment) => assignment.type === "completed").length;
 
   return (
-    <div className="bg-[#F8F9FA] min-h-screen font-sans flex flex-col">
+    <div className="font-sans">
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div>

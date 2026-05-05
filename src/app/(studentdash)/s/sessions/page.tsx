@@ -368,7 +368,7 @@ export default function SessionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] font-sans">
+    <div className="font-sans">
       <div className="mb-8">
         <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
@@ -423,7 +423,7 @@ export default function SessionsPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-[1600px]">
+      <div>
         {isLoading ? (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((item) => (

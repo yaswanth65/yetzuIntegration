@@ -14,7 +14,7 @@ export default function OrganizationProfilePage({ params }: { params: Promise<{ 
   const [activeTab, setActiveTab] = useState('overview');
 
   return (
-    <div className="min-h-screen bg-[#FBFBFB] md:p-8 p-4">
+    <div className="md:p-8 p-4">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
@@ -22,7 +22,7 @@ export default function OrganizationProfilePage({ params }: { params: Promise<{ 
             <Link href="/a/organisation" className="p-1 hover:bg-gray-100 rounded-full transition-colors">
               <ChevronLeft className="w-5 h-5 text-gray-500" />
             </Link>
-            <h1 className="text-2xl font-bold text-[#0A0A0A]">Stanford Institute</h1>
+            <h1 className="text-2xl font-medium text-[#021165] sm:text-3xl md:text-4xl">Stanford Institute</h1>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#ECFDF5] text-[#10B981]">
               Active
             </span>

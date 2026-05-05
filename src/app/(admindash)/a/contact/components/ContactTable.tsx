@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Eye } from 'lucide-react';
+import { useGetContacts } from "@/lib/queries/formService/useFormService";
+import { asArray } from "@/lib/api";
 
 interface ContactTableProps {
   onViewClick: (contactData: any) => void;
@@ -7,7 +9,23 @@ interface ContactTableProps {
 
 export default function ContactTable({ onViewClick }: ContactTableProps) {
   const [activeTab, setActiveTab] = useState('Contact');
-  const contactData: any[] = [];
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All Status');
+  const [typeFilter, setTypeFilter] = useState('All Inquiry Types');
+  const [sortBy, setSortBy] = useState('Newest First');
+
+  const { data, isLoading } = useGetContacts();
+  const contactData = asArray(data?.data || data?.contacts || data || []);
+
+  const filteredContacts = contactData.filter((item: any) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      (item.name || '').toLowerCase().includes(query) ||
+      (item.email || '').toLowerCase().includes(query) ||
+      (item.mobile || '').toLowerCase().includes(query)
+    );
+  });
 
   return (
     <div className="bg-white rounded-[20px] border border-gray-200 mt-8 w-full shadow-sm overflow-hidden p-6 pb-12">
@@ -41,19 +59,41 @@ export default function ContactTable({ onViewClick }: ContactTableProps) {
           <input 
             type="text" 
             placeholder="Search name, email, phone..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-800"
           />
         </div>
         
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <select className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none pr-8 relative bg-no-repeat" style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundPosition: 'right 0.5rem center', backgroundSize: '1em 1em' }}>
+          <select 
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none pr-8 relative bg-no-repeat"
+            style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundPosition: 'right 0.5rem center', backgroundSize: '1em 1em' }}
+          >
             <option>All Status</option>
+            <option>Pending</option>
+            <option>Resolved</option>
           </select>
-          <select className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none pr-8 relative bg-no-repeat" style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundPosition: 'right 0.5rem center', backgroundSize: '1em 1em' }}>
+          <select 
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none pr-8 relative bg-no-repeat"
+            style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundPosition: 'right 0.5rem center', backgroundSize: '1em 1em' }}
+          >
             <option>All Inquiry Types</option>
+            <option>General</option>
+            <option>Support</option>
           </select>
-          <select className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none pr-8 relative bg-no-repeat" style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundPosition: 'right 0.5rem center', backgroundSize: '1em 1em' }}>
+          <select 
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none pr-8 relative bg-no-repeat"
+            style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundPosition: 'right 0.5rem center', backgroundSize: '1em 1em' }}
+          >
             <option>Newest First</option>
+            <option>Oldest First</option>
           </select>
         </div>
       </div>
@@ -72,39 +112,42 @@ export default function ContactTable({ onViewClick }: ContactTableProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {contactData.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={6} className="py-10 px-6 text-center text-sm text-gray-500">
+                  Loading contacts...
+                </td>
+              </tr>
+            ) : filteredContacts.length === 0 ? (
               <tr>
                 <td colSpan={6} className="py-10 px-6 text-center text-sm text-gray-500">
                   No contact submissions found
                 </td>
               </tr>
-            ) : contactData.map((item) => (
-              <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group">
+            ) : filteredContacts.map((item: any, index: number) => (
+              <tr key={item.id || item._id || index} className="hover:bg-gray-50/50 transition-colors group">
                 <td className="py-5 px-6 text-sm text-slate-600 font-medium">
-                  {item.submittedDate}
+                  {item.createdAt || item.created_at ? new Date(item.createdAt || item.created_at).toLocaleDateString() : 'N/A'}
                 </td>
                 <td className="py-5 px-6">
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-bold text-slate-800">{item.user.name}</span>
-                    <span className="text-xs text-gray-500">{item.user.email}</span>
-                    <span className="text-xs text-gray-500">{item.user.phone}</span>
-                    <span className="text-xs text-gray-500">{item.user.institution}</span>
+                    <span className="text-sm font-bold text-slate-800">{item.name || 'N/A'}</span>
+                    <span className="text-xs text-gray-500">{item.email || 'N/A'}</span>
+                    <span className="text-xs text-gray-500">{item.mobile || 'N/A'}</span>
+                    <span className="text-xs text-gray-500">{item.medical_school_affiliation || 'N/A'}</span>
                   </div>
                 </td>
                 <td className="py-5 px-6 text-sm text-slate-700 font-medium">
-                  {item.inquiry}
+                  {item.subject || 'General'}
                 </td>
                 <td className="py-5 px-6 text-sm text-slate-600 truncate max-w-[200px]">
-                  {item.message}
+                  {item.description || 'No message'}
                 </td>
                 <td className="py-5 px-6">
                   <div className="flex flex-col gap-2 items-start">
-                    <span className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md border ${
-                      item.status === 'Pending' ? 'bg-[#E0F2FE] text-[#0284C7] border-blue-200' : 'bg-[#DCFCE7] text-[#16A34A] border-green-200'
-                    }`}>
-                      {item.status.toUpperCase()}
+                    <span className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md border bg-[#E0F2FE] text-[#0284C7] border-blue-200`}>
+                      Pending
                     </span>
-                    
                   </div>
                 </td>
                 <td className="py-5 px-6 text-center">

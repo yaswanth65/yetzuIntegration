@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import SessionTable from "@/app/(admindash)/components/SessionTable";
 import SessionDetailsPanel from "@/app/(admindash)/components/SessionDetailsPanel";
 import { Session, Status, Tab } from "@/app/(admindash)/types/SessionType";
 import { AdminAPI, asArray } from "@/lib/api";
 import CreateSession from "./CreateSession";
 import CalendarView from "./CalendarView";
-import { Plus, Search, List, Calendar as CalendarIcon, Filter } from "lucide-react";
+import { Plus, Search, List, Calendar as CalendarIcon, Filter, X, Check } from "lucide-react";
 
 interface Props {
   data: Session[];
@@ -22,6 +22,15 @@ const tabStatusMap: Record<Exclude<Tab, "All">, Status> = {
   Draft: "draft",
 };
 
+interface FilterSection {
+  title: string;
+  type: "checkboxes" | "text" | "number-range" | "select";
+  options?: { label: string; value: string }[];
+  placeholder?: string;
+  minPlaceholder?: string;
+  maxPlaceholder?: string;
+}
+
 export default function AllSessions({ data }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("All");
   const [search, setSearch] = useState("");
@@ -29,6 +38,9 @@ export default function AllSessions({ data }: Props) {
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [localData, setLocalData] = useState<Session[]>([]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<Record<string, any>>({});
+  const filterPanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setLocalData([]);
@@ -77,15 +89,21 @@ export default function AllSessions({ data }: Props) {
         else if (status === "completed" || status === "Completed") status = "Completed";
         else if (status === "missed" || status === "Missed") status = "Missed";
 
+        const dateTime = rawDate ? new Date(rawDate) : new Date();
+
         return {
           id: String(item.id || item._id || item.sessionId || item.sessionCode || `SESSION-${index + 1}`),
-          title: String(item.title || "Untitled Session"),
+          title: String(item.title || item.name || item.courseTitle || "Untitled Session"),
           type: String(sessionType || "Webinar"),
           educator: String(educatorName || "Educator"),
           students: Number(studentsCount) || 0,
-          date: rawDate ? new Date(rawDate).toLocaleDateString() : "TBD",
+          date: rawDate ? dateTime.toLocaleDateString() : "TBD",
+          dateTime: dateTime,
           status: String(status),
           sessionCode: String(item.sessionCode || ""),
+          startTime: item.startTime || "",
+          endTime: item.endTime || "",
+          mode: item.mode || "",
         };
       });
       setLocalData(mappedData as Session[]);
@@ -104,7 +122,6 @@ export default function AllSessions({ data }: Props) {
         if (typeof edu === 'string') {
           educatorName = edu;
         } else if (edu && typeof edu === 'object' && edu !== null) {
-          // Handle both {name: "..."} and full object with qualification, etc.
           educatorName = edu.name || edu.full_name || edu.displayName || String(edu.id || "");
         } else if (item.educatorName) {
           educatorName = item.educatorName;
@@ -134,7 +151,6 @@ export default function AllSessions({ data }: Props) {
           studentsCount = item.enrolledCount;
         }
 
-        // Map status correctly - sessions come as "draft" from API
         let status = item.status || "Scheduled";
         if (status === "draft") status = "draft";
         else if (status === "upcoming" || status === "Upcoming") status = "Scheduled";
@@ -142,16 +158,18 @@ export default function AllSessions({ data }: Props) {
         else if (status === "completed" || status === "Completed") status = "Completed";
         else if (status === "missed" || status === "Missed") status = "Missed";
 
+        const dateTime = rawDate ? new Date(rawDate) : new Date();
+
         return {
           id: String(item.id || item._id || item.sessionId || item.sessionCode || `SESSION-${index + 1}`),
           title: String(item.title || item.name || item.courseTitle || "Untitled Session"),
           type: String(sessionType || "Webinar"),
           educator: String(educatorName || "Educator"),
           students: Number(studentsCount) || 0,
-          date: rawDate ? new Date(rawDate).toLocaleDateString() : "TBD",
+          date: rawDate ? dateTime.toLocaleDateString() : "TBD",
+          dateTime: dateTime,
           status: String(status),
           sessionCode: String(item.sessionCode || ""),
-          // Keep original fields for calendar view
           startTime: item.startTime || "",
           endTime: item.endTime || "",
           mode: item.mode || "",
@@ -162,11 +180,65 @@ export default function AllSessions({ data }: Props) {
       console.error("Failed to refresh sessions:", error);
     }
   };
+
+  // Close filter panel on outside click
+  useEffect(() => {
+    if (!isFilterOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (filterPanelRef.current && !filterPanelRef.current.contains(e.target as Node)) {
+        setIsFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [isFilterOpen]);
+
   const [sortBy, setSortBy] = useState<"date" | "title" | "students">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [showFilter, setShowFilter] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<string>("All");
-  const [filterEducator, setFilterEducator] = useState<string>("All");
+
+  const filterSections: FilterSection[] = [
+    {
+      title: "Status",
+      type: "checkboxes",
+      options: [
+        { label: "Scheduled", value: "Scheduled" },
+        { label: "Completed", value: "Completed" },
+        { label: "Missed", value: "Missed" },
+        { label: "Live", value: "Live" },
+        { label: "Draft", value: "draft" },
+      ],
+    },
+    {
+      title: "Educator",
+      type: "select",
+      options: [
+        ...[...new Set(localData.map(s => s.educator))].map(edu => ({ label: edu, value: edu })),
+      ],
+    },
+    {
+      title: "Session Type",
+      type: "checkboxes",
+      options: [
+        { label: "Webinar", value: "Webinar" },
+        { label: "Workshop", value: "Workshop" },
+        { label: "Course", value: "Course" },
+      ],
+    },
+    {
+      title: "Students Range",
+      type: "number-range",
+      minPlaceholder: "Min students",
+      maxPlaceholder: "Max students",
+    },
+  ];
+
+  const handleApplyFilters = () => {
+    setIsFilterOpen(false);
+  };
+
+  const handleResetFilters = () => {
+    setActiveFilters({});
+  };
 
   const filteredData = useMemo(() => {
     let list = [...localData];
@@ -176,12 +248,26 @@ export default function AllSessions({ data }: Props) {
       list = list.filter((session) => session.status === status);
     }
 
-    if (filterStatus !== "All") {
-      list = list.filter((session) => session.status === filterStatus);
+    // Apply mega filter
+    if (activeFilters["Status"] && activeFilters["Status"].length > 0) {
+      list = list.filter((session) => activeFilters["Status"].includes(session.status));
     }
 
-    if (filterEducator !== "All") {
-      list = list.filter((session) => session.educator === filterEducator);
+    if (activeFilters["Educator"]) {
+      list = list.filter((session) => session.educator === activeFilters["Educator"]);
+    }
+
+    if (activeFilters["Session Type"] && activeFilters["Session Type"].length > 0) {
+      list = list.filter((session) => activeFilters["Session Type"].includes(session.type));
+    }
+
+    if (activeFilters["Students Range"]) {
+      const { min, max } = activeFilters["Students Range"];
+      list = list.filter((session) => {
+        if (min && session.students < Number(min)) return false;
+        if (max && session.students > Number(max)) return false;
+        return true;
+      });
     }
 
     if (search.trim()) {
@@ -210,7 +296,7 @@ export default function AllSessions({ data }: Props) {
     });
 
     return list;
-  }, [activeTab, localData, search, sortBy, sortOrder, filterStatus, filterEducator]);
+  }, [activeTab, localData, search, sortBy, sortOrder, activeFilters]);
 
   const tabCounts = useMemo(
     () => ({
@@ -222,6 +308,12 @@ export default function AllSessions({ data }: Props) {
     }),
     [localData]
   );
+
+  const activeFilterCount = Object.values(activeFilters).reduce((acc: number, val) => {
+    if (Array.isArray(val)) return acc + val.length;
+    if (val && typeof val === "object") return acc + Object.values(val).filter(Boolean).length;
+    return acc + (val ? 1 : 0);
+  }, 0);
 
   if (isCreating) {
     return (
@@ -306,53 +398,125 @@ export default function AllSessions({ data }: Props) {
               className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-[#042BFD]/20 transition-all shadow-sm"
             />
           </div>
-          <button 
-            onClick={() => setShowFilter(!showFilter)}
-            className={`p-3 bg-white border border-gray-100 rounded-2xl transition-all shadow-sm ${showFilter ? "text-[#042BFD] border-blue-200 bg-blue-50" : "text-gray-400 hover:text-[#021165] hover:border-blue-100"}`}
-          >
-            <Filter size={20} />
-          </button>
-        </div>
-
-        {/* Filter Dropdown */}
-        {showFilter && (
-          <div className="flex flex-col sm:flex-row gap-4 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Status</label>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-100"
-              >
-                <option value="All">All Statuses</option>
-                <option value="Scheduled">Scheduled</option>
-                <option value="Completed">Completed</option>
-                <option value="Missed">Missed</option>
-                <option value="Live">Live</option>
-                <option value="draft">Draft</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Educator</label>
-              <select
-                value={filterEducator}
-                onChange={(e) => setFilterEducator(e.target.value)}
-                className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-100"
-              >
-                <option value="All">All Educators</option>
-                {[...new Set(localData.map(s => s.educator))].map(edu => (
-                  <option key={edu} value={edu}>{edu}</option>
-                ))}
-              </select>
-            </div>
-            <button
-              onClick={() => { setFilterStatus("All"); setFilterEducator("All"); }}
-              className="self-end px-4 py-2 text-xs font-bold text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+          <div className="relative">
+            <button 
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className={`p-3 bg-white border rounded-2xl transition-all shadow-sm ${
+                isFilterOpen || activeFilterCount > 0
+                  ? "text-[#042BFD] border-blue-200 bg-blue-50"
+                  : "text-gray-400 hover:text-[#021165] hover:border-blue-100 border-gray-100"
+              }`}
             >
-              Clear Filters
+              <Filter size={20} />
             </button>
+            {activeFilterCount > 0 && (
+              <span className="absolute -top-2 -right-2 w-5 h-5 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
+
+            {/* Mega Dropdown Filter Panel */}
+            {isFilterOpen && (
+              <div ref={filterPanelRef} className="absolute right-0 top-full mt-2 z-50 w-[480px] bg-white rounded-xl border border-slate-200 shadow-2xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-900">Filters</h3>
+                  <button onClick={() => setIsFilterOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors"><X size={16} /></button>
+                </div>
+                <div className="p-6 space-y-6 max-h-[400px] overflow-y-auto">
+                  {filterSections.map((section, idx) => (
+                    <div key={idx}>
+                      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">{section.title}</h4>
+                      
+                      {section.type === "checkboxes" && section.options && (
+                        <div className="grid grid-cols-2 gap-2">
+                          {section.options.map((option) => {
+                            const isChecked = (activeFilters[section.title] || []).includes(option.value);
+                            return (
+                              <label
+                                key={option.value}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all ${
+                                  isChecked
+                                    ? "border-blue-500 bg-blue-50 text-blue-700"
+                                    : "border-slate-200 hover:bg-slate-50 text-slate-700"
+                                }`}
+                                onClick={() => {
+                                  const current = activeFilters[section.title] || [];
+                                  const updated = isChecked 
+                                    ? current.filter((v: string) => v !== option.value)
+                                    : [...current, option.value];
+                                  setActiveFilters({ ...activeFilters, [section.title]: updated });
+                                }}
+                              >
+                                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
+                                  isChecked ? "border-blue-500 bg-blue-500 text-white" : "border-slate-300"
+                                }`}>
+                                  {isChecked && <Check size={12} strokeWidth={3} />}
+                                </div>
+                                <span className="text-sm font-medium">{option.label}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {section.type === "select" && section.options && (
+                        <select
+                          value={activeFilters[section.title] || ""}
+                          onChange={(e) => setActiveFilters({ ...activeFilters, [section.title]: e.target.value })}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        >
+                          <option value="">All Educators</option>
+                          {section.options.map((option) => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                          ))}
+                        </select>
+                      )}
+
+                      {section.type === "number-range" && (
+                        <div className="grid grid-cols-2 gap-3">
+                          <input
+                            type="number"
+                            placeholder={section.minPlaceholder || "Min"}
+                            value={(activeFilters[section.title] || {}).min || ""}
+                            onChange={(e) => setActiveFilters({
+                              ...activeFilters,
+                              [section.title]: { ...(activeFilters[section.title] || {}), min: e.target.value }
+                            })}
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                          />
+                          <input
+                            type="number"
+                            placeholder={section.maxPlaceholder || "Max"}
+                            value={(activeFilters[section.title] || {}).max || ""}
+                            onChange={(e) => setActiveFilters({
+                              ...activeFilters,
+                              [section.title]: { ...(activeFilters[section.title] || {}), max: e.target.value }
+                            })}
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50">
+                  <button
+                    onClick={() => { setActiveFilters({}); handleResetFilters(); }}
+                    className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-red-600 transition-colors"
+                  >
+                    Reset
+                  </button>
+                  <button
+                    onClick={handleApplyFilters}
+                    className="px-6 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors"
+                  >
+                    Apply Filters
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* View Toggle */}

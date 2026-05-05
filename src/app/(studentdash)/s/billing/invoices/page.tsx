@@ -143,11 +143,11 @@ export default function InvoicesPage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#F8F9FA] font-sans relative">
+    <div className="font-sans relative">
       
       {/* --- FULL WIDTH WHITE HEADER --- */}
       <div className="bg-white px-6 md:px-10 py-6 border-b border-gray-200">
-        <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-[26px] font-bold text-gray-900 mb-1">Invoices</h1>
             <p className="text-[14px] text-gray-500">Complete record of all your sessions</p>
@@ -170,7 +170,7 @@ export default function InvoicesPage() {
       </div>
 
       {/* --- MAIN GRAY CONTENT AREA --- */}
-      <div className="p-6 md:px-10 max-w-[1600px] mx-auto">
+      <div className="p-6 md:px-10">
         
         {/* INVOICES TABLE (White Background) */}
         <div className="bg-white rounded-[16px] border border-gray-200 shadow-sm overflow-hidden">

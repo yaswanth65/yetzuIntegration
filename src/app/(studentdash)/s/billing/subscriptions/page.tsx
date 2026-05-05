@@ -85,11 +85,11 @@ export default function SubscriptionsPage() {
   const closeCancelModal = () => setIsCancelConfirmModalOpen(false);
 
   return (
-    <div className="w-full min-h-screen bg-[#F8F9FA] font-sans relative">
+    <div className="font-sans relative">
       
       {/* --- FULL WIDTH WHITE HEADER --- */}
       <div className="bg-white px-6 md:px-10 py-6  border-b border-gray-200">
-        <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-[26px] font-bold text-gray-900 mb-1">Subscriptions</h1>
             <p className="text-[14px] text-gray-500">Manage your active plans, billing cycles, and renewal dates.</p>
@@ -112,7 +112,7 @@ export default function SubscriptionsPage() {
       </div>
 
       {/* --- MAIN GRAY CONTENT AREA --- */}
-      <div className="p-6 md:px-10 max-w-[1600px] mx-auto">
+      <div className="p-6 md:px-10">
         
         {/* --- HERO BANNER --- */}
         <div className="  bg-gradient-to-b from-[#030213] via-[#1A1A4E] to-[#2D2D7E] rounded-[24px] p-6 md:p-8 lg:px-10 flex flex-col lg:flex-row justify-between lg:items-center gap-8 mb-8 shadow-md">

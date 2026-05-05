@@ -236,42 +236,22 @@ export const StudentAPI = {
     }
   },
 
-  getCertificates: async () => {
-    try {
-      const response = await authApi.get("/api/certificate/student", {
-        withCredentials: true, // Send cookies automatically (interceptor adds headers)
-      });
-      return dataOf(response);
-    } catch (error) {
-      logApiFailure("StudentAPI.getCertificates", error);
-      throw error;
-    }
-  },
-
-  getCertificateById: async (certificateId: string) => {
-    try {
-      const response = await authApi.get(`/api/certificate/${certificateId}`);
-      return dataOf(response);
-    } catch (error) {
-      logApiFailure("StudentAPI.getCertificateById", error, { certificateId });
-      throw error;
-    }
-  },
+  // Certificate methods moved to CertificateAPI.student namespace
 
   // Blogs (public - no auth required)
-  getBlogs: async () => {
+  getBlogs: async (params?: { search?: string; page?: number; limit?: number }) => {
     try {
-      const response = await api.get("/api/blogs");
+      const response = await api.get("/api/public/blogs", { params });
       return dataOf(response);
     } catch (error) {
-      logApiFailure("StudentAPI.getBlogs", error);
+      logApiFailure("StudentAPI.getBlogs", error, { params });
       throw error;
     }
   },
 
   getBlogById: async (blogId: string) => {
     try {
-      const response = await api.get(`/api/blogs/${blogId}`);
+      const response = await api.get(`/api/public/blogs/${blogId}`);
       return dataOf(response);
     } catch (error) {
       logApiFailure("StudentAPI.getBlogById", error, { blogId });
@@ -316,17 +296,7 @@ export const StudentAPI = {
     }
   },
 
-  downloadCertificate: async (certificateId: string) => {
-    try {
-      const response = await authApi.get(`/api/certificate/${certificateId}/download`, {
-        responseType: 'blob'
-      });
-      return response;
-    } catch (error) {
-      logApiFailure("StudentAPI.downloadCertificate", error, { certificateId });
-      throw error;
-    }
-  },
+  // Certificate methods moved to CertificateAPI.student namespace
 
   editProfile: async (data: { name?: string; email?: string; mobileno?: string; phone?: string }) => {
     const payload = {
@@ -687,35 +657,7 @@ export const EducatorAPI = {
     }
   },
 
-  getCertificates: async () => {
-    try {
-      const response = await authApi.get("/api/certificate/educator/list");
-      return dataOf(response);
-    } catch (error) {
-      logApiFailure("EducatorAPI.getCertificates", error);
-      throw error;
-    }
-  },
-
-  generateCertificate: async (payload: { sessionId: string; studentId: string; studentName: string }) => {
-    try {
-      const response = await authApi.post("/api/certificate/generate", payload);
-      return dataOf(response);
-    } catch (error) {
-      logApiFailure("EducatorAPI.generateCertificate", error, { payload });
-      throw error;
-    }
-  },
-
-  revokeCertificate: async (certificateId: string) => {
-    try {
-      const response = await authApi.post(`/api/certificate/${certificateId}/revoke`);
-      return dataOf(response);
-    } catch (error) {
-      logApiFailure("EducatorAPI.revokeCertificate", error, { certificateId });
-      throw error;
-    }
-  },
+  // Certificate methods moved to CertificateAPI.educator namespace
 
   updateAssignmentStatus: async (payload: { assignmentId: string; status: string }) => {
     try {
@@ -789,6 +731,43 @@ export const EducatorAPI = {
       return dataOf(response);
     } catch (error) {
       logApiFailure("EducatorAPI.getNotifications", error);
+      throw error;
+    }
+  },
+
+  // Tickets
+  getTickets: async () => {
+    try {
+      const response = await authApi.get("/api/educator/tickets", {
+        withCredentials: true,
+      });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.getTickets", error);
+      throw error;
+    }
+  },
+
+  createTicket: async (payload: { subject: string; description: string; priority?: string }) => {
+    try {
+      const response = await authApi.post("/api/educator/tickets", payload, {
+        withCredentials: true,
+      });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.createTicket", error, { payload });
+      throw error;
+    }
+  },
+
+  getTicketById: async (ticketId: string) => {
+    try {
+      const response = await authApi.get(`/api/educator/tickets/${ticketId}`, {
+        withCredentials: true,
+      });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.getTicketById", error, { ticketId });
       throw error;
     }
   },
@@ -998,35 +977,62 @@ export const AdminAPI = {
     }
   },
 
-  getCertificates: async (params?: { page?: number; limit?: number }) => {
+  // Coupons
+  getCoupons: async (params?: { page?: number; limit?: number }) => {
     try {
-      const response = await authApi.get("/api/certificate/admin/list", { params });
+      const response = await authApi.get("/api/admin/coupons", { params });
       return dataOf(response);
     } catch (error) {
-      logApiFailure("AdminAPI.getCertificates", error, { params });
+      logApiFailure("AdminAPI.getCoupons", error, { params });
       throw error;
     }
   },
 
-  getCertificateById: async (certificateId: string) => {
+  createCoupon: async (payload: {
+    name: string;
+    code: string;
+    discountType: string;
+    discountValue: number;
+    maxUses?: number;
+    status?: string;
+  }) => {
     try {
-      const response = await authApi.get(`/api/certificate/admin/${certificateId}`);
+      const response = await authApi.post("/api/admin/coupons", payload);
       return dataOf(response);
     } catch (error) {
-      logApiFailure("AdminAPI.getCertificateById", error, { certificateId });
+      logApiFailure("AdminAPI.createCoupon", error, { payload });
       throw error;
     }
   },
 
-  verifyCertificate: async (certificateId: string) => {
+  updateCoupon: async (couponId: string, payload: {
+    name?: string;
+    code?: string;
+    discountType?: string;
+    discountValue?: number;
+    maxUses?: number;
+    status?: string;
+  }) => {
     try {
-      const response = await authApi.get(`/api/certificate/verify/${certificateId}`);
+      const response = await authApi.put(`/api/admin/coupons/${couponId}`, payload);
       return dataOf(response);
     } catch (error) {
-      logApiFailure("AdminAPI.verifyCertificate", error, { certificateId });
+      logApiFailure("AdminAPI.updateCoupon", error, { couponId, payload });
       throw error;
     }
   },
+
+  deleteCoupon: async (couponId: string) => {
+    try {
+      const response = await authApi.delete(`/api/admin/coupons/${couponId}`);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.deleteCoupon", error, { couponId });
+      throw error;
+    }
+  },
+
+  // Certificate methods moved to CertificateAPI.admin namespace
 
   getNotifications: async () => {
     try {
@@ -1049,7 +1055,19 @@ export const AdminAPI = {
     }
   },
 
-  createBlog: async (payload: { title: string; excerpt: string; content: string; status: string; tags?: string[] }) => {
+  createBlog: async (payload: {
+    title: string;
+    excerpt: string;
+    content: string;
+    status: string;
+    tags?: string[];
+    sections?: Array<{
+      img: string;
+      title: string;
+      description: string;
+      button?: { label: string; link: string };
+    }>;
+  }) => {
     try {
       const response = await authApi.post("/api/admin/blogs", payload);
       return dataOf(response);
@@ -1069,7 +1087,19 @@ export const AdminAPI = {
     }
   },
 
-  updateBlog: async (blogId: string, payload: { title?: string; excerpt?: string; content?: string; status?: string; tags?: string[] }) => {
+  updateBlog: async (blogId: string, payload: {
+    title?: string;
+    excerpt?: string;
+    content?: string;
+    status?: string;
+    tags?: string[];
+    sections?: Array<{
+      img: string;
+      title: string;
+      description: string;
+      button?: { label: string; link: string };
+    }>;
+  }) => {
     try {
       const response = await authApi.put(`/api/admin/blogs/${blogId}`, payload);
       return dataOf(response);
@@ -1118,6 +1148,133 @@ export const AdminAPI = {
       logApiFailure("AdminAPI.updateTicket", error, { ticketId, payload });
       throw error;
     }
+  },
+};
+
+export const CertificateAPI = {
+  student: {
+    getCertificates: async (): Promise<any> => {
+      try {
+        const response = await authApi.get("/api/student/certificates", {
+          withCredentials: true,
+        });
+        return dataOf(response);
+      } catch (error) {
+        logApiFailure("CertificateAPI.student.getCertificates", error);
+        throw error;
+      }
+    },
+
+    getCertificateById: async (certificateId: string): Promise<any> => {
+      try {
+        const response = await authApi.get(`/api/certificate/${certificateId}`, {
+          withCredentials: true,
+        });
+        return dataOf(response);
+      } catch (error) {
+        logApiFailure("CertificateAPI.student.getCertificateById", error, { certificateId });
+        throw error;
+      }
+    },
+
+    downloadCertificate: async (certificateId: string): Promise<any> => {
+      try {
+        const response = await authApi.get(`/api/certificate/${certificateId}/download`, {
+          responseType: "blob",
+          withCredentials: true,
+        });
+        return response;
+      } catch (error) {
+        logApiFailure("CertificateAPI.student.downloadCertificate", error, { certificateId });
+        throw error;
+      }
+    },
+  },
+
+  educator: {
+    getCertificates: async (): Promise<any> => {
+      try {
+        const response = await authApi.get("/api/certificate/educator/list", {
+          withCredentials: true,
+        });
+        return dataOf(response);
+      } catch (error) {
+        logApiFailure("CertificateAPI.educator.getCertificates", error);
+        throw error;
+      }
+    },
+
+    generateCertificate: async (payload: {
+      sessionId: string;
+      studentId: string;
+      studentName: string;
+    }): Promise<any> => {
+      try {
+        const response = await authApi.post("/api/certificate/generate", payload, {
+          withCredentials: true,
+        });
+        return dataOf(response);
+      } catch (error) {
+        logApiFailure("CertificateAPI.educator.generateCertificate", error, { payload });
+        throw error;
+      }
+    },
+
+    revokeCertificate: async (certificateId: string): Promise<any> => {
+      try {
+        const response = await authApi.post(
+          `/api/certificate/${certificateId}/revoke`,
+          {},
+          { withCredentials: true }
+        );
+        return dataOf(response);
+      } catch (error) {
+        logApiFailure("CertificateAPI.educator.revokeCertificate", error, { certificateId });
+        throw error;
+      }
+    },
+  },
+
+  admin: {
+    getCertificates: async (params?: {
+      page?: number;
+      limit?: number;
+    }): Promise<any> => {
+      try {
+        const response = await authApi.get("/api/certificate/admin/list", {
+          params,
+          withCredentials: true,
+        });
+        return dataOf(response);
+      } catch (error) {
+        logApiFailure("CertificateAPI.admin.getCertificates", error, { params });
+        throw error;
+      }
+    },
+
+    getCertificateById: async (certificateId: string): Promise<any> => {
+      try {
+        const response = await authApi.get(`/api/certificate/admin/${certificateId}`, {
+          withCredentials: true,
+        });
+        return dataOf(response);
+      } catch (error) {
+        logApiFailure("CertificateAPI.admin.getCertificateById", error, { certificateId });
+        throw error;
+      }
+    },
+
+    verifyCertificate: async (certificateId: string): Promise<any> => {
+      try {
+        const response = await authApi.get(`/api/certificate/verify/${certificateId}`, {
+          withCredentials: true,
+        });
+        return dataOf(response);
+      } catch (error) {
+        logApiFailure("CertificateAPI.admin.verifyCertificate", error, { certificateId });
+        throw error;
+      }
+    },
   },
 };
 

@@ -44,14 +44,16 @@ export default function DashLayout({ children, role }: DashLayoutProps) {
                     isNotificationActive={isNotificationOpen} 
                 />
 
-                <main className="lg:pl-64 pt-20 h-full overflow-hidden transition-all duration-300">
+                <main className="pt-20 lg:ml-[260px] h-full overflow-hidden transition-all duration-300">
                     {isChatOpen ? (
                         <div className="h-[calc(100vh-80px)] w-full">
                             {/* <ChatWidget onClose={() => setIsChatOpen(false)} /> */}
                         </div>
                     ) : (
-                        <div className="p-4 sm:p-6 lg:p-8 h-[calc(100vh-80px)] overflow-y-auto custom-scrollbar">
-                            {children}
+                        <div className="px-4 sm:px-6 lg:px-8 h-[calc(100vh-80px)] overflow-y-auto custom-scrollbar">
+                            <div className="max-w-[1600px] py-4 sm:py-6 lg:py-8">
+                                {children}
+                            </div>
                         </div>
                     )}
                 </main>

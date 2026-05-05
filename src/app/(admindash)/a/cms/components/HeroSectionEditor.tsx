@@ -1,5 +1,16 @@
 import React from "react";
-import { UploadBox } from "./UploadBox";
+import { TextField, ImageUpload, StatsField } from "./CMSField";
+
+interface HeroSectionData {
+  topMessage: string;
+  heading: string;
+  subheading: string;
+  heroImage: string;
+  stats: Array<{ num: string; label: string }>;
+  avatar1: string;
+  avatar2: string;
+  avatar3: string;
+}
 
 export function HeroSectionEditor() {
   return (
@@ -7,51 +18,44 @@ export function HeroSectionEditor() {
       {/* Top Message */}
       <section>
         <h3 className="text-lg font-semibold text-slate-900 mb-6">Top Message</h3>
-        
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-slate-700 mb-2">Content</label>
-          <input 
-            type="text" 
-            className="w-full px-4 py-3 bg-slate-100 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-600"
-            defaultValue="150+ Students Enrolled"
-          />
-        </div>
-
+        <TextField label="Content" value="150+ Students Enrolled" onChange={() => {}} />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Image</label>
-            <UploadBox />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Image</label>
-            <UploadBox />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Image</label>
-            <UploadBox />
-          </div>
+          <ImageUpload label="Avatar 1" dimensions="32 x 32" />
+          <ImageUpload label="Avatar 2" dimensions="32 x 32" />
+          <ImageUpload label="Avatar 3" dimensions="32 x 32" />
         </div>
       </section>
 
       {/* Main Message */}
       <section>
         <h3 className="text-lg font-semibold text-slate-900 mb-6">Main Message</h3>
-        
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-slate-700 mb-2">Heading</label>
-          <textarea 
-            className="w-full px-4 py-3 bg-slate-100 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-600 min-h-[80px] resize-none"
-            defaultValue="Your Ultimate Academic Mentorship & Learning Ecosystem"
-          />
-        </div>
+        <TextField
+          label="Heading (Mobile & Desktop)"
+          value="Your Ultimate Academic Mentorship & Learning Ecosystem"
+          onChange={() => {}}
+          multiline
+        />
+        <TextField
+          label="Sub-heading"
+          value="Unlock Your Potential with Personalized Mentorship, Milestone Based Assignments, and Expert Academic Support-All in One Intuitive Platform."
+          onChange={() => {}}
+          multiline
+        />
+        <ImageUpload label="Hero Image" dimensions="1100 x 600" />
+      </section>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Sub-heading</label>
-          <textarea 
-            className="w-full px-4 py-3 bg-slate-100 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-600 min-h-[80px] resize-none"
-            defaultValue="Unlock Your Potential with Personalized Mentorship, Milestone-Based Assignments, and Expert Academic Support—All in One Intuitive Platform."
-          />
-        </div>
+      {/* Stats */}
+      <section>
+        <h3 className="text-lg font-semibold text-slate-900 mb-6">Stats Section</h3>
+        <StatsField
+          items={[
+            { num: "200+", label: "Community Members" },
+            { num: "24+", label: "Institutes Affiliated" },
+            { num: "30k+", label: "Mentorship Hours" },
+            { num: "100+", label: "Students Mentored" },
+          ]}
+          onChange={() => {}}
+        />
       </section>
     </div>
   );

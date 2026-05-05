@@ -118,7 +118,7 @@ export default function WebinarsPage() {
   };
 
   return (
-    <div className="bg-[#F9FAFB] min-h-screen font-['Inter'] flex flex-col">
+    <div className="font-sans">
       {/* --- HEADER --- */}
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-medium text-[#021165] mb-6">Learning Hub</h1>

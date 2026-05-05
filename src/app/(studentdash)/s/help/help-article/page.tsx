@@ -25,7 +25,7 @@ export default function HelpCenterPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <div className="w-full min-h-screen bg-white font-sans flex flex-col">
+    <div className="font-sans flex flex-col">
       
       {/* --- HEADER --- */}
       <header className="sticky top-0  z-3 bg-white border-b border-gray-200 px-6 md:px-10 py-3 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -50,7 +50,7 @@ export default function HelpCenterPage() {
       </header>
 
       {/* --- MAIN LAYOUT --- */}
-      <div className="flex flex-1 max-w-[1600px] mx-auto w-full">
+      <div className="flex flex-1 w-full">
         
         {/* LEFT SIDEBAR (STICKY) */}
         <aside className="w-[280px] shrink-0 border-r border-gray-100 hidden lg:block sticky top-[89px] h-[calc(100vh-89px)] overflow-y-auto custom-scrollbar py-6">

@@ -120,8 +120,7 @@ export default function AllOrganizationsPage() {
   });
 
   return (
-    <div className="bg-[#FAFBFD] p-4 md:p-6 min-h-[calc(100vh-64px)] w-full">
-      <div className="max-w-[1600px] mx-auto">
+    <div className="w-full">
         <Link href="/a/organisation" className="flex items-center text-sm text-gray-500 font-medium mb-4 hover:text-black transition-colors w-fit">
           <ChevronLeft className="w-4 h-4 mr-1" /> Organizations
         </Link>
@@ -320,9 +319,8 @@ export default function AllOrganizationsPage() {
                    <ChevronLeft className="w-4 h-4 rotate-180" />
                 </button>
              </div>
-          </div>
-        </div>
-      </div>
+           </div>
+         </div>
     </div>
   );
 }

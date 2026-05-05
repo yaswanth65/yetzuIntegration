@@ -1,28 +1,25 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Search, Clock, User, Download, Lock, Award, ExternalLink } from "lucide-react";
-import { StudentAPI } from "@/lib/api";
+import { Search, Clock, User, Download, Lock, Award, ExternalLink, FileText } from "lucide-react";
+import { CertificateAPI } from "@/lib/api";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
 
-const BronzeMedal = () => (
-<Award color="#fcb51d" />
-);
-
-const GreyMedal = () => (
-  <Award color="#a1a1a1" />
-);
-
 interface Certificate {
   id: string;
+  certificateId: string;
+  certificateCode: string;
   title: string;
-  courseName: string;
+  sessionTitle: string;
+  sessionId: string;
   educatorName: string;
-  issueDate: string;
+  certificateUrl: string | null;
+  issuedAt: string;
+  completedAt: string;
   status: "issued" | "pending" | "expired";
-  downloadUrl?: string;
-  courseId?: string;
+  source: string;
+  certificateEnabled: boolean;
 }
 
 export default function CertificatesPage() {
@@ -34,24 +31,31 @@ export default function CertificatesPage() {
     const fetchCertificates = async () => {
       try {
         setIsLoading(true);
-        const response = await StudentAPI.getCertificates();
-        const certData = response?.certificates || response?.data?.certificates || response || [];
+        const response = await CertificateAPI.student.getCertificates();
+        // API returns: { success, message, data: { count, generatedFromSessions, list: [...] } }
+        const certData = response?.data?.list || response?.list || [];
         
         const mappedCerts: Certificate[] = certData.map((cert: any) => ({
-          id: cert.id || cert._id || "",
+          id: cert.id || cert.certificateId || "",
+          certificateId: cert.certificateId || cert.id || "",
+          certificateCode: cert.certificateCode || "",
           title: cert.title || "Certificate of Completion",
-          courseName: cert.courseName || cert.sessionTitle || cert.session?.title || "Course",
-          educatorName: cert.educatorName || cert.mentorName || "Educator",
-          issueDate: cert.issueDate || cert.issuedAt || cert.createdAt || "",
+          sessionTitle: cert.sessionTitle || cert.courseName || "Session",
+          sessionId: cert.sessionId || "",
+          educatorName: cert.educatorName || "Educator",
+          certificateUrl: cert.certificateUrl,
+          issuedAt: cert.issuedAt || cert.issueDate || "",
+          completedAt: cert.completedAt || "",
           status: cert.status === "issued" ? "issued" : cert.status === "pending" ? "pending" : "expired",
-          downloadUrl: cert.downloadUrl || cert.url || cert.pdfUrl,
-          courseId: cert.courseId || cert.sessionId,
+          source: cert.source || "session_completion",
+          certificateEnabled: cert.certificateEnabled !== false,
         }));
         
         setCertificates(mappedCerts);
       } catch (error) {
         console.error("Failed to fetch certificates:", error);
         setCertificates([]);
+        toast.error("Failed to load certificates");
       } finally {
         setIsLoading(false);
       }
@@ -64,26 +68,33 @@ export default function CertificatesPage() {
     const search = searchTerm.toLowerCase();
     return (
       cert.title.toLowerCase().includes(search) ||
-      cert.courseName.toLowerCase().includes(search) ||
-      cert.educatorName.toLowerCase().includes(search)
+      cert.sessionTitle.toLowerCase().includes(search) ||
+      cert.educatorName.toLowerCase().includes(search) ||
+      cert.certificateCode.toLowerCase().includes(search)
     );
   });
 
   const handleDownload = async (cert: Certificate) => {
-    if (!cert.downloadUrl) {
+    if (!cert.certificateUrl) {
       toast.error("Download not available");
       return;
     }
-    window.open(cert.downloadUrl, "_blank");
+    window.open(cert.certificateUrl, "_blank");
   };
 
   const handleAddToLinkedIn = (cert: Certificate) => {
-    const linkedInUrl = `https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(cert.title)}&organizationName=${encodeURIComponent("Yetzu")}&issueYear=${encodeURIComponent(new Date(cert.issueDate).getFullYear().toString())}&issueMonth=${encodeURIComponent((new Date(cert.issueDate).getMonth() + 1).toString())}&certUrl=${encodeURIComponent(window.location.origin + "/s/certificate/" + cert.id)}&certId=${encodeURIComponent(cert.id)}`;
+    const issueDate = cert.issuedAt ? new Date(cert.issuedAt) : new Date();
+    const linkedInUrl = `https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(cert.title)}&organizationName=${encodeURIComponent("Yetzu")}&issueYear=${encodeURIComponent(issueDate.getFullYear().toString())}&issueMonth=${encodeURIComponent((issueDate.getMonth() + 1).toString())}&certUrl=${encodeURIComponent(window.location.origin + "/s/certificate/" + cert.id)}&certId=${encodeURIComponent(cert.certificateCode)}`;
     window.open(linkedInUrl, "_blank");
   };
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "N/A";
+    return new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  };
+
   return (
-    <div className="bg-[#F8F9FA] min-h-screen font-sans flex flex-col">
+    <div className="font-sans">
       {/* --- HEADER --- */}
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
@@ -163,15 +174,22 @@ export default function CertificatesPage() {
 
                 {/* Course Name */}
                 <p className="text-sm text-gray-600 mb-2 relative z-10">
-                  {cert.courseName}
+                  {cert.sessionTitle}
                 </p>
+
+                {/* Certificate Code */}
+                {cert.certificateCode && (
+                  <p className="text-xs text-gray-400 mb-4 relative z-10 font-mono">
+                    {cert.certificateCode}
+                  </p>
+                )}
 
                 {/* Details Box */}
                 <div className="bg-gray-50 rounded-2xl p-5 flex gap-4 mb-8 mt-auto relative z-10 border border-gray-100">
                   <div className="flex-1 flex flex-col items-center justify-center border-r border-gray-200 gap-1.5 px-2">
                     <Clock size={16} className="text-gray-400" />
                     <span className="text-[11px] text-gray-700 font-bold uppercase tracking-wider text-center">
-                      {cert.issueDate ? new Date(cert.issueDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "N/A"}
+                      {formatDate(cert.issuedAt)}
                     </span>
                   </div>
                   <div className="flex-1 flex flex-col items-center justify-center gap-1.5 px-2">
@@ -184,7 +202,7 @@ export default function CertificatesPage() {
 
                 {/* Actions */}
                 <div className="relative z-10">
-                  {cert.status === "issued" ? (
+                  {cert.status === "issued" && cert.certificateEnabled ? (
                     <div className="flex items-center gap-3">
                       <button 
                         onClick={() => handleAddToLinkedIn(cert)}
@@ -211,7 +229,7 @@ export default function CertificatesPage() {
                     <div className="flex justify-center items-center gap-2 text-gray-400 py-3 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
                       <Lock size={16} strokeWidth={2} />
                       <span className="text-xs font-bold uppercase tracking-widest">
-                        {cert.status === "pending" ? "Pending Issuance" : "Expired"}
+                        {cert.status === "pending" ? "Pending Issuance" : cert.status === "expired" ? "Expired" : "Unavailable"}
                       </span>
                     </div>
                   )}
@@ -222,5 +240,5 @@ export default function CertificatesPage() {
         )}
       </div>
     </div>
-);
+  );
 }

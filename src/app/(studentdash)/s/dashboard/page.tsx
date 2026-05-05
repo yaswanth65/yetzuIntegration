@@ -197,12 +197,12 @@ export default function OverviewPage() {
   
   if (isLoading) {
     return (
-      <main className="p-4 md:p-6 lg:p-8 max-w-[1600px] font-sans mx-auto min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-500">Loading your dashboard...</p>
         </div>
-      </main>
+      </div>
     );
   }
   
@@ -225,10 +225,10 @@ export default function OverviewPage() {
     }));
   
   return (
-    <main className="p-4 md:p-6 lg:p-8 max-w-[1600px] font-sans mx-auto min-h-screen bg-gray-50">
+    <main className="font-sans">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Student Dashboard</h1>
-        <p className="text-gray-500 mt-1">Welcome back, {userInfo.name || "Student"}! Here's what's happening with your learning journey.</p>
+        <h1 className="text-2xl font-medium text-[#021165] sm:text-3xl md:text-4xl">Student Dashboard</h1>
+        <p className="mt-1 text-sm text-gray-500">Welcome back, {userInfo.name || "Student"}! Here's what's happening with your learning journey.</p>
       </div>
       
       {dashboardError && (

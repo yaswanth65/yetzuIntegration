@@ -81,7 +81,7 @@ export default function page() {
   }, []);
 
   return (
-    <div className="bg-white p-6 min-h-screen">
+    <div className="p-6">
       <AllSessions data={sessions} />
     </div>
   )

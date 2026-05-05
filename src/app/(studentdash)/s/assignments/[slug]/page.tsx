@@ -505,8 +505,8 @@ export default function AssignmentSlugPage() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-white md:bg-[#F8F9FA] md:p-8 md:mt-2 font-sans pb-18 md:pb-8">
-      <div className="max-w-[1600px] mx-auto">
+    <div className="bg-white font-sans pb-18 md:bg-transparent md:p-0 md:pb-8">
+      <div>
         <div className="flex md:hidden items-center gap-2 mb-2 px-4 pt-6">
           <Link href="/s/assignments" className="text-gray-900 flex items-center gap-2 font-semibold text-[16px] md:text-[18px]">
             <ArrowLeft size={20} /> Assignments
