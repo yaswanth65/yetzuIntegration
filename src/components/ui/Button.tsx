@@ -1,7 +1,9 @@
 import React from "react";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "outline";
+  variant?: "primary" | "secondary" | "outline" | "black" | "legacy";
+  size?: "sm" | "md" | "lg";
+  rounded?: "md" | "lg" | "xl" | "full";
   trailingIcon?: React.ReactNode;
   loading?: boolean;
 };
@@ -31,6 +33,8 @@ const Spinner = () => (
 const Button: React.FC<ButtonProps> = ({
   children,
   variant = "primary",
+  size = "md",
+  rounded = "xl",
   trailingIcon,
   loading,
   disabled,
@@ -39,8 +43,21 @@ const Button: React.FC<ButtonProps> = ({
 }) => {
   const isDisabled = disabled || loading;
 
+  const sizes = {
+    sm: "px-4 py-1.5 text-xs",
+    md: "px-6 py-2 text-sm",
+    lg: "px-8 py-2.5 text-base",
+  };
+
+  const roundeds = {
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    full: "rounded-full",
+  };
+
   const base =
-    "flex items-center justify-center px-6 py-1 rounded-[12px] text-sm sm:text-base font-medium h-[48px] w-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 gap-2 select-none";
+    "flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 gap-2 select-none w-full";
 
   const styles = {
     primary:
@@ -49,6 +66,10 @@ const Button: React.FC<ButtonProps> = ({
       "bg-transparent text-[#042BFD] border border-[#042BFD] hover:bg-[#042BFD] hover:text-white active:scale-[0.98] cursor-pointer transition-all duration-300",
     outline:
       "bg-transparent text-[#000000] border border-[#000000] hover:bg-gray-50 active:scale-[0.98] cursor-pointer transition-all duration-300",
+    black:
+      "bg-[#111111] text-white hover:bg-black active:scale-[0.98] cursor-pointer",
+    legacy:
+      "bg-[#003fc7] text-white hover:bg-[#0033a8] active:scale-[0.98] cursor-pointer",
     disabled: "bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed",
   };
 
@@ -58,12 +79,16 @@ const Button: React.FC<ButtonProps> = ({
       ? styles.primary
       : variant === "secondary"
         ? styles.secondary
-        : styles.outline;
+        : variant === "outline"
+          ? styles.outline
+          : variant === "black"
+            ? styles.black
+            : styles.legacy;
 
   return (
     <button
       disabled={isDisabled}
-      className={`${base} ${variantClass} ${className}`}
+      className={`${base} ${sizes[size]} ${roundeds[rounded]} ${variantClass} ${className}`}
       {...props}
     >
       {loading ? (

@@ -31,7 +31,7 @@ const Input: React.FC<InputProps> = ({
     // Responsive styles for container and input
     const border = error
         ? "border-red-500"
-        : "border-gray-200 focus-within:border-blue-600";
+        : "border-gray-200 focus-within:border-[#042BFD] focus-within:ring-2 focus-within:ring-[#042BFD]/20";
     const bg = disabled ? "bg-gray-100 text-gray-400" : "bg-white";
     const textColor = error ? "text-red-600" : "text-gray-900";
     const containerStyle = disabled
@@ -49,7 +49,7 @@ const Input: React.FC<InputProps> = ({
 
             {/* Input wrapper */}
             <div
-                className={`flex items-center rounded-md sm:rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 border transition-all duration-150 ${bg} ${border} w-full`}
+                className={`flex items-center rounded-xl px-4 py-2.5 border transition-all duration-150 ${bg} ${border} w-full`}
             >
                 {icon && <span className="mr-2 sm:mr-3">{icon}</span>}
 

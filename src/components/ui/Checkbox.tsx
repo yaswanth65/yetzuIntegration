@@ -6,6 +6,7 @@ interface CheckboxProps {
   disabled?: boolean;
   large?: boolean;
   onChange?: (checked: boolean) => void;
+  label?: string;
 }
 
 const Checkbox: React.FC<CheckboxProps> = ({
@@ -14,12 +15,13 @@ const Checkbox: React.FC<CheckboxProps> = ({
   disabled = false,
   large = false,
   onChange,
+  label,
 }) => {
   const ref = useRef<HTMLButtonElement>(null);
 
   const sizeCn = large
-    ? "w-6 h-6 text-md rounded-md"
-    : "w-4 h-4 text-sm rounded-sm";
+    ? "w-5 h-5 text-sm rounded"
+    : "w-4 h-4 text-sm rounded";
 
   // toggle state
   const handleToggle = () => {
@@ -29,16 +31,16 @@ const Checkbox: React.FC<CheckboxProps> = ({
 
   // mark: tick or indeterminate line
   const mark = indeterminate ? (
-    <svg viewBox="0 0 24 24" className="w-4 h-4 mx-auto pointer-events-none">
+    <svg viewBox="0 0 24 24" className="w-3 h-3 mx-auto pointer-events-none">
       <rect x="6" y="11" width="12" height="2" rx="1" fill="currentColor" />
     </svg>
   ) : checked ? (
-    <svg viewBox="0 0 24 24" className="w-4 h-4 mx-auto pointer-events-none">
+    <svg viewBox="0 0 24 24" className="w-3 h-3 mx-auto pointer-events-none">
       <polyline
         points="5 13 10 18 19 7"
         fill="none"
         stroke="currentColor"
-        strokeWidth={2.5}
+        strokeWidth={3}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -46,34 +48,37 @@ const Checkbox: React.FC<CheckboxProps> = ({
   ) : null;
 
   return (
-    <button
-      ref={ref}
-      type="button"
-      onClick={handleToggle}
-      onKeyDown={(e) => {
-        if (e.key === " " || e.key === "Enter") {
-          e.preventDefault();
-          handleToggle();
-        }
-      }}
-      disabled={disabled}
-      aria-checked={checked}
-      style={{ outline: "none" }}
-      className={`flex items-center justify-center transition-all duration-200 ease-in-out ${sizeCn} 
-        ${checked || indeterminate ? "bg-[#0047FF] text-white" : "bg-white border border-gray-300"}
-        ${disabled ? "opacity-60 cursor-not-allowed" : "hover:scale-105 cursor-pointer"}
-        shadow-none`}
-    >
-      <span
-        className={`transition-all duration-200 transform pointer-events-none ${
-          checked || indeterminate
-            ? "scale-100 opacity-100"
-            : "scale-0 opacity-0"
-        }`}
+    <label className={`flex items-center gap-2 ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}>
+      <button
+        ref={ref}
+        type="button"
+        onClick={handleToggle}
+        onKeyDown={(e) => {
+          if (e.key === " " || e.key === "Enter") {
+            e.preventDefault();
+            handleToggle();
+          }
+        }}
+        disabled={disabled}
+        aria-checked={checked}
+        style={{ outline: "none" }}
+        className={`flex items-center justify-center transition-all duration-200 ${sizeCn} 
+          ${checked || indeterminate ? "bg-[#042BFD] text-white" : "bg-white border border-gray-300"}
+          ${disabled ? "cursor-not-allowed" : "hover:border-[#042BFD]"}
+          shadow-none`}
       >
-        {mark}
-      </span>
-    </button>
+        <span
+          className={`transition-all duration-200 transform pointer-events-none ${
+            checked || indeterminate
+              ? "scale-100 opacity-100"
+              : "scale-0 opacity-0"
+          }`}
+        >
+          {mark}
+        </span>
+      </button>
+      {label && <span className="text-sm text-gray-700 select-none">{label}</span>}
+    </label>
   );
 };
 

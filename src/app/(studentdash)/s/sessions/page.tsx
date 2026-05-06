@@ -254,18 +254,16 @@ export default function SessionsPage() {
     return (
       <div
         key={session.id}
-        className={`relative flex min-h-[320px] w-[85vw] shrink-0 snap-center flex-col rounded-[24px] bg-gradient-to-br p-[1.5px] transition-all hover:scale-[1.02] md:min-w-0 md:w-auto md:snap-align-none ${theme.wrapperBorder}`}
+        className={`relative flex min-h-[300px] w-[85vw] shrink-0 snap-center flex-col rounded-[18px] bg-gradient-to-br p-[1.5px] md:min-w-0 md:w-auto md:snap-align-none ${theme.wrapperBorder}`}
       >
-        <div className="relative flex h-full flex-1 flex-col overflow-hidden rounded-[22px] border border-gray-100/50 bg-white p-5 shadow-sm">
-          <div className={`pointer-events-none absolute inset-0 z-0 rounded-[22px] bg-gradient-to-b ${theme.bgGradient}`}></div>
+        <div className="relative flex h-full flex-1 flex-col overflow-hidden rounded-[16px] border border-gray-100/50 bg-white p-4 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+          <div className={`pointer-events-none absolute inset-0 z-0 rounded-[16px] bg-gradient-to-b ${theme.bgGradient}`}></div>
 
           <div className="relative z-10 mb-6 flex items-start justify-between">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-gray-50 bg-white shadow-sm">
-              <img src={theme.icon} alt="Icon" className="h-8 w-8 object-contain" />
-            </div>
+            <img src={theme.icon} alt="Icon" className="h-[64px] w-[64px] object-contain opacity-90" />
             {session.badge ? (
-              <span className={`${theme.badgeClasses} flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider shadow-sm`}>
-                {session.badge.includes("STARTS") ? <Clock size={12} /> : null}
+              <span className={`${theme.badgeClasses} flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide shadow-sm`}>
+                {session.badge.includes("STARTS") ? <Clock size={14} /> : null}
                 {session.badge}
               </span>
             ) : null}
@@ -273,25 +271,23 @@ export default function SessionsPage() {
 
           <div className="relative z-10 flex flex-1 flex-col">
             <Link href={`/s/sessions/${session.slug}`} className="transition-colors hover:text-[#042BFD]">
-              <h3 className="mb-4 line-clamp-2 pr-2 text-lg font-bold leading-tight text-gray-900">{session.title}</h3>
+              <h3 className="mb-5 pr-2 text-[18px] font-bold leading-snug text-gray-900 line-clamp-2">{session.title}</h3>
             </Link>
 
             <div className="mt-auto mb-6 flex items-center gap-3">
-              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-gray-100 shadow-sm">
-                <img src={session.mentor.avatar} alt="Mentor" className="h-full w-full object-cover" />
-              </div>
-              <div className="min-w-0">
-                <p className="mb-1 truncate text-sm font-bold leading-none text-gray-900">{session.mentor.name}</p>
-                <p className="truncate text-[11px] text-gray-500">{session.mentor.role}</p>
+              <img src={session.mentor.avatar} alt="Mentor" className="h-11 w-11 shrink-0 rounded-full object-cover" />
+              <div>
+                <p className="mb-1 text-[14px] font-semibold leading-none text-gray-900">{session.mentor.name}</p>
+                <p className="text-[12px] text-gray-500">{session.mentor.role}</p>
               </div>
             </div>
 
-            <div className="mb-6 flex w-full items-center gap-4 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
-              <div className="flex items-center gap-2 text-xs font-bold text-gray-600">
-                <Calendar size={14} className="shrink-0 text-gray-400" /> <span className="truncate">{session.date}</span>
+            <div className="mb-6 flex w-full items-center gap-4 rounded-[10px] border border-gray-50 bg-[#F8FAFC] px-4 py-3">
+              <div className="flex items-center gap-2 text-[13px] font-medium text-gray-600">
+                <Calendar size={16} className="shrink-0 text-gray-400" /> <span className="truncate">{session.date}</span>
               </div>
-              <div className="flex items-center gap-2 text-xs font-bold text-gray-600">
-                <Clock size={14} className="shrink-0 text-gray-400" /> <span className="truncate">{session.time}</span>
+              <div className="flex items-center gap-2 text-[13px] font-medium text-gray-600">
+                <Clock size={16} className="shrink-0 text-gray-400" /> <span className="truncate">{session.time}</span>
               </div>
             </div>
 
@@ -301,22 +297,22 @@ export default function SessionsPage() {
                   href={session.webinerLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all active:scale-95 ${
+                  className={`flex-1 flex items-center justify-center gap-2 rounded-[10px] py-2.5 text-[14px] font-medium transition-colors active:scale-95 ${
                     isFocus
-                      ? "bg-[#021165] text-white shadow-lg shadow-blue-900/10 hover:bg-[#031a9c]"
-                      : "bg-[#042BFD] text-white hover:bg-[#0325D7]"
+                      ? "bg-[#111111] text-white hover:bg-black"
+                      : "border border-[#042BFD] bg-white text-[#042BFD] hover:bg-blue-50"
                   }`}
                 >
-                  Join Session
+                  {isFocus ? "Join Session" : "View Details"}
                   <ExternalLink size={14} />
                 </a>
               ) : (
                 <Link href={`/s/sessions/${session.slug}`} className="flex-1">
                   <button
-                    className={`flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all active:scale-95 ${
+                    className={`flex w-full items-center justify-center gap-2 rounded-[10px] py-2.5 text-[14px] font-medium transition-colors active:scale-95 ${
                       isFocus && activeTab === "upcoming"
-                        ? "bg-[#021165] text-white shadow-lg shadow-blue-900/10 hover:bg-[#031a9c]"
-                        : "border-2 border-[#042BFD] text-[#042BFD] hover:bg-blue-50"
+                        ? "bg-[#111111] text-white hover:bg-black"
+                        : "border border-[#042BFD] bg-white text-[#042BFD] hover:bg-blue-50"
                     }`}
                   >
                     {isFocus && activeTab === "upcoming" ? "Join Session" : "View Details"}
@@ -330,18 +326,18 @@ export default function SessionsPage() {
                   e.stopPropagation();
                   setOpenDropdownId(isDropdownOpen ? null : session.id);
                 }}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 text-gray-500 transition-all hover:bg-gray-50"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] border border-gray-200 text-gray-500 transition-all hover:bg-gray-50 hover:text-gray-700"
               >
-                <MoreVertical size={18} />
+                <MoreVertical size={20} />
               </button>
 
               {isDropdownOpen ? (
                 <div
                   ref={dropdownRef}
-                  className="animate-in fade-in zoom-in-95 absolute right-0 bottom-full z-50 mb-3 w-48 origin-bottom-right rounded-2xl border border-gray-100 bg-white py-2 shadow-2xl duration-200"
+                  className="animate-in fade-in zoom-in-95 absolute right-0 bottom-[110%] z-50 mb-2 w-48 origin-bottom-right rounded-xl border border-gray-100 bg-white py-2 shadow-[0_10px_25px_rgba(0,0,0,0.1)] duration-200"
                 >
                   <button
-                    className="w-full px-4 py-2.5 text-left text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50"
+                    className="w-full px-4 py-2.5 text-left text-[13px] font-medium text-gray-700 transition-colors hover:bg-gray-50"
                     onClick={() => {
                       setOpenDropdownId(null);
                       setRescheduleSession(session);
@@ -350,13 +346,13 @@ export default function SessionsPage() {
                     Reschedule
                   </button>
                   <button
-                    className="w-full px-4 py-2.5 text-left text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50"
+                    className="w-full px-4 py-2.5 text-left text-[13px] font-medium text-gray-700 transition-colors hover:bg-gray-50"
                     onClick={() => {
                       navigator.clipboard.writeText(`${window.location.origin}/s/sessions/${session.slug}`);
                       setOpenDropdownId(null);
                     }}
                   >
-                    Copy Link
+                    Copy Link to Interview
                   </button>
                 </div>
               ) : null}
@@ -368,29 +364,29 @@ export default function SessionsPage() {
   };
 
   return (
-    <div className="font-sans">
-      <div className="mb-8">
-        <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-2xl font-medium text-[#021165] sm:text-3xl md:text-4xl">Sessions</h1>
-            <p className="mt-1 text-sm text-gray-500">Track your upcoming and past learning sessions</p>
-          </div>
-
+    <div className="w-full bg-white md:bg-[#F8F9FA] font-sans pb-18 lg:pb-8">
+      
+      {/* --- HEADER --- */}
+      <div className="sticky top-0 z-20 md:static md:z-auto bg-white pt-4 md:pt-6 md:px-10 border-b border-gray-100 md:border-gray-200">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-6 px-4 md:px-0">
+          <h1 className="text-[22px] font-bold text-gray-900">Sessions</h1>
+          
           <div className="relative w-full md:w-[320px]">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
               <Search className="h-4 w-4 text-gray-400" strokeWidth={2} />
             </div>
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search sessions or mentors..."
-              className="block w-full rounded-2xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm placeholder-gray-400 shadow-sm transition-all focus:border-[#042BFD] focus:outline-none focus:ring-2 focus:ring-[#042BFD]/10"
+              placeholder="Search by session, mentor or topic"
+              className="block w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-[10px] text-[13px] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm"
             />
           </div>
         </div>
-
-        <div className="flex items-center gap-4 border-b border-gray-200 sm:gap-8">
+        
+        {/* Tabs */}
+        <div className="flex items-center px-4 md:px-0 gap-6 md:gap-8 overflow-x-auto no-scrollbar">
           {(["upcoming", "completed", "missed"] as const).map((tab) => {
             const isActive = activeTab === tab;
             const count = sessions.filter((session) => session.tab === tab).length;
@@ -399,19 +395,17 @@ export default function SessionsPage() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`-mb-[1px] flex items-center gap-2 border-b-2 pb-4 text-sm capitalize transition-all sm:text-base ${
+                className={`pb-3.5 flex items-center gap-2 border-b-2 transition-all -mb-[1px] md:-mb-[2px] capitalize whitespace-nowrap ${
                   isActive
-                    ? "border-[#042BFD] font-bold text-[#021165]"
-                    : "border-transparent font-medium text-gray-500 hover:text-gray-700"
+                    ? "border-[#042BFD] text-gray-900 font-medium"
+                    : "border-transparent text-gray-500 hover:text-gray-700 font-medium"
                 }`}
               >
-                {tab}
-                <span
-                  className={`flex h-[20px] min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold ${
-                    isActive
-                      ? tab === "missed"
-                        ? "bg-red-100 text-red-600"
-                        : "bg-[#042BFD] text-white"
+                <span className="text-[14px] md:text-[15px]">{tab}</span>
+                <span 
+                  className={`flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-medium ${
+                    isActive 
+                      ? tab === "missed" ? "bg-red-100 text-red-600" : "bg-blue-100 text-blue-600" 
                       : "bg-gray-100 text-gray-500"
                   }`}
                 >
@@ -423,71 +417,83 @@ export default function SessionsPage() {
         </div>
       </div>
 
-      <div>
+      {/* --- MAIN CONTENT AREA --- */}
+      <div className="px-4 md:p-6 md:px-10 max-w-[1600px] mx-auto mt-4 md:mt-2">
+        
         {isLoading ? (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((item) => (
-              <div key={item} className="h-[300px] animate-pulse rounded-3xl border border-gray-100 bg-white" />
+              <div key={item} className="h-[300px] animate-pulse rounded-[18px] bg-white" />
             ))}
           </div>
         ) : error ? (
-          <div className="rounded-[24px] border border-red-200 bg-red-50 px-6 py-10 text-center">
+          <div className="rounded-[18px] border border-red-200 bg-red-50 px-6 py-10 text-center">
             <h3 className="text-lg font-bold text-gray-900">Unable to load sessions</h3>
             <p className="mt-1 text-sm text-red-600">{error}</p>
           </div>
+        ) : sessions.length === 0 ? (
+          <div className="flex flex-col items-center justify-center bg-white rounded-none md:rounded-2xl md:border border-gray-100 shadow-sm py-20 px-6 min-h-[500px] w-full">
+            <div className="relative w-64 h-64 md:w-72 md:h-72 mb-8 flex items-center justify-center">
+              <div className="absolute inset-0 bg-blue-50/50 rounded-full blur-3xl"></div>
+              <img src="/images/empty-state.svg" alt="Learning Journey" className="relative z-10 w-full h-full object-contain" />
+            </div>
+            <h2 className="text-xl md:text-[24px] font-bold text-gray-900 mb-3 text-center">Your learning journey starts here</h2>
+            <p className="text-center text-sm text-gray-500 max-w-[550px] mb-8 leading-relaxed">
+              Explore webinars, cohorts, and 1:1 mentorships across a wide range of topics.<br className="hidden md:block" />
+              Start learning from expert educators and unlock exclusive resources and study materials.
+            </p>
+            <button className="bg-[#111111] hover:bg-black text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2.5 transition-colors text-[14px]">
+              Explore Courses <ExternalLink size={16} />
+            </button>
+          </div>
         ) : activeTab === "upcoming" ? (
-          <div className="space-y-12">
-            {focusTodaySessions.length > 0 ? (
-              <section>
-                <div className="mb-6 flex items-center gap-4">
-                  <span className="whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
-                    Focus For Today
+          <>
+            {/* Focus For Today */}
+            {focusTodaySessions.length > 0 && (
+              <div className="mb-8">
+                <div className="flex items-center gap-4 mb-4 px-4 md:px-0">
+                  <span className="text-[12px] font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    FOCUS FOR TODAY
                   </span>
-                  <div className="h-[1px] flex-1 bg-gray-100"></div>
+                  <div className="hidden md:block flex-1 h-px bg-gray-200"></div>
                 </div>
-                <div className="-mx-4 flex snap-x gap-6 overflow-x-auto px-4 pb-4 no-scrollbar md:mx-0 md:grid md:grid-cols-2 md:px-0 md:pb-0 lg:grid-cols-3">
+                <div className="flex overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 px-4 md:px-0 pb-4 md:pb-0 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                   {focusTodaySessions.map((session) => renderCard(session, true))}
                 </div>
-              </section>
-            ) : null}
+              </div>
+            )}
 
-            {otherSessions.length > 0 ? (
-              <section>
-                <div className="mb-6 flex items-center gap-4">
-                  <span className="whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
-                    Upcoming Sessions
+            {/* Upcoming Sessions */}
+            {otherSessions.length > 0 && (
+              <div>
+                <div className="flex items-center gap-4 mb-4 px-4 md:px-0">
+                  <span className="text-[12px] font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    UPCOMING SESSIONS
                   </span>
-                  <div className="h-[1px] flex-1 bg-gray-100"></div>
+                  <div className="hidden md:block flex-1 h-px bg-gray-200"></div>
                 </div>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div className="flex overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 px-4 md:px-0 pb-4 md:pb-0 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                   {otherSessions.map((session) => renderCard(session, false))}
                 </div>
-              </section>
-            ) : null}
-
-            {focusTodaySessions.length === 0 && otherSessions.length === 0 ? (
-              <div className="py-20 text-center">
-                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 text-gray-400">
-                  <Calendar size={32} />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900">No upcoming sessions</h3>
-                <p className="mt-1 text-sm text-gray-500">Your enrolled sessions will appear here once they are scheduled.</p>
               </div>
-            ) : null}
-          </div>
+            )}
+
+            {focusTodaySessions.length === 0 && otherSessions.length === 0 && (
+              <div className="py-20 text-center text-gray-500 px-4">
+                No upcoming sessions found.
+              </div>
+            )}
+          </>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          /* Completed / Missed Tab View */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             {filteredSessions.map((session) => renderCard(session, false))}
-
-            {filteredSessions.length === 0 ? (
-              <div className="col-span-full py-20 text-center">
-                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 text-gray-400">
-                  <Clock size={32} />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900">No sessions found</h3>
-                <p className="mt-1 text-sm text-gray-500">Sessions in this category will appear here when they are available.</p>
+            
+            {filteredSessions.length === 0 && (
+              <div className="col-span-full py-20 text-center text-gray-500">
+                No sessions found in this category.
               </div>
-            ) : null}
+            )}
           </div>
         )}
       </div>

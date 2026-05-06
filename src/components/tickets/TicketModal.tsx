@@ -44,11 +44,17 @@ export default function TicketModal({ ticket, onClose, onResolve }: TicketModalP
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "resolved": return <CheckCircle size={18} className="text-green-500" />;
-      case "open": return <Clock size={18} className="text-yellow-500" />;
-      case "in_review": return <AlertCircle size={18} className="text-blue-500" />;
-      default: return <AlertCircle size={18} className="text-gray-400" />;
+    switch (status.toLowerCase()) {
+      case "resolved":
+      case "closed":
+        return <CheckCircle size={18} className="text-[#059669]" />;
+      case "open":
+        return <Clock size={18} className="text-[#2563EB]" />;
+      case "in_review":
+      case "in progress":
+        return <AlertCircle size={18} className="text-[#D97706]" />;
+      default:
+        return <AlertCircle size={18} className="text-gray-400" />;
     }
   };
 
@@ -63,9 +69,9 @@ export default function TicketModal({ ticket, onClose, onResolve }: TicketModalP
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-gray-900">Ticket Details</h2>
+      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-200 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+          <h2 className="text-[16px] font-bold text-gray-900">Ticket Details</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <X size={20} />
           </button>
@@ -73,16 +79,16 @@ export default function TicketModal({ ticket, onClose, onResolve }: TicketModalP
 
         <div className="p-6 space-y-6">
           {/* Status & Priority */}
-          <div className="flex gap-4">
+          <div className="flex gap-6">
             <div>
-              <p className="text-xs text-gray-500 mb-1">Status</p>
+              <p className="text-[14px] text-gray-500 mb-1">Status</p>
               <span className="flex items-center gap-2">
                 {getStatusIcon(ticket.status)}
-                <span className="text-sm capitalize font-medium">{ticket.status}</span>
+                <span className="text-[14px] capitalize font-medium text-gray-600">{ticket.status}</span>
               </span>
             </div>
             <div>
-              <p className="text-xs text-gray-500 mb-1">Priority</p>
+              <p className="text-[14px] text-gray-500 mb-1">Priority</p>
               <span className={`text-xs font-medium px-2 py-1 rounded-full ${getPriorityColor(ticket.priority)}`}>
                 {ticket.priority}
               </span>
@@ -91,23 +97,23 @@ export default function TicketModal({ ticket, onClose, onResolve }: TicketModalP
 
           {/* Subject */}
           <div>
-            <p className="text-xs text-gray-500 mb-1">Subject</p>
-            <p className="text-lg font-bold text-gray-900">{ticket.subject}</p>
+            <p className="text-[14px] text-gray-500 mb-1">Subject</p>
+            <p className="text-[16px] font-bold text-gray-900">{ticket.subject}</p>
           </div>
 
           {/* Description */}
           {ticket.description && (
             <div>
-              <p className="text-xs text-gray-500 mb-1">Description</p>
-              <p className="text-sm text-gray-700 leading-relaxed">{ticket.description}</p>
+              <p className="text-[14px] text-gray-500 mb-1">Description</p>
+              <p className="text-[14px] text-gray-600 leading-relaxed">{ticket.description}</p>
             </div>
           )}
 
           {/* User Info */}
           {(ticket.userName || ticket.from) && (
             <div>
-              <p className="text-xs text-gray-500 mb-1">From</p>
-              <span className="flex items-center gap-2 text-sm text-gray-600">
+              <p className="text-[14px] text-gray-500 mb-1">From</p>
+              <span className="flex items-center gap-2 text-[14px] text-gray-600">
                 <User size={14} />
                 {ticket.userName || ticket.from}
               </span>
@@ -116,8 +122,8 @@ export default function TicketModal({ ticket, onClose, onResolve }: TicketModalP
 
           {/* Date */}
           <div>
-            <p className="text-xs text-gray-500 mb-1">Created</p>
-            <span className="flex items-center gap-2 text-sm text-gray-500">
+            <p className="text-[14px] text-gray-500 mb-1">Created</p>
+            <span className="flex items-center gap-2 text-[14px] text-gray-500">
               <Calendar size={14} />
               {new Date(ticket.createdAt || ticket.created_at || "").toLocaleString()}
             </span>
@@ -126,15 +132,15 @@ export default function TicketModal({ ticket, onClose, onResolve }: TicketModalP
           {/* Comment (if resolved) */}
           {ticket.comment && (
             <div className="bg-gray-50 p-4 rounded-xl">
-              <p className="text-xs text-gray-500 mb-1">Resolution Comment</p>
-              <p className="text-sm text-gray-700">{ticket.comment}</p>
+              <p className="text-[14px] text-gray-500 mb-1">Resolution Comment</p>
+              <p className="text-[14px] text-gray-600">{ticket.comment}</p>
             </div>
           )}
 
           {/* Resolve Section (Admin only) */}
-          {onResolve && ticket.status !== "resolved" && (
-            <div className="border-t border-gray-100 pt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+          {onResolve && ticket.status !== "resolved" && ticket.status !== "closed" && (
+            <div className="border-t border-gray-200 pt-6">
+              <label className="block text-[14px] font-bold text-gray-900 mb-2">
                 Resolution Comment (Optional)
               </label>
               <textarea
@@ -142,12 +148,12 @@ export default function TicketModal({ ticket, onClose, onResolve }: TicketModalP
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Add a comment about the resolution..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#042BFD] text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#042BFD] text-[14px] text-gray-900"
               />
               <button
                 onClick={handleResolve}
                 disabled={isUpdating}
-                className="mt-3 flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                className="mt-3 flex items-center gap-2 bg-[#6366F1] text-white px-4 py-2 rounded-lg hover:bg-[#4F46E5] transition-colors disabled:opacity-50 text-[14px] font-medium"
               >
                 <CheckCircle size={16} />
                 {isUpdating ? "Resolving..." : "Resolve Ticket"}

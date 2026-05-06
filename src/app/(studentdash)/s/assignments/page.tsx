@@ -24,13 +24,21 @@ const getColorStyles = (colorScheme: string) => {
         image: "/images/file-format-green.svg",
       };
     case "orange":
-    default:
       return {
         wrapperBorder: "from-[#FED7AA] via-transparent to-[#FED7AA]",
         bgGradient: "from-[#FFF7ED] via-white via-40% to-white",
         badgeBg: "bg-[#FFF7ED]",
         badgeText: "text-[#EA580C]",
         image: "/images/file-format-orange.svg",
+      };
+    case "gray":
+    default:
+      return {
+        wrapperBorder: "from-[#E2E8F0] via-transparent to-[#E2E8F0]",
+        bgGradient: "from-[#F8FAFC] via-white via-40% to-white",
+        badgeBg: "bg-[#F1F5F9]",
+        badgeText: "text-[#475569]",
+        image: "/images/file-format-gray.svg",
       };
   }
 };
@@ -266,29 +274,30 @@ export default function AssignmentPage() {
   const completedCount = assignments.filter((assignment) => assignment.type === "completed").length;
 
   return (
-    <div className="font-sans">
-      <div className="mb-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-          <div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-medium text-[#021165]">Assignments</h1>
-            <p className="text-gray-500 text-sm mt-1">Submit and track your academic progress</p>
-          </div>
-
-          <div className="relative w-full md:w-[320px]">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+    <div className="w-full min-h-screen bg-[#F8F9FA] font-sans">
+      
+      {/* --- FULL WIDTH HEADER --- */}
+      <div className="sticky top-0 z-20 bg-white px-4 md:px-10 pt-6 md:pt-8 border-b border-gray-200 md:static md:z-auto">
+        <h1 className="text-[22px] font-semibold text-gray-900 mb-3">Assignments</h1>
+        
+        {/* Search Bar */}
+        <div className="mb-4 md:mb-6 max-w-[360px]">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
               <Search className="h-4 w-4 text-gray-400" strokeWidth={2} />
             </div>
             <input
               type="text"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Search assignments or mentors..."
-              className="block w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#042BFD]/10 focus:border-[#042BFD] transition-all shadow-sm"
+              placeholder="Search by assignment, session or mentor"
+              className="block w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-[10px] text-[13px] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm"
             />
           </div>
         </div>
 
-        <div className="flex items-center gap-4 sm:gap-8 border-b border-gray-200">
+        {/* Tabs */}
+        <div className="flex items-center gap-8">
           {(["pending", "completed"] as const).map((tab) => {
             const isActive = activeTab === tab;
             const count = tab === "pending" ? pendingCount : completedCount;
@@ -297,16 +306,18 @@ export default function AssignmentPage() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`pb-4 flex items-center gap-2 border-b-2 transition-all -mb-[1px] capitalize text-sm sm:text-base ${
+                className={`pb-3.5 flex items-center gap-2 border-b-2 transition-all -mb-[2px] capitalize ${
                   isActive
-                    ? "border-[#042BFD] text-[#021165] font-bold"
+                    ? "border-[#042BFD] text-gray-900 font-semibold"
                     : "border-transparent text-gray-500 hover:text-gray-700 font-medium"
                 }`}
               >
                 {tab}
-                <span
-                  className={`flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full text-[10px] font-bold ${
-                    isActive ? "bg-[#042BFD] text-white" : "bg-gray-100 text-gray-500"
+                <span 
+                  className={`flex items-center justify-center w-[18px] h-[18px] rounded-full text-[10px] font-medium ${
+                    isActive 
+                      ? "bg-[#042BFD] text-white" 
+                      : "text-gray-400"
                   }`}
                 >
                   {count}
@@ -317,15 +328,16 @@ export default function AssignmentPage() {
         </div>
       </div>
 
-      <div className="flex-1 w-full">
+      {/* --- MAIN CONTENT AREA --- */}
+      <div className="px-4 md:px-10 max-w-[1600px] mx-auto mt-2">
+        
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="h-[280px] bg-white rounded-[32px] animate-pulse border border-gray-100" />
-            ))}
+          <div className="flex flex-col items-center justify-center h-[40vh]">
+            <div className="h-8 w-8 border-4 border-[#042BFD] border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-gray-500 font-medium text-sm">Loading assignments...</p>
           </div>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[32px] border border-gray-100 shadow-sm text-center px-6">
+          <div className="flex flex-col items-center justify-center h-[40vh] bg-white rounded-xl border border-gray-200">
             <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-4 text-red-400">
               <AlertCircle size={32} />
             </div>
@@ -333,68 +345,69 @@ export default function AssignmentPage() {
             <p className="text-gray-500 text-sm mt-1 max-w-md">{error}</p>
           </div>
         ) : filteredAssignments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[32px] border border-gray-100 shadow-sm">
-            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-gray-400">
-              <LinkIcon size={32} />
-            </div>
-            <h3 className="text-lg font-bold text-gray-900">No {activeTab} assignments</h3>
-            <p className="text-gray-500 text-sm mt-1">Assignments in this category will appear here</p>
+          <div className="flex flex-col items-center justify-center h-[40vh] bg-white rounded-xl border border-gray-200">
+            <p className="text-gray-500 font-medium">No {activeTab} assignments found.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          /* Grid of Cards */
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-20 md:mb-20">
             {filteredAssignments.map((item) => {
               const styles = getColorStyles(item.colorScheme);
 
               return (
                 <div
                   key={item.id}
-                  className={`group relative rounded-[32px] p-[1.5px] bg-gradient-to-br ${styles.wrapperBorder} flex flex-col min-h-[300px] transition-all hover:scale-[1.02]`}
+                  className={`relative rounded-[20px] p-[1px] bg-gradient-to-br ${styles.wrapperBorder} flex flex-col min-h-[280px]`}
                 >
-                  <div className="relative flex-1 flex flex-col bg-white rounded-[30.5px] p-6 md:p-7 overflow-hidden h-full shadow-sm border border-gray-100/50">
-                    <div className={`absolute inset-0 bg-gradient-to-b ${styles.bgGradient} pointer-events-none z-0 opacity-40 group-hover:opacity-60 transition-opacity`} />
-
-                    <div className="flex justify-between items-start mb-8 relative z-10">
-                      <div className="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center border border-gray-50 group-hover:shadow-md transition-shadow">
-                        <img src={styles.image} alt="Icon" className="w-8 h-8 object-contain" />
-                      </div>
-                      <span className={`${styles.badgeBg} ${styles.badgeText} text-[10px] font-bold px-3 py-1.5 rounded-full tracking-wider uppercase shadow-sm border border-black/5`}>
+                  <div className="relative flex-1 flex flex-col bg-white rounded-[18px] p-6 overflow-hidden h-full shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-gray-100/50">
+                    
+                    <div className={`absolute inset-0 bg-gradient-to-b ${styles.bgGradient} pointer-events-none z-0 opacity-60`}></div>
+                    
+                    <div className="flex justify-between items-start mb-6 relative z-10">
+                      <img 
+                        src={styles.image}
+                        alt="Icon" 
+                        className="w-[54px] h-[54px] object-contain opacity-90" 
+                      />
+                      <span className={`${styles.badgeBg} ${styles.badgeText} text-[11px] font-medium px-3.5 py-1.5 rounded-full tracking-wide uppercase`}>
                         {item.badgeLabel}: {item.date}
                       </span>
                     </div>
 
                     <div className="relative z-10 flex-1 flex flex-col">
-                      <Link href={`/s/assignments/${item.id}`} className="hover:text-[#042BFD] transition-colors">
-                        <h3 className="text-xl font-bold text-gray-900 mb-6 leading-snug line-clamp-2">
+                      <Link href={`/s/assignments/${item.id}`} className="hover:underline">
+                        <h3 className="text-[17px] font-bold text-gray-900 mb-5 leading-snug pr-2 line-clamp-2">
                           {item.title}
                         </h3>
                       </Link>
 
-                      <div className="flex items-center justify-between bg-white/60 backdrop-blur-sm rounded-2xl p-4 mb-6 mt-auto border border-gray-100 shadow-sm">
-                        <div className="flex items-center gap-3 min-w-0 pr-4">
-                          <LinkIcon size={16} className="text-gray-400 shrink-0" strokeWidth={2} />
-                          <span className="text-sm text-gray-600 font-medium truncate">{item.sessionName}</span>
+                      <div className="flex items-center justify-between bg-[#F8FAFC] rounded-[12px] p-3 mb-5 mt-auto border border-gray-100/80">
+                        <div className="flex items-start gap-2.5 pr-2">
+                          <LinkIcon size={16} className="text-gray-500 mt-0.5 shrink-0" strokeWidth={1.5} />
+                          <span className="text-[14px] text-gray-800 leading-snug line-clamp-1">
+                            {item.sessionName}
+                          </span>
                         </div>
-
-                        <div className="relative group/mentor shrink-0">
-                          <img
-                            src={item.mentorImage}
-                            alt={item.mentorName}
-                            className="w-9 h-9 rounded-full object-cover ring-2 ring-white shadow-sm cursor-pointer hover:ring-[#042BFD] transition-all"
+                        
+                        <div className="relative group shrink-0">
+                          <img 
+                            src={item.mentorImage} 
+                            alt={item.mentorName} 
+                            className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-gray-200 transition-all" 
                           />
-                          <div className="absolute bottom-full right-0 mb-3 opacity-0 invisible group-hover/mentor:opacity-100 group-hover/mentor:visible transition-all duration-200 z-50">
-                            <div className="bg-[#1a1a1a] text-white text-xs font-bold px-3 py-2 rounded-lg shadow-xl whitespace-nowrap">
+                          
+                          <div className="absolute top-[calc(100%+12px)] right-[-6px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 w-max">
+                            <div className="bg-[#262626] text-white text-[14px] font-medium px-4 py-2 rounded-[8px] shadow-xl relative">
                               {item.mentorName}
-                              <div className="absolute top-full right-4 -mt-1 w-2 h-2 bg-[#1a1a1a] rotate-45" />
+                              <div className="absolute -top-1.5 right-[16px] w-3 h-3 bg-[#262626] rotate-45 rounded-sm"></div>
                             </div>
                           </div>
                         </div>
                       </div>
 
                       <div className="flex justify-end">
-                        <Link href={`/s/assignments/${item.id}`} className="w-full sm:w-auto">
-                          <button className="w-full sm:w-auto bg-[#021165] hover:bg-[#031a9c] text-white rounded-xl px-8 py-3 text-sm font-bold transition-all active:scale-95 shadow-lg shadow-blue-900/10">
-                            Open Workspace
-                          </button>
+                        <Link href={`/s/assignments/${item.id}`} className="border border-[#042BFD] text-[#042BFD] bg-white rounded-[10px] px-6 py-2 text-[14px] font-medium hover:bg-blue-50 transition-colors">
+                          Open Workspace
                         </Link>
                       </div>
                     </div>

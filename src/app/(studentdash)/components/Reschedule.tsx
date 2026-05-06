@@ -208,7 +208,7 @@ export default function RescheduleModal({
       <div
         ref={sheetRef}
         className="
-          fixed bottom-0 left-0 z-[101] flex h-[92vh] w-full flex-col rounded-t-[24px] bg-white shadow-2xl
+          fixed bottom-0 left-0 z-[101] flex h-[90vh] w-full flex-col rounded-t-[24px] bg-white shadow-2xl
           animate-in slide-in-from-bottom duration-300
           md:relative md:h-full md:w-full md:max-w-[480px] md:rounded-none md:slide-in-from-right
         "
@@ -217,44 +217,44 @@ export default function RescheduleModal({
         onTouchEnd={handleTouchEnd}
       >
         <div className="shrink-0 flex justify-center pt-3 pb-1 md:hidden touch-none">
-          <div className="h-1 w-10 rounded-full bg-gray-300" />
+          <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-4 md:px-8 md:py-8">
-          <div className="mb-5 flex items-start justify-between">
+        <div className="flex-1 overflow-y-auto px-5 py-4 md:px-8 md:py-8 custom-scrollbar">
+          <div className="mb-6 flex items-start justify-between">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 shadow-sm md:h-11 md:w-11">
               <Monitor size={20} className="text-gray-700" />
             </div>
-            <button onClick={onClose} className="hidden -mr-1 p-1 text-gray-400 transition-colors hover:text-gray-900 md:flex">
+            <button onClick={onClose} className="hidden -mr-2 p-1 text-gray-400 transition-colors hover:text-gray-900 md:flex">
               <X size={22} strokeWidth={1.5} />
             </button>
           </div>
 
-          <h2 className="mb-5 text-[18px] font-semibold text-gray-900 md:text-[22px]">Reschedule Session</h2>
+          <h2 className="mb-5 text-[18px] font-bold text-gray-900 md:mb-6 md:text-[22px]">Reschedule Session</h2>
 
-          <div className="mb-6 rounded-[14px] border border-gray-100 bg-[#F9FAFB] p-4">
-            <p className="mb-1.5 text-[14px] font-semibold uppercase tracking-wide text-gray-400">Current Session</p>
-            <h3 className="mb-2.5 text-[18px] font-semibold leading-snug text-gray-900">{sessionTitle}</h3>
-            <div className="mb-1.5 flex items-center gap-4 text-[14px] text-gray-600">
+          <div className="mb-6 rounded-[12px] border border-gray-100 bg-[#F8FAFC] p-4 md:p-5">
+            <p className="mb-1.5 text-[12px] font-medium text-gray-500 md:mb-2">Current Session</p>
+            <h3 className="mb-2.5 text-[15px] font-bold leading-snug text-gray-900 md:text-[16px]">{sessionTitle}</h3>
+            <div className="mb-2 flex items-center gap-3 text-[12px] text-gray-700 md:gap-4 md:text-[13px]">
               <div className="flex items-center gap-1.5">
-                <Calendar size={13} className="text-gray-400" />
+                <Calendar size={14} className="text-gray-500" />
                 <span>{sessionDate}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <Clock size={13} className="text-gray-400" />
+                <Clock size={14} className="text-gray-500" />
                 <span>{sessionTime}</span>
               </div>
             </div>
-            <p className="text-[12px] text-gray-500">with {mentorName}</p>
+            <p className="text-[12px] text-gray-500 md:text-[13px]">with {mentorName}</p>
           </div>
 
           {error ? (
             <div className="mb-6 rounded-[12px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
           ) : null}
 
-          <div className="mb-6">
-            <label className="mb-2 block text-[14px] font-medium text-gray-900">
-              Reason for Rescheduling <span className="text-red-500">*</span>
+          <div className="mb-6 md:mb-8">
+            <label className="mb-2.5 block text-[13px] font-bold text-gray-900">
+              Reason for Rescheduling <span className="text-gray-900">*</span>
             </label>
             <textarea
               value={reason}
@@ -263,67 +263,67 @@ export default function RescheduleModal({
                 if (error) setError("");
               }}
               rows={4}
-              className="w-full resize-none rounded-[12px] border border-gray-200 px-4 py-3 text-[14px] text-gray-900 placeholder-gray-400 transition-all focus:border-[#042BFD] focus:outline-none focus:ring-2 focus:ring-[#042BFD]/20"
+              className="w-full resize-none rounded-[12px] border border-gray-200 p-4 text-[14px] text-gray-900 placeholder-gray-400 transition-all focus:border-[#042BFD] focus:outline-none focus:ring-2 focus:ring-[#042BFD]/20 min-h-[110px]"
               placeholder="Please provide a brief explanation for the student..."
             />
           </div>
 
-          <div className="mb-6">
-            <label className="mb-2 block text-[14px] font-medium text-gray-900">
-              Suggest Alternative Times <span className="text-red-500">*</span>
+          <div className="mb-6 md:mb-8">
+            <label className="mb-2.5 block text-[13px] font-bold text-gray-900">
+              Suggest Alternative Times <span className="text-gray-900">*</span>
             </label>
-            <div className="mb-2 grid grid-cols-1 gap-2.5 md:grid-cols-2">
+            <div className="mb-2.5 grid grid-cols-1 gap-3 md:grid-cols-2">
               {suggestedSlots.map((slot) => {
                 const isSelected = selectedSlots.includes(slot.id);
                 return (
                   <div
                     key={slot.id}
                     onClick={() => toggleSlot(slot.id)}
-                    className={`cursor-pointer select-none rounded-[12px] border px-4 py-3 transition-all ${
+                    className={`cursor-pointer select-none rounded-[12px] border p-3.5 transition-all ${
                       isSelected
-                        ? "border-[#042BFD] bg-[#F0F2FF]"
-                        : "border-gray-200 bg-white hover:border-[#042BFD]/40 hover:bg-[#F5F6FF]/50"
+                        ? "border-[#042BFD] bg-[#F5F6FF]"
+                        : "border-gray-200 hover:border-[#042BFD] hover:bg-[#F5F6FF]/50"
                     }`}
                   >
-                    <p className={`mb-0.5 text-[16px] font-semibold ${isSelected ? "text-[#042BFD]" : "text-gray-900"}`}>
+                    <p className={`mb-1 text-[13px] font-bold md:mb-1.5 md:text-[14px] ${isSelected ? "text-[#042BFD]" : "text-gray-900"}`}>
                       {slot.date}
                     </p>
-                    <p className={`text-[14px] ${isSelected ? "font-medium text-[#042BFD]/70" : "text-gray-500"}`}>
+                    <p className={`text-[12px] md:text-[13px] ${isSelected ? "text-[#042BFD]/80 font-medium" : "text-gray-500"}`}>
                       {slot.time}
                     </p>
                   </div>
                 );
               })}
             </div>
-            <p className="text-[14px] text-gray-400">Select one or more time slots to offer the educator.</p>
+            <p className="text-[12px] text-gray-500 md:text-[13px]">Select one or more time slots to offer the educator.</p>
           </div>
 
-          <div className="mb-2">
-            <label className="mb-2 block text-[14px] font-medium text-gray-900">
+          <div className="mb-4">
+            <label className="mb-2.5 block text-[13px] font-bold text-gray-900">
               Additional Message <span className="font-normal text-gray-400">(Optional)</span>
             </label>
             <textarea
               value={additionalMessage}
               onChange={(e) => setAdditionalMessage(e.target.value)}
               rows={3}
-              className="w-full resize-none rounded-[12px] border border-gray-200 px-4 py-3 text-[14px] text-gray-900 placeholder-gray-400 transition-all focus:border-[#042BFD] focus:outline-none focus:ring-2 focus:ring-[#042BFD]/20"
+              className="w-full resize-none rounded-[12px] border border-gray-200 p-4 text-[14px] text-gray-900 placeholder-gray-400 transition-all focus:border-[#042BFD] focus:outline-none focus:ring-2 focus:ring-[#042BFD]/20 min-h-[90px] md:min-h-[100px]"
               placeholder="Add any additional context for the educator..."
             />
           </div>
         </div>
 
-        <div className="flex gap-3 border-t border-gray-100 bg-white px-5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:px-8 md:py-6">
+        <div className="flex gap-3 border-t border-gray-100 bg-white p-5 pb-[calc(1rem+env(safe-area-inset-bottom))] md:p-8 md:pb-8 shrink-0">
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="flex-1 rounded-[10px] border border-gray-200 bg-white py-3 text-[14px] font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+            className="flex-1 rounded-[10px] border border-gray-200 bg-white py-3 text-[14px] font-bold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50 md:py-3.5"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
             disabled={isSubmitting}
-            className="flex-1 rounded-[10px] bg-[#042BFD] py-3 text-[14px] font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+            className="flex-1 rounded-[10px] bg-[#042BFD] py-3 text-[14px] font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50 md:py-3.5"
           >
             {isSubmitting ? "Submitting..." : "Confirm"}
           </button>
