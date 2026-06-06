@@ -9,27 +9,63 @@ import FAQSection from "@/components/shared/FAQSection";
 import Testimonials from "@/components/TestimonialsSection";
 import PromoCards from "./components/PromoCards";
 import BookSlotSection from "@/app/(site)/contact-us/components/BookSlotSection";
-import { Loader2, AlertCircle } from "lucide-react";
-
 import { useDebounce } from "@/hooks/useDebounce";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import AvatarStack from "@/components/ui/AvatarStack";
 import Button from "@/components/ui/Button";
+import { AlertCircle } from "lucide-react";
+import { Course } from "@/lib/queries/courses/types";
 
 export default function CoursesPage() {
     const [search, setSearch] = useState("");
-    const [minCost, setMinCost] = useState<number | "">("");
-    const [maxCost, setMaxCost] = useState<number | "">("");
+    const [sortBy, setSortBy] = useState("");
+    const [category, setCategory] = useState("");
+    const [sessionType, setSessionType] = useState("");
 
-    const debouncedSearch = useDebounce(search, 500);
-    const debouncedMinCost = useDebounce(minCost, 500);
-    const debouncedMaxCost = useDebounce(maxCost, 500);
+    const { data: courses, isLoading, isError } = useGetCourses();
+    const debouncedSearch = useDebounce(search, 300);
 
-    const { data: courses, isLoading, isError } = useGetCourses({
-        search: debouncedSearch || undefined,
-        minCost: debouncedMinCost === "" ? undefined : debouncedMinCost,
-        maxCost: debouncedMaxCost === "" ? undefined : debouncedMaxCost,
-    });
+    const categories = useMemo(() => {
+      if (!courses) return [];
+      const vals = new Set(courses.map((c: any) => c.category).filter(Boolean));
+      return [...vals] as string[];
+    }, [courses]);
+
+    const sessionTypes = useMemo(() => {
+      if (!courses) return [];
+      const vals = new Set(courses.map((c: any) => c.sessionType).filter(Boolean));
+      return [...vals] as string[];
+    }, [courses]);
+
+    const filtered = useMemo(() => {
+      if (!courses) return [];
+      let list = [...courses] as any[];
+
+      if (debouncedSearch) {
+        const q = debouncedSearch.toLowerCase();
+        list = list.filter(c =>
+          (c.title || "").toLowerCase().includes(q) ||
+          (c.description || "").toLowerCase().includes(q)
+        );
+      }
+
+      if (sessionType) {
+        list = list.filter(c => c.sessionType === sessionType);
+      }
+
+      if (category) {
+        list = list.filter(c => c.category === category);
+      }
+
+      if (sortBy === "price-asc") list.sort((a, b) => (a.finalPrice ?? a.cost ?? 0) - (b.finalPrice ?? b.cost ?? 0));
+      else if (sortBy === "price-desc") list.sort((a, b) => (b.finalPrice ?? b.cost ?? 0) - (a.finalPrice ?? a.cost ?? 0));
+      else if (sortBy === "date-asc") list.sort((a, b) => new Date(a.startDateTime || 0).getTime() - new Date(b.startDateTime || 0).getTime());
+      else if (sortBy === "date-desc") list.sort((a, b) => new Date(b.startDateTime || 0).getTime() - new Date(a.startDateTime || 0).getTime());
+      else if (sortBy === "title-asc") list.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+      else if (sortBy === "title-desc") list.sort((a, b) => (b.title || "").localeCompare(a.title || ""));
+
+      return list;
+    }, [courses, debouncedSearch, sortBy, category, sessionType]);
 
     return (
         <main className="min-h-screen bg-white pb-20">
@@ -41,10 +77,14 @@ export default function CoursesPage() {
                     <CourseFilters
                         search={search}
                         setSearch={setSearch}
-                        minCost={minCost}
-                        setMinCost={setMinCost}
-                        maxCost={maxCost}
-                        setMaxCost={setMaxCost}
+                        sortBy={sortBy}
+                        setSortBy={setSortBy}
+                        category={category}
+                        setCategory={setCategory}
+                        categories={categories}
+                        sessionTypes={sessionTypes}
+                        sessionType={sessionType}
+                        setSessionType={setSessionType}
                     />
 
                     <div className="mt-2">
@@ -74,54 +114,18 @@ export default function CoursesPage() {
                             </div>
                         )}
 
-                        {!isLoading && !isError && courses && courses.length === 0 && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
-                                {[1, 2, 3, 4, 5, 6].map((i) => (
-                                    <div key={i} className="h-full">
-                                        <div
-                                            className="
-                                      bg-white 
-                                      rounded-[32px]
-                                      border border-[#EEF0FB]
-                                      overflow-hidden
-                                      flex flex-col
-                                      h-full
-                                      p-5
-                                      shadow-sm
-                                    "
-                                        >
-                                            <div className="relative rounded-[24px] overflow-hidden w-full h-[220px] mb-6 bg-gray-100">
-                                                <div className="absolute top-3 right-3">
-                                                    <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-bold text-[#021165] border border-[#EEF0FB]">
-                                                        Sat 7:30pm
-                                                    </div>
-                                                </div>
-                                                <div className="absolute bottom-3 left-3">
-                                                    <AvatarStack count={5} size={32} />
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col flex-grow gap-2 px-1">
-                                                <h3 className="text-xl font-bold text-[#1B1B1B]">Loren Ipsum</h3>
-                                                <p className="text-sm text-[#7A7A7A] leading-relaxed mb-2">
-                                                    Loren Ipsum meta description is display here Loren Ipsum meta...
-                                                </p>
-                                                <div className="mb-6">
-                                                    <span className="text-2xl font-bold text-[#252525]">₹500.01</span>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-4 mt-auto">
-                                                    <Button variant="secondary" className="!rounded-xl !h-[44px] !text-sm">Button</Button>
-                                                    <Button className="!rounded-xl !h-[44px] !text-sm">Button</Button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                        {!isLoading && !isError && filtered.length === 0 && (
+                            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[32px] border border-[#EEF0FB] p-8 text-center shadow-sm">
+                                <h3 className="text-lg font-bold text-gray-900 mb-2">No courses found</h3>
+                                <p className="text-gray-500 max-w-md mx-auto">
+                                    Try adjusting your search or filter criteria.
+                                </p>
                             </div>
                         )}
 
-                        {!isLoading && !isError && courses && courses.length > 0 && (
+                        {!isLoading && !isError && filtered.length > 0 && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
-                                {courses.map((course) => (
+                                {filtered.map((course) => (
                                     <div key={course._id} className="h-full">
                                         <CourseCard course={course} />
                                     </div>

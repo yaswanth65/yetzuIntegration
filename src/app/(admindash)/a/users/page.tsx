@@ -15,6 +15,7 @@ import {
 import { UsersTable } from "./components/UsersTable";
 import { PermissionsDrawer } from "./components/PermissionsDrawer";
 import { AddUserModal } from "./components/AddUserModal";
+import { EditUserModal } from "./components/EditUserModal";
 import { TabType, User } from "./components/types";
 import { AdminAPI, asArray } from "@/lib/api";
 import { toast } from "react-hot-toast";
@@ -33,6 +34,7 @@ export default function UserManagementPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [editUserId, setEditUserId] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -368,7 +370,7 @@ export default function UserManagementPage() {
       {isLoading && <div className="text-center py-12"><p className="text-slate-500">Loading users...</p></div>}
 
       {/* Data Table */}
-      {!isLoading && <UsersTable users={filteredUsers} onRefresh={fetchUsers} />}
+      {!isLoading && <UsersTable users={filteredUsers} onRefresh={fetchUsers} onEditUser={setEditUserId} />}
 
       {/* Pagination Footer */}
       <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
@@ -381,6 +383,12 @@ export default function UserManagementPage() {
       </div>
 
       <PermissionsDrawer isOpen={isPermissionsOpen} onClose={() => setIsPermissionsOpen(false)} />
+      <EditUserModal
+        isOpen={!!editUserId}
+        userId={editUserId}
+        onClose={() => setEditUserId(null)}
+        onSaved={fetchUsers}
+      />
       <AddUserModal isOpen={isAddUserOpen} onClose={() => setIsAddUserOpen(false)}
         onSubmit={async (user) => {
           try { await AdminAPI.createUser(user); toast.success("User created successfully"); await fetchUsers(); }

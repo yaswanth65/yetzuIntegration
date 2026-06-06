@@ -396,8 +396,8 @@ export default function SessionSlugPage() {
   }
 
   return (
-    <div className="bg-white p-0 pb-10 font-sans md:bg-transparent md:p-0 md:pb-8">
-      <div>
+    <div className="bg-white p-0 pb-10 font-sans md:bg-transparent md:p-0 md:pb-8 md:pl-6 lg:pl-8">
+      <div className="mt-6">
         <div className="mb-6 flex items-center gap-2 px-4 pt-6 text-[18px] font-semibold text-gray-900 md:hidden">
           <Link href="/s/sessions" className="flex items-center gap-2">
             <ArrowLeft size={20} />
@@ -405,15 +405,15 @@ export default function SessionSlugPage() {
           </Link>
         </div>
 
-        {/* <div className="mb-6 hidden items-center gap-2 px-2 text-[13px] font-medium md:flex">
+        <div className="mb-4 hidden items-center gap-2 px-2 text-[13px] font-medium md:flex">
           <Link href="/s/sessions" className="text-gray-500 transition-colors hover:text-gray-900">
             Sessions
           </Link>
           <ChevronRight size={14} className="text-gray-400" />
-          <span className="truncate text-gray-900">
-            {sessionData.type}: {sessionData.title}
-          </span>
-        </div> */}
+          <span className="text-gray-500">{sessionData.type}</span>
+          <ChevronRight size={14} className="text-gray-400" />
+          <span className="truncate text-gray-900 max-w-[500px]">{sessionData.title}</span>
+        </div>
 
         <div className="mb-2 bg-white p-4 pt-0 md:mb-6 md:rounded-[24px] md:border md:border-gray-100 md:p-8 md:pt-8 md:shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
           <div className="mb-6 flex flex-col justify-between gap-6 xl:flex-row xl:items-start md:mb-8">

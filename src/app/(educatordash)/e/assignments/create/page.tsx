@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ChevronLeft, Check, Lock, Upload, Calendar as CalendarIcon, ChevronDown, Loader2 } from "lucide-react";
+import { ChevronLeft, Check, Lock, Upload, ChevronDown, Loader2 } from "lucide-react";
 import { authApi } from "@/lib/axios";
-import { EducatorAPI, asArray } from "@/lib/api";
+import { EducatorAPI } from "@/lib/api";
 
 type SessionOption = {
   value: string;
@@ -16,7 +16,7 @@ type SessionOption = {
   studentsCount: number;
 };
 
-export default function CreateAssignmentPage() {
+function CreateAssignmentContent() {
   const searchParams = useSearchParams();
   const preselectedSessionId = searchParams.get("sessionId") || "";
   const hideFiles = searchParams.get("hideFiles") === "true";
@@ -367,5 +367,13 @@ export default function CreateAssignmentPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CreateAssignmentPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-gray-500">Loading...</div>}>
+      <CreateAssignmentContent />
+    </Suspense>
   );
 }

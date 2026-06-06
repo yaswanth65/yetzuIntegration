@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Search, CheckCircle2, Clock, ChevronLeft, ChevronRight, Eye, Download, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { authApi } from "@/lib/axios";
+import { shortenId } from "@/lib/utils/shortenId";
 
 type Submission = {
   id: string;
@@ -185,7 +186,7 @@ export default function SubmissionsPage() {
                 <tbody className="divide-y divide-gray-100">
                   {paginatedData.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-5 text-blue-600 font-medium">{item.assignmentId}</td>
+                      <td className="px-6 py-5 text-blue-600 font-medium" title={item.assignmentId}>{shortenId(item.assignmentId)}</td>
                       <td className="px-6 py-5 text-gray-900 font-medium max-w-[200px] truncate">{item.sessionTitle}</td>
                       <td className="px-6 py-5 text-gray-900 font-medium">{item.studentName}</td>
                       <td className="px-6 py-5">

@@ -24,16 +24,11 @@ const getStudyImage = (courseId: string) => {
     return STUDY_IMAGES[hash % STUDY_IMAGES.length];
 };
 
-export function getImageUrl(thumbnail: string | undefined): string {
-    if (thumbnail?.length === 0) return getStudyImage(thumbnail || '123');
-    // If it's already a full URL, return as is
-    if (thumbnail?.startsWith('http://') || thumbnail?.startsWith('https://')) {
+export function getImageUrl(thumbnail: string | undefined | null): string {
+    if (!thumbnail || thumbnail.length === 0) return getStudyImage(thumbnail || '123');
+    if (thumbnail.startsWith('http://') || thumbnail.startsWith('https://')) {
         return thumbnail;
     }
-
-    // Remove leading slash if present
-    const cleanPath = thumbnail?.startsWith('/') ? thumbnail.slice(1) : thumbnail;
-
-    // Prepend the API base URL
-    return `https://productionyetzuapi.yetzu.com/${cleanPath}` || getStudyImage(thumbnail || '123');
+    const cleanPath = thumbnail.startsWith('/') ? thumbnail.slice(1) : thumbnail;
+    return `https://productionyetzuapi.yetzu.com/${cleanPath}`;
 }

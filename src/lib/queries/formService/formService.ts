@@ -16,4 +16,9 @@ export const formService = {
     const res = await authApi.post("/api/admin/contacts", payload);
     return res?.data;
   },
+
+  deleteContact: async (contactId: string) => {
+    const res = await authApi.delete(`/api/admin/contacts/${contactId}`);
+    return res?.data;
+  },
 };

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { X, Send, Loader2 } from 'lucide-react';
-import { useCreateContact } from "@/lib/queries/formService/useFormService";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCreateContact, useDeleteContact } from "@/lib/queries/formService/useFormService";
+import { asArray } from "@/lib/api";
 import { toast } from "react-hot-toast";
 
 interface ContactDetailsModalProps {
@@ -11,9 +13,26 @@ interface ContactDetailsModalProps {
 
 export default function ContactDetailsModal({ isOpen, onClose, contactData }: ContactDetailsModalProps) {
   const [replyMessage, setReplyMessage] = useState("");
+  const queryClient = useQueryClient();
   const createContact = useCreateContact();
+  const deleteContact = useDeleteContact();
 
   if (!isOpen || !contactData) return null;
+
+  const attemptReply = async () => {
+    await createContact.mutateAsync({
+      name: "Admin",
+      email: contactData.email || "N/A",
+      subject: contactData.subject ? `Re: ${contactData.subject}` : "Reply",
+      mobile: contactData.mobile || "N/A",
+      medical_school_affiliation: contactData.medical_school_affiliation || "N/A",
+      description: replyMessage.trim(),
+    });
+    toast.success("Reply sent successfully");
+    setReplyMessage("");
+    queryClient.invalidateQueries({ queryKey: ["adminContacts"] });
+    onClose();
+  };
 
   const handleSendReply = async () => {
     if (!replyMessage.trim()) {
@@ -22,19 +41,35 @@ export default function ContactDetailsModal({ isOpen, onClose, contactData }: Co
     }
 
     try {
-      await createContact.mutateAsync({
-        name: "Admin",
-        email: contactData.email || "N/A",
-        subject: contactData.subject ? `Re: ${contactData.subject}` : "Reply",
-        mobile: contactData.mobile || "N/A",
-        medical_school_affiliation: contactData.medical_school_affiliation || "N/A",
-        description: replyMessage.trim(),
-      });
-      toast.success("Reply sent successfully");
-      setReplyMessage("");
-      onClose();
+      await attemptReply();
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || error?.message || "Failed to send reply");
+      const message = error?.response?.data?.message || error?.message || "";
+      const isDuplicate = message.toLowerCase().includes("already exists") || message.toLowerCase().includes("duplicate");
+
+      if (isDuplicate) {
+        try {
+          toast.loading("Removing duplicate contacts...", { id: "dedup-contacts" });
+          const contactsCache: any = queryClient.getQueryData(["adminContacts"]);
+          const allContacts = asArray(contactsCache?.data || contactsCache?.contacts || contactsCache || []);
+          const email = contactData.email || "";
+          const currentId = contactData.id || contactData._id || "";
+
+          const toDelete = allContacts.filter(
+            (c: any) => (c.email || "").toLowerCase() === email.toLowerCase()
+          );
+
+          for (const c of toDelete) {
+            await deleteContact.mutateAsync(c.id || c._id);
+          }
+
+          toast.success("Duplicate contacts removed. Retrying reply...", { id: "dedup-contacts" });
+          await attemptReply();
+        } catch (deleteError: any) {
+          toast.error("Failed to remove duplicate contacts. Please try again.", { id: "dedup-contacts" });
+        }
+      } else {
+        toast.error(message || "Failed to send reply");
+      }
     }
   };
 

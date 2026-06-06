@@ -34,6 +34,8 @@ type AssignmentView = {
   comments: CommentItem[];
   submittedFiles: ResourceItem[];
   status: string;
+  educatorRemark?: string;
+  feedbackUrl?: string;
 };
 
 const EMPTY_ASSIGNMENT: AssignmentView = {
@@ -50,6 +52,8 @@ const EMPTY_ASSIGNMENT: AssignmentView = {
   comments: [],
   submittedFiles: [],
   status: "",
+  educatorRemark: "",
+  feedbackUrl: "",
 };
 
 const formatDateTime = (value?: string) => {
@@ -114,12 +118,12 @@ const getBadgeDetails = (dueDateStr: string, status: string) => {
 const mapAssignmentDetails = (item: any, assignmentId: string): AssignmentView => {
   const payload = item?.data ?? item;
   const base = payload?.assignment ?? payload;
+  const submission = base.submission || payload?.submission;
 
   const toDownloadUrl = (value?: string) => {
     if (!value) return undefined;
     const url = String(value);
     if (/^https?:\/\//i.test(url)) return url;
-    // Many APIs return a Supabase storage path; keep consistent with existing pages.
     return `https://rvleyzlrzxdkgfyqrvzy.supabase.co/storage/v1/object/public/${url.replace(/^\/+/, "")}`;
   };
 
@@ -175,13 +179,19 @@ const mapAssignmentDetails = (item: any, assignmentId: string): AssignmentView =
     }
   });
 
-  const submittedFiles = asArray(base.submittedFiles || base.submissions || base.documents || payload?.submissions).map(
-    (file: any, index: number) => ({
-      id: String(file.id || file._id || file.submissionId || index),
-      name: file.name || file.fileName || file.documentName || "Submission.pdf",
-      url: file.url || file.fileUrl || file.documentUrl,
-    }),
-  );
+  const submittedFiles = submission?.submitted_url || submission?.fileUrl
+    ? [{
+        id: String(submission.id || submission.submissionId || "submission"),
+        name: submission.submitted_doc?.split("/").pop() || submission.fileName || submission.documentName || "Submission.pdf",
+        url: submission.submitted_url || submission.fileUrl || submission.documentUrl,
+      }]
+    : asArray(base.submittedFiles || base.documents || payload?.submissions).map(
+        (file: any, index: number) => ({
+          id: String(file.id || file._id || file.submissionId || index),
+          name: file.name || file.fileName || file.documentName || "Submission.pdf",
+          url: file.url || file.fileUrl || file.documentUrl,
+        }),
+      );
 
   const comments = asArray(base.comments || base.feedbacks || base.activity || payload?.comments).map((comment: any, index: number) => ({
     id: String(comment.id || comment._id || index),
@@ -206,7 +216,9 @@ const mapAssignmentDetails = (item: any, assignmentId: string): AssignmentView =
     resources: Array.from(uniqueResources.values()),
     comments,
     submittedFiles,
-    status: String(base.status || payload?.status || ""),
+    status: String(submission?.status || base.status || payload?.status || ""),
+    educatorRemark: submission?.educatorRemark || base.educatorRemark || "",
+    feedbackUrl: submission?.feedbackUrl || base.feedbackUrl || "",
   };
 };
 
@@ -505,21 +517,23 @@ export default function AssignmentSlugPage() {
   }
 
   return (
-    <div className="bg-white font-sans pb-18 md:bg-transparent md:p-0 md:pb-8">
-      <div>
+    <div className="bg-white font-sans pb-18 md:bg-transparent md:p-0 md:pb-8 md:pl-6 lg:pl-8">
+      <div className="mt-6">
         <div className="flex md:hidden items-center gap-2 mb-2 px-4 pt-6">
           <Link href="/s/assignments" className="text-gray-900 flex items-center gap-2 font-semibold text-[16px] md:text-[18px]">
             <ArrowLeft size={20} /> Assignments
           </Link>
         </div>
 
-        {/* <div className="hidden md:flex items-center gap-2 text-[13px] font-medium mb-6 px-2 text-gray-500">
+        <div className="hidden md:flex items-center gap-2 text-[13px] font-medium mb-6 px-2 text-gray-500">
           <Link href="/s/sessions" className="hover:text-gray-900 transition-colors">
             Sessions
           </Link>
           <ChevronRight size={14} className="text-gray-400" />
-          <span className="text-gray-500 truncate">{assignmentData.mentor.session}</span>
-        </div> */}
+          <span className="text-gray-500">{assignmentData.mentor.session}</span>
+          <ChevronRight size={14} className="text-gray-400" />
+          <span className="truncate text-gray-900 max-w-[400px]">{assignmentData.title}</span>
+        </div>
 
         <div className="flex flex-col md:grid md:grid-cols-3 md:gap-6 bg-white md:bg-transparent">
           <div className="order-1 md:col-span-2 bg-white p-4 md:p-8 border-b border-gray-200 md:border md:border-gray-100 md:rounded-[24px] md:shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
@@ -687,41 +701,56 @@ export default function AssignmentSlugPage() {
           </div>
 
           <div className="order-4 md:col-span-1 md:col-start-3 md:row-start-2 bg-white p-4 md:p-8 flex flex-col h-full md:border md:border-gray-100 md:rounded-[24px] md:shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
-            <h2 className="text-[16px] md:text-[18px] font-medium text-gray-900 mb-4 md:mb-6">Add Private Comment</h2>
-
-            <div className="flex-1 hidden md:flex flex-col justify-end min-h-[50px] md:min-h-[100px] mb-4 gap-3">
-              {comments.length === 0 ? (
-                <p className="text-sm text-gray-500">No comments yet.</p>
-              ) : (
-                comments.map((commentItem) => (
-                  <div key={commentItem.id} className="bg-[#F8FAFC] rounded-[16px] p-4 border border-gray-100">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-[13px] font-bold text-gray-900">{commentItem.author}</span>
-                      <span className="text-[11px] text-gray-400">{commentItem.date}</span>
-                    </div>
-                    <p className="text-[14px] text-gray-600 italic leading-relaxed">{commentItem.text}</p>
-                  </div>
-                ))
-              )}
+            <div className="flex items-center gap-2 mb-4 md:mb-6">
+              <div className="w-8 h-8 rounded-full bg-[#EEF2FF] flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#042BFD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </div>
+              <h2 className="text-[16px] md:text-[18px] font-semibold text-gray-900">Educator's Feedback</h2>
             </div>
 
-            <div className="mt-auto mb-2 md:mb-0">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Enter here"
-                  value={comment}
-                  onChange={(event) => setComment(event.target.value)}
-                  onKeyDown={(event) => event.key === "Enter" && handleSendComment()}
-                  className="w-full border border-gray-200 rounded-[14px] pl-4 pr-12 py-3 md:py-3.5 text-[13px] md:text-[14px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#042BFD] transition-all"
-                />
-                <button onClick={handleSendComment} className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-[#042BFD] transition-colors rounded-lg">
-                  <Send size={18} strokeWidth={2} />
-                </button>
-              </div>
-              <p className="text-[12px] md:text-[11px] text-gray-400 mt-2 pl-1">
-                Private comments are only visible to you and your mentor
-              </p>
+            <div className="flex-1 flex flex-col min-h-[100px] md:min-h-[200px] mb-4 gap-3">
+              {(assignmentData.educatorRemark || assignmentData.feedbackUrl) && (
+                <div className="bg-blue-50 border border-blue-100 rounded-[14px] p-4">
+                  {assignmentData.educatorRemark && (
+                    <p className="text-[13px] text-blue-900 leading-relaxed">{assignmentData.educatorRemark}</p>
+                  )}
+                  {assignmentData.feedbackUrl && (
+                    <a href={assignmentData.feedbackUrl} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-white border border-blue-200 rounded-xl text-[12px] font-medium text-blue-700 hover:bg-blue-50 transition-colors">
+                      <Download size={14} />
+                      Download Feedback File
+                    </a>
+                  )}
+                </div>
+              )}
+              {comments.length === 0 && !assignmentData.educatorRemark ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
+                  <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-3">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                  </div>
+                  <p className="text-[13px] text-gray-400 font-medium">No feedback yet</p>
+                  <p className="text-[11px] text-gray-400 mt-1">Your educator will leave feedback here after reviewing</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {comments.map((commentItem) => (
+                    <div key={commentItem.id} className="bg-[#F8FAFC] rounded-[14px] p-4 border border-gray-100">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-6 h-6 rounded-full bg-[#042BFD] flex items-center justify-center">
+                          <span className="text-[10px] font-bold text-white">{commentItem.author.charAt(0)}</span>
+                        </div>
+                        <span className="text-[12px] font-semibold text-gray-900">{commentItem.author}</span>
+                        <span className="text-[10px] text-gray-400 ml-auto">{commentItem.date}</span>
+                      </div>
+                      <p className="text-[13px] text-gray-600 leading-relaxed pl-8">{commentItem.text}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {uploadedFiles.length > 0 && (

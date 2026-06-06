@@ -50,7 +50,7 @@ export default function DashLayout({ children, role }: DashLayoutProps) {
                             {/* <ChatWidget onClose={() => setIsChatOpen(false)} /> */}
                         </div>
                     ) : (
-                        <div className="pl-0 lg:pl-4 h-[calc(100vh-80px)] overflow-y-auto">
+                        <div className="pl-0 lg:pl-6 h-[calc(100vh-80px)] overflow-y-auto">
                             {children}
                         </div>
                     )}

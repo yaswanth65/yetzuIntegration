@@ -304,18 +304,14 @@ export default function SessionsPage() {
             </div>
 
             <div className="relative flex items-center justify-between gap-3">
-              {session.webinerLink && activeTab === "upcoming" ? (
+              {isFocus && session.webinerLink && activeTab === "upcoming" ? (
                 <a
                   href={session.webinerLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`flex-1 flex items-center justify-center gap-2 rounded-[10px] py-2.5 text-[14px] font-medium transition-colors active:scale-95 ${
-                    isFocus
-                      ? "bg-[#111111] text-white hover:bg-black"
-                      : "border border-[#042BFD] bg-white text-[#042BFD] hover:bg-blue-50"
-                  }`}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-[10px] py-2.5 text-[14px] font-medium transition-colors active:scale-95 bg-[#111111] text-white hover:bg-black"
                 >
-                  {isFocus ? "Join Session" : "View Details"}
+                  Join Session
                   <ExternalLink size={14} />
                 </a>
               ) : (

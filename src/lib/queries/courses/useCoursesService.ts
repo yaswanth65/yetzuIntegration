@@ -10,8 +10,6 @@ const useGetCourses = (params?: { search?: string; minCost?: number; maxCost?: n
     queryFn: () => getCourses(params),
     refetchInterval: false,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    initialData: [],
   });
 };
 
@@ -22,7 +20,6 @@ const useGetCourseById = (id: string): UseQueryResult<Course, unknown> => {
     enabled: !!id,
     refetchInterval: false,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
   });
 };
 

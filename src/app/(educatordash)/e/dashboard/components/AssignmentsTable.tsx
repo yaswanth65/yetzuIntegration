@@ -1,242 +1,265 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { Eye, Download, CheckCircle2, Clock, XCircle, MinusCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
-import { EducatorAPI, asArray } from '@/lib/api';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useMemo } from "react";
+import { Search, CheckCircle2, Clock, ChevronLeft, ChevronRight, Eye, Download, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { authApi } from "@/lib/axios";
+import { shortenId } from "@/lib/utils/shortenId";
 
-interface DashboardAssignment {
+type Submission = {
   id: string;
   assignmentId: string;
-  sessionType: string;
+  assignmentTitle: string;
   studentName: string;
-  createdAt: string;
-  deadline: string;
+  studentEmail: string;
+  sessionTitle: string;
+  sessionType: string;
+  dueDate: string;
   status: string;
-  submissions: any[];
-}
-
-const getStatusBadge = (status: string) => {
-  switch (status?.toLowerCase()) {
-    case 'submitted':
-    case 'reviewed':
-    case 'review done':
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-[#10B981] rounded-full border border-[#D1FAE5] bg-white">
-          <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981]" />
-          Submitted
-        </span>
-      );
-    case 'pending':
-    case 'pending submission':
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-[#D97706] rounded-full border border-[#FEF3C7] bg-white">
-          <Clock className="w-3.5 h-3.5 text-[#D97706]" />
-          Pending
-        </span>
-      );
-    case 'failed':
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-[#EF4444] rounded-full border border-[#FEE2E2] bg-white">
-          <XCircle className="w-3.5 h-3.5 text-[#EF4444]" />
-          Failed
-        </span>
-      );
-    case 'cancelled':
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-[#6B7280] rounded-full border border-[#E5E7EB] bg-white">
-          <MinusCircle className="w-3.5 h-3.5 text-[#6B7280]" />
-          Cancelled
-        </span>
-      );
-    default:
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-[#6B7280] rounded-full border border-[#E5E7EB] bg-white">
-          {status || 'Unknown'}
-        </span>
-      );
-  }
+  submittedAt: string;
+  submitted_url?: string;
 };
 
-// Helper to shorten ID (show first 8 chars)
-const shortId = (id: string) => id ? `${id.substring(0, 8)}...` : 'N/A';
+const formatDate = (value?: string) => {
+  if (!value) return "-";
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+};
 
-const ITEMS_PER_PAGE = 8;
+const normalizeStatus = (status: string) => {
+  const s = status.toLowerCase();
+  if (s === "review done" || s === "reviewed") return "Review Done";
+  if (s === "submitted") return "Submitted";
+  return "Pending";
+};
 
 export default function AssignmentsTable() {
-  const [loading, setLoading] = useState(true);
-  const [assignments, setAssignments] = useState<DashboardAssignment[]>([]);
+  const [activeTab, setActiveTab] = useState("Pending");
   const [currentPage, setCurrentPage] = useState(1);
-  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAssignments = async () => {
+    const fetchSubmissions = async () => {
       try {
         setLoading(true);
-        // Fetch all assignments via POST /api/educator/assignments/list (from Postman)
-        const response = await EducatorAPI.getAssignments();
-        const data = asArray(response);
-        
-        if (data.length > 0) {
-          const mapped = data.map((item: any) => ({
-            id: item.id || item._id || '',
-            assignmentId: item.id || item._id || '',
-            sessionType: item.sessionType || item.type || 'Session',
-            studentName: item.studentName || item.student?.name || 'Student',
-            createdAt: item.createdAt || item.issuedDate || new Date().toISOString(),
-            deadline: item.deadline || item.dueDate || 'TBD',
-            status: item.status || 'Pending',
-            submissions: item.submissions || [],
-          }));
-          
-          // Sort by createdAt (latest first)
-          mapped.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-          
-          setAssignments(mapped);
-        }
-      } catch (error) {
-        console.error("Failed to fetch educator assignments", error);
-        setAssignments([]);
+        const response = await authApi.get("/api/educator/assignments/submissions", {
+          params: { page: 1, limit: 100 },
+        });
+        const data = response?.data?.data || response?.data || response;
+        const list = data?.list || data?.submissions || data || [];
+        const mapped: Submission[] = (Array.isArray(list) ? list : []).map((item: any) => ({
+          id: item.id || item._id,
+          assignmentId: item.assignmentId || item.assignment?.id || "-",
+          assignmentTitle: item.assignmentTitle || item.assignment?.title || "Assignment",
+          studentName: item.studentName || item.student?.name || "Student",
+          studentEmail: item.studentEmail || item.student?.email || "",
+          sessionTitle: item.sessionTitle || item.session?.title || item.assignment?.session?.title || "Session",
+          sessionType: item.session?.sessionType || item.assignment?.session?.sessionType || item.sessionType || "Webinar",
+          dueDate: item.assignment?.dueDate || item.dueDate || "",
+          status: normalizeStatus(item.status),
+          submittedAt: item.submittedAt || item.submissionDate || item.createdAt || "",
+          submitted_url: item.submitted_url || item.fileUrl || item.documentUrl || "",
+        }));
+        setSubmissions(mapped);
+      } catch {
+        setSubmissions([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchAssignments();
+    fetchSubmissions();
   }, []);
 
-  const totalPages = Math.ceil(assignments.length / ITEMS_PER_PAGE);
-  
-  const paginatedAssignments = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return assignments.slice(start, start + ITEMS_PER_PAGE);
-  }, [currentPage, assignments]);
+  const filteredData = useMemo(() => {
+    return submissions.filter(item => {
+      if (activeTab === "Pending") return item.status === "Pending" || item.status === "Submitted";
+      if (activeTab === "Completed") return item.status === "Review Done";
+      return true;
+    }).filter(item => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return item.assignmentId.toLowerCase().includes(q) ||
+        item.assignmentTitle.toLowerCase().includes(q) ||
+        item.sessionTitle.toLowerCase().includes(q) ||
+        item.studentName.toLowerCase().includes(q);
+    });
+  }, [activeTab, searchQuery, submissions]);
 
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
+  const pendingCount = submissions.filter(s => s.status === "Pending" || s.status === "Submitted").length;
+  const completedCount = submissions.filter(s => s.status === "Review Done").length;
+
+  const itemsPerPage = 8;
+  const totalItems = filteredData.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+  };
+
+  const renderStatusBadge = (status: string) => {
+    if (status === "Submitted") {
+      return (
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-green-200 bg-green-50 text-green-700 text-[13px] font-medium">
+          <CheckCircle2 className="w-3.5 h-3.5" />
+          {status}
+        </div>
+      );
     }
+    if (status === "Pending") {
+      return (
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-yellow-200 bg-yellow-50 text-yellow-700 text-[13px] font-medium">
+          <Clock className="w-3.5 h-3.5" />
+          {status}
+        </div>
+      );
+    }
+    if (status === "Review Done") {
+      return (
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-blue-200 bg-blue-50 text-blue-700 text-[13px] font-medium">
+          <CheckCircle2 className="w-3.5 h-3.5" />
+          {status}
+        </div>
+      );
+    }
+    return null;
   };
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden mt-6 mb-8">
-        <div className="flex items-center justify-center h-48">
+      <div className="border border-gray-200 rounded-[20px] overflow-hidden bg-white shadow-sm">
+        <div className="flex items-center justify-center py-16">
           <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-          <span className="ml-2 text-sm text-gray-500">Loading assignments...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (assignments.length === 0) {
-    return (
-      <div className="bg-white rounded-xl border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden mt-6 mb-8">
-        <div className="flex flex-col items-center justify-center h-48">
-          <p className="text-gray-500 text-sm">No assignments found</p>
-          <p className="text-gray-400 text-xs mt-1">Create your first assignment to get started</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden mt-6 mb-8">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className="sticky top-0 bg-[#FAFAFA] z-10">
-            <tr className="bg-[#FAFAFA] border-b border-gray-100">
-              <th className="px-6 py-4 font-semibold text-gray-500 text-[11px] uppercase tracking-wider">ID</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 text-[11px] uppercase tracking-wider">Session Type</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 text-[11px] uppercase tracking-wider">Student Name</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 text-[11px] uppercase tracking-wider">Created At</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 text-[11px] uppercase tracking-wider">Deadline</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 text-[11px] uppercase tracking-wider">Status</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 text-[11px] uppercase tracking-wider text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {paginatedAssignments.map((item) => (
-              <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="px-6 py-4">
-                  <span className="text-[#3B82F6] font-semibold text-xs">{shortId(item.assignmentId)}</span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="inline-flex px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-[11px] font-medium">
-                    {item.sessionType}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="text-gray-900 font-semibold text-xs">{item.studentName}</span>
-                </td>
-                <td className="px-6 py-4 text-gray-500 text-xs">
-                  {new Date(item.createdAt).toLocaleDateString()}
-                </td>
-                <td className="px-6 py-4 text-gray-500 text-xs">
-                  {item.deadline !== 'TBD' ? new Date(item.deadline).toLocaleDateString() : 'TBD'}
-                </td>
-                <td className="px-6 py-4">
-                  {getStatusBadge(item.status)}
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="flex items-center justify-end gap-3">
-                    <button
-                      onClick={() => router.push(`/e/assignments/${item.id}`)}
-                      className="text-gray-400 hover:text-gray-600 transition-colors"
-                      title="View Details"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    {item.submissions && item.submissions.length > 0 && (
-                      <button
-                        onClick={() => {
-                          const firstSubmission = item.submissions[0];
-                          const url = firstSubmission.documentUrl || firstSubmission.fileUrl;
-                          if (url) window.open(url, "_blank");
-                        }}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
-                        title="Download Submission"
-                      >
-                        <Download className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-gray-200">
+        <div className="flex items-center gap-8">
+          <button
+            onClick={() => handleTabChange("Pending")}
+            className={`flex items-center gap-2 pb-4 border-b-2 transition-colors -mb-[1px] ${activeTab === "Pending" ? "border-blue-600 text-gray-900 font-medium" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}`}
+          >
+            Pending <span className="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded-full font-medium">{pendingCount}</span>
+          </button>
+          <button
+            onClick={() => handleTabChange("Completed")}
+            className={`flex items-center gap-2 pb-4 border-b-2 transition-colors -mb-[1px] ${activeTab === "Completed" ? "border-blue-600 text-gray-900 font-medium" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}`}
+          >
+            Completed <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full font-medium">{completedCount}</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4 w-full md:w-auto pb-3">
+          <div className="relative w-full md:w-[320px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by assignment, session or student"
+              value={searchQuery}
+              onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-gray-400 bg-white"
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-500 font-medium">
-        <p>Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, assignments.length)} of {assignments.length} assignments</p>
-        <div className="flex items-center gap-1.5">
-          <button 
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-gray-700 transition-colors bg-white disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+      <div className="border border-gray-200 rounded-[20px] overflow-hidden bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm whitespace-nowrap">
+            <thead className="bg-gray-50/80 text-gray-500 border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-4 font-medium tracking-wider text-[11px] uppercase">ASSIGNMENT ID</th>
+                <th className="px-6 py-4 font-medium tracking-wider text-[11px] uppercase">SESSION</th>
+                <th className="px-6 py-4 font-medium tracking-wider text-[11px] uppercase">STUDENT NAME</th>
+                <th className="px-6 py-4 font-medium tracking-wider text-[11px] uppercase">SESSION TYPE</th>
+                <th className="px-6 py-4 font-medium tracking-wider text-[11px] uppercase">DUE DATE</th>
+                <th className="px-6 py-4 font-medium tracking-wider text-[11px] uppercase">STATUS</th>
+                <th className="px-6 py-4 font-medium tracking-wider text-[11px] uppercase">SUBMISSION DATE</th>
+                <th className="px-6 py-4 font-medium tracking-wider text-[11px] uppercase">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {paginatedData.map((item) => (
+                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-6 py-5 text-blue-600 font-medium" title={item.assignmentId}>{shortenId(item.assignmentId)}</td>
+                  <td className="px-6 py-5 text-gray-900 font-medium max-w-[200px] truncate">{item.sessionTitle}</td>
+                  <td className="px-6 py-5 text-gray-900 font-medium">{item.studentName}</td>
+                  <td className="px-6 py-5">
+                    <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-[13px] font-medium">{item.sessionType}</span>
+                  </td>
+                  <td className="px-6 py-5 text-gray-500">{formatDate(item.dueDate)}</td>
+                  <td className="px-6 py-5">{renderStatusBadge(item.status)}</td>
+                  <td className="px-6 py-5 text-gray-600">{formatDate(item.submittedAt)}</td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-4 text-gray-400">
+                      <Link href={`/e/submissions/${item.id}`} className="hover:text-gray-600 transition-colors">
+                        <Eye className="w-4 h-4" />
+                      </Link>
+                      {item.status !== "Pending" && item.submitted_url && (
+                        <a href={item.submitted_url} target="_blank" rel="noreferrer" className="hover:text-gray-600 transition-colors">
+                          <Download className="w-4 h-4" />
+                        </a>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {paginatedData.length === 0 && Array.from({ length: 5 }).map((_, i) => (
+                <tr key={`empty-${i}`} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-6 py-5">&nbsp;</td>
+                  <td className="px-6 py-5">&nbsp;</td>
+                  <td className="px-6 py-5">&nbsp;</td>
+                  <td className="px-6 py-5">&nbsp;</td>
+                  <td className="px-6 py-5">&nbsp;</td>
+                  <td className="px-6 py-5">&nbsp;</td>
+                  <td className="px-6 py-5">&nbsp;</td>
+                  <td className="px-6 py-5">&nbsp;</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            Showing {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}&ndash;{Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} submissions
+          </div>
+          <div className="flex items-center gap-1">
             <button
-              key={page}
-              onClick={() => handlePageChange(page)}
-              className={`w-7 h-7 rounded-lg flex items-center justify-center font-semibold text-xs ${
-                currentPage === page 
-                  ? 'bg-[#111827] text-white' 
-                  : 'text-gray-600 bg-white border border-transparent hover:bg-gray-50'
-              }`}
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors"
             >
-              {page}
+              <ChevronLeft className="w-4 h-4" />
             </button>
-          ))}
-          <button 
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-gray-700 transition-colors bg-white disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
+                  currentPage === page
+                    ? "bg-[#021165] text-white"
+                    : "border border-gray-200 text-gray-600 bg-white hover:bg-gray-50"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

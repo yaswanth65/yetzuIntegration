@@ -52,7 +52,8 @@ const toDisplayDate = (value?: string) => {
 };
 
 const mapAssignment = (item: any, index: number) => {
-  const status = String(item.status || "").toLowerCase();
+  const submission = item.submission;
+  const status = String(submission?.status || item.status || "").toLowerCase();
   const dueSource = item.dueDate || item.deadline || item.createdAt || "";
   const dueDate = dueSource ? new Date(dueSource) : null;
   const isSubmitted = ["submitted", "review done", "reviewed", "graded", "completed"].includes(status);

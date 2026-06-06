@@ -9,9 +9,10 @@ import Link from "next/link";
 interface UsersTableProps {
   users: User[];
   onRefresh?: () => void;
+  onEditUser?: (userId: string) => void;
 }
 
-export function UsersTable({ users, onRefresh }: UsersTableProps) {
+export function UsersTable({ users, onRefresh, onEditUser }: UsersTableProps) {
   const handleDelete = async (userId: string, userName: string) => {
     if (!confirm(`Are you sure you want to delete user "${userName}"?`)) return;
     try {
@@ -25,8 +26,7 @@ export function UsersTable({ users, onRefresh }: UsersTableProps) {
   };
 
   const handleEdit = (user: User) => {
-    // Placeholder for edit functionality
-    toast(`Edit user: ${user.name}`);
+    onEditUser?.(user.id);
   };
 
   return (

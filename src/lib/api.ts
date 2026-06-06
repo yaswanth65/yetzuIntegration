@@ -129,6 +129,28 @@ export const CourseAPI = {
   },
 };
 
+export const PublicSessionsAPI = {
+  getAll: async (params?: { status?: string }) => {
+    try {
+      const response = await api.get("/api/public/sessions", { params: { status: "all", ...params } });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("PublicSessionsAPI.getAll", error, { params });
+      throw error;
+    }
+  },
+
+  getById: async (sessionId: string) => {
+    try {
+      const response = await api.get(`/api/public/sessions/${sessionId}`);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("PublicSessionsAPI.getById", error, { sessionId });
+      throw error;
+    }
+  },
+};
+
 export const PaymentAPI = {
   createOrder: async (payload: { amount: number; currency?: string; sessionId: string; userId?: string }) => {
     try {
@@ -738,6 +760,41 @@ export const EducatorAPI = {
     }
   },
 
+  addSubmissionComment: async (submissionId: string, educatorRemark: string) => {
+    try {
+      const response = await authApi.post(`/api/educator/assignments/submissions/${submissionId}`, { educatorRemark });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.addSubmissionComment", error, { submissionId, educatorRemark });
+      throw error;
+    }
+  },
+
+  patchSubmission: async (submissionId: string, payload: { educatorRemark?: string; status?: string; feedbackUrl?: string }) => {
+    try {
+      const response = await authApi.patch(`/api/educator/assignments/submissions/${submissionId}`, payload);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.patchSubmission", error, { submissionId, payload });
+      throw error;
+    }
+  },
+
+  uploadFeedbackFile: async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const response = await authApi.post("/api/assignment/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const result = response?.data?.data || response?.data || response;
+      return result?.url || result?.fileUrl || result?.path || "";
+    } catch (error) {
+      logApiFailure("EducatorAPI.uploadFeedbackFile", error, { fileName: file.name });
+      throw error;
+    }
+  },
+
   getNotifications: async () => {
     try {
       const response = await authApi.get("/api/educator/dashboard/notifications");
@@ -951,7 +1008,7 @@ export const AdminAPI = {
     }
   },
 
-  updateUser: async (payload: { userId: string; name?: string; email?: string; status?: string; role?: string }) => {
+  updateUser: async (payload: { userId: string; name?: string; email?: string; mobileno?: string; status?: string; role?: string; metadata?: Record<string, any> }) => {
     const { userId, ...body } = payload;
     try {
       const response = await authApi.put(`/api/admin/users/${userId}`, body);

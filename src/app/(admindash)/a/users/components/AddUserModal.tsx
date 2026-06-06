@@ -11,7 +11,6 @@ interface AddUserModalProps {
     mobileno?: string;
     role: string;
     status: string;
-    permissions: Record<string, boolean>;
     inviteMethod: "email_invite" | "temp_password";
     organizationId?: string;
     sendCredentialsEmail?: boolean;
@@ -29,27 +28,15 @@ export function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModalProps) {
     mobileno: "",
     role: "Student",
     status: "active",
+    organizationId: "",
     inviteMethod: "email_invite" as "email_invite" | "temp_password",
-    permissions: {
-      viewSessions: false,
-      submitAssignments: false,
-      manageSessions: false,
-      manageAssignments: false,
-      viewAnalytics: false,
-      manageUsers: false,
-      manageBilling: false,
-      manageSettings: false,
-    },
   });
 
   const addUserSteps = [
     { num: 1, label: "Basic Info" },
     { num: 2, label: "Access Control" },
-    { num: 3, label: "Permissions" },
-    { num: 4, label: "Review" },
+    { num: 3, label: "Review" },
   ];
-
-  const isStudent = newUser.role === "Student";
 
   const resetForm = () => {
     setAddUserStep(1);
@@ -60,17 +47,8 @@ export function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModalProps) {
       mobileno: "",
       role: "Student",
       status: "active",
+      organizationId: "",
       inviteMethod: "email_invite",
-      permissions: {
-        viewSessions: false,
-        submitAssignments: false,
-        manageSessions: false,
-        manageAssignments: false,
-        viewAnalytics: false,
-        manageUsers: false,
-        manageBilling: false,
-        manageSettings: false,
-      },
     });
   };
 
@@ -93,7 +71,7 @@ export function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModalProps) {
           <div className="absolute left-12 right-12 top-1/2 h-0.5 -mt-[1px] bg-slate-100 z-0">
             <div
               className="h-full bg-blue-600 transition-all duration-300 ease-in-out"
-              style={{ width: `${((addUserStep - 1) / 3) * 100}%` }}
+              style={{ width: `${((addUserStep - 1) / 2) * 100}%` }}
             />
           </div>
           {addUserSteps.map((step) => (
@@ -203,6 +181,12 @@ export function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModalProps) {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Organization ID</label>
+                <input type="text" className="w-full px-4 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" placeholder="e.g. 11111111-1111-1111-1111-111111111111"
+                  value={newUser.organizationId} onChange={(e) => setNewUser({ ...newUser, organizationId: e.target.value })} />
+              </div>
+
               {newUser.inviteMethod === "temp_password" && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Custom Password (optional)</label>
@@ -219,52 +203,6 @@ export function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModalProps) {
           )}
 
           {addUserStep === 3 && (
-            <div>
-              <h3 className="text-sm font-medium text-slate-700 mb-4">
-                Permissions for {newUser.role}
-              </h3>
-              <div className="space-y-1 border border-slate-200 rounded-lg p-2 bg-slate-50">
-                {(isStudent
-                  ? [
-                      { key: "viewSessions", label: "View Sessions" },
-                      { key: "submitAssignments", label: "Submit Assignments" },
-                    ]
-                  : [
-                      { key: "manageSessions", label: "Manage Sessions" },
-                      { key: "manageAssignments", label: "Manage Assignments" },
-                      { key: "viewAnalytics", label: "View Analytics" },
-                      { key: "manageUsers", label: "Manage Users" },
-                      { key: "manageBilling", label: "Manage Billing" },
-                      { key: "manageSettings", label: "Manage Settings" },
-                    ]
-                ).map((perm) => (
-                  <div key={perm.key} className="flex items-center justify-between px-4 py-3 bg-white border border-slate-100 rounded-md shadow-sm">
-                    <span className="text-sm font-medium text-slate-700">{perm.label}</span>
-                    <button
-                      onClick={() =>
-                        setNewUser({
-                          ...newUser,
-                          permissions: {
-                            ...newUser.permissions,
-                            [perm.key]: !newUser.permissions[perm.key as keyof typeof newUser.permissions],
-                          },
-                        })
-                      }
-                      className={`w-11 h-6 rounded-full transition-colors relative ${
-                        newUser.permissions[perm.key as keyof typeof newUser.permissions] ? "bg-blue-600" : "bg-slate-200"
-                      }`}
-                    >
-                      <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                        newUser.permissions[perm.key as keyof typeof newUser.permissions] ? "left-6" : "left-1"
-                      }`} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {addUserStep === 4 && (
             <div className="space-y-6">
               <div className="bg-slate-50 p-6 rounded-lg border border-slate-100 grid md:grid-cols-2 gap-6">
                 <div>
@@ -282,6 +220,10 @@ export function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModalProps) {
                 <div>
                   <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Role</p>
                   <p className="text-sm font-medium text-slate-900">{newUser.role}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Organization</p>
+                  <p className="text-sm font-medium text-slate-900">{newUser.organizationId || "-"}</p>
                 </div>
               </div>
 
@@ -350,32 +292,34 @@ export function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModalProps) {
             )}
           </div>
           <div>
-            {addUserStep < 4 ? (
-              <button onClick={() => setAddUserStep((p) => Math.min(4, p + 1))}
+            {addUserStep < 3 ? (
+              <button onClick={() => setAddUserStep((p) => Math.min(3, p + 1))}
                 className="px-6 py-2 text-sm font-medium text-white bg-[#0f172a] rounded-md hover:bg-slate-800 transition-colors shadow-sm">
                 Continue
               </button>
             ) : (
               <button
                 onClick={async () => {
-                  const payload = {
+                  const payload: Record<string, any> = {
                     name: newUser.name,
                     email: newUser.email,
                     mobileno: newUser.mobileno || undefined,
                     role: newUser.role.toLowerCase(),
                     status: newUser.status,
-                    permissions: newUser.permissions,
                     inviteMethod: newUser.inviteMethod,
-                    sendCredentialsEmail: newUser.inviteMethod === "temp_password" ? true : undefined,
-                    sendInviteEmail: newUser.inviteMethod === "email_invite" ? true : undefined,
-                    metadata: { source: "admin_panel" },
+                    organizationId: newUser.organizationId || undefined,
                   };
 
-                  if (newUser.inviteMethod === "temp_password" && newUser.password) {
-                    (payload as any).password = newUser.password;
+                  if (newUser.inviteMethod === "temp_password") {
+                    payload.password = newUser.password || `Temp@${Date.now().toString(36).toUpperCase()}`;
+                    payload.sendCredentialsEmail = true;
+                    payload.metadata = { source: "admin_panel" };
+                  } else {
+                    payload.sendInviteEmail = true;
+                    payload.metadata = { invitedBy: "admin" };
                   }
 
-                  await onSubmit?.(payload);
+                  await onSubmit?.(payload as any);
                   resetForm();
                   onClose();
                 }}

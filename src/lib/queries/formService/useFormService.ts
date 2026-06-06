@@ -7,7 +7,7 @@ import {
 import { formService } from "./formService";
 import { ContactFormPayload } from "./types";
 
-const { postContactInfo, getContacts, createContact } = formService;
+const { postContactInfo, getContacts, createContact, deleteContact } = formService;
 
 const usePostContactInfo = (): UseMutationResult<
   any,
@@ -39,4 +39,10 @@ const useCreateContact = (): UseMutationResult<
   });
 };
 
-export { usePostContactInfo, useGetContacts, useCreateContact };
+const useDeleteContact = (): UseMutationResult<any, unknown, string> => {
+  return useMutation<any, unknown, string>({
+    mutationFn: deleteContact,
+  });
+};
+
+export { usePostContactInfo, useGetContacts, useCreateContact, useDeleteContact };
