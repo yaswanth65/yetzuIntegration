@@ -4,6 +4,7 @@ import Image from "next/image";
 import React, { useState, useRef, useEffect } from "react";
 import { Menu, Bell, Search, ChevronDown, Settings, FileText, Video, Award, Calendar, CheckCircle2 } from "lucide-react";
 import { AdminAPI, asArray } from "@/lib/api";
+import { getTimeAgo } from "@/lib/utils/dateUtils";
 
 interface AdminHeaderProps {
     onMenuClick: () => void;
@@ -42,7 +43,7 @@ export default function AdminHeader({ onMenuClick }: AdminHeaderProps) {
             icon: notificationIconFor(item.type || item.category),
             title: item.title || item.message || "Notification",
             subtitle: item.subtitle || item.description || "",
-            time: item.timeAgo || item.createdAt || item.time || "",
+            time: getTimeAgo(item.createdAt || item.time || item.timeAgo),
             unread: Boolean(item.unread || item.isUnread || item.status === "unread"),
           })));
         } catch {

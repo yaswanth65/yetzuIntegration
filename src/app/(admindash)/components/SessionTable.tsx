@@ -86,6 +86,7 @@ export default function SessionTable({data,showHeader = true, title, onRowClick,
 
     const columns = [
       { key: "code", label: "Session ID" },
+      { key: "title", label: "Session Name" },
       { key: "type", label: "Type" },
       { key: "educator", label: "Educator" },
       { key: "students", label: "Students" },
@@ -94,7 +95,7 @@ export default function SessionTable({data,showHeader = true, title, onRowClick,
       { key: "actions", label: "Actions" },
     ];
 
-    const gridCols = "grid-cols-[minmax(130px,1.3fr)_minmax(105px,1fr)_minmax(150px,2fr)_minmax(85px,0.7fr)_minmax(140px,1.2fr)_minmax(115px,1fr)_minmax(75px,0.6fr)]";
+    const gridCols = "grid-cols-[minmax(130px,1.3fr)_minmax(150px,1.5fr)_minmax(105px,1fr)_minmax(150px,2fr)_minmax(85px,0.7fr)_minmax(140px,1.2fr)_minmax(115px,1fr)_minmax(75px,0.6fr)]";
 
     return (
         <div className={`w-full ${className}`}>
@@ -153,6 +154,23 @@ export default function SessionTable({data,showHeader = true, title, onRowClick,
                               title={String(item.sessionCode || item.id)}
                             >
                               {shortenId(String(item.sessionCode || item.id))}
+                            </span>
+                        </div>
+
+                        {/* Session Name */}
+                        <div className="flex items-center px-4">
+                            <span 
+                              className="text-[14px] text-[#0A0A0A] truncate"
+                              style={{
+                                fontFamily: "'Inter', sans-serif",
+                                fontWeight: 500,
+                                fontSize: "14px",
+                                lineHeight: "21px",
+                                letterSpacing: "-0.150391px",
+                              }}
+                              title={String(item.title || "")}
+                            >
+                              {String(item.title || "Untitled Session")}
                             </span>
                         </div>
 

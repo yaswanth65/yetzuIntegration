@@ -657,6 +657,7 @@ import {
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { getTimeAgo } from "@/lib/utils/dateUtils";
 
 interface DashNavbarProps {
   role: string | null;
@@ -977,7 +978,7 @@ export default function DashNavbar({
                               {notif.subtitle || notif.message}
                             </p>
                             <p className="text-[11px] text-gray-400 font-normal">
-                              {notif.time || notif.createdAt || "Just now"}
+                              {getTimeAgo(notif.createdAt || notif.time)}
                             </p>
                           </div>
 

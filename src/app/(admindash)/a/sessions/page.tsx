@@ -12,7 +12,7 @@ export default function page() {
   useEffect(() => {
     const fetchSessions = async () => {
       try {
-        const response = await AdminAPI.getSessions();
+        const response = await AdminAPI.getSessions({ limit: 200 });
         const rawData = asArray(response);
         
         const apiSessions = rawData.map((item: any, index: number) => {
