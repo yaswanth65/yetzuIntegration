@@ -218,7 +218,6 @@ import {
     Award,
     DollarSign,
     Send,
-    Ticket,
     ChevronDown,
     Headphones,
     Menu,
@@ -254,8 +253,8 @@ const getStudentNav = (basePath: string): NavItem[] => [
     { label: "Assignments", href: `${basePath}/assignments`, icon: FileText },
     { label: "Certificates", href: `${basePath}/certificate`, icon: Award },
     { label: "Chat", href: `${basePath}/chat`, icon: Send },
-    { label: "Tickets", href: `${basePath}/tickets`, icon: Ticket },
-];
+    { label: "Help & Support", href: `${basePath}/help`, icon: Headphones },
+  ];
 
 const getEducatorNav = (basePath: string): NavItem[] => [
     { label: "Overview", href: `${basePath}/dashboard`, icon: LayoutGrid },
@@ -437,14 +436,7 @@ export default function DashSidebar({ role, isOpen, onClose }: DashSidebarProps)
                             <span className="text-[15px]">Sign Out</span>
                         </button>
 
-                        <Link
-                            href={`${basePath}/help`}
-                            onClick={() => window.innerWidth < 1024 && onClose()}
-                            className="flex whitespace-nowrap items-center gap-4 px-4 py-3.5 text-[#4B5563] hover:text-black hover:bg-gray-100 rounded-xl transition-colors w-full"
-                        >
-                            <Headphones size={22} strokeWidth={1.5} />
-                            <span className="text-[15px]">Help & Support</span>
-                        </Link>
+
 
                     </div>
                 </div>

@@ -28,6 +28,7 @@ const stepsList = [
   "Pricing",
   "Educator",
   "Students",
+  "Public Page",
   "Review",
 ];
 
@@ -86,6 +87,22 @@ export default function CreateSession({ onBack, onCreated }: CreateSessionProps)
   const [selectedBundleSessions, setSelectedBundleSessions] = useState<string[]>([]);
   const [paidSessions, setPaidSessions] = useState<any[]>([]);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+
+  // Public Page CMS
+  const [publicPageEnabled, setPublicPageEnabled] = useState(true);
+  const [heroHeading, setHeroHeading] = useState("");
+  const [heroSubheading, setHeroSubheading] = useState("");
+  const [heroImageFile, setHeroImageFile] = useState<File | null>(null);
+  const [learningOutcomes, setLearningOutcomes] = useState<string[]>([]);
+  const [outcomeInput, setOutcomeInput] = useState("");
+  const [targetAudience, setTargetAudience] = useState("");
+  const [prerequisites, setPrerequisites] = useState("");
+  const [faqs, setFaqs] = useState<{ question: string; answer: string }[]>([]);
+  const [faqQuestion, setFaqQuestion] = useState("");
+  const [faqAnswer, setFaqAnswer] = useState("");
+  const [metaTitle, setMetaTitle] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
+  const [metaKeywords, setMetaKeywords] = useState("");
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -155,6 +172,44 @@ export default function CreateSession({ onBack, onCreated }: CreateSessionProps)
     setThumbnailFile(file);
   };
 
+  const handleHeroImageSelect = (file?: File | null) => {
+    if (!file) return;
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Please upload a JPG, PNG, or WebP image.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be 10 MB or smaller.");
+      return;
+    }
+    setHeroImageFile(file);
+  };
+
+  const addOutcome = () => {
+    const val = outcomeInput.trim();
+    if (!val) return;
+    setLearningOutcomes(prev => [...prev, val]);
+    setOutcomeInput("");
+  };
+
+  const removeOutcome = (index: number) => {
+    setLearningOutcomes(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addFaq = () => {
+    const q = faqQuestion.trim();
+    const a = faqAnswer.trim();
+    if (!q || !a) { toast.error("Please enter both question and answer."); return; }
+    setFaqs(prev => [...prev, { question: q, answer: a }]);
+    setFaqQuestion("");
+    setFaqAnswer("");
+  };
+
+  const removeFaq = (index: number) => {
+    setFaqs(prev => prev.filter((_, i) => i !== index));
+  };
+
   const toggleBundleSession = (sessionId: string) => {
     setSelectedBundleSessions(prev => 
       prev.includes(sessionId) 
@@ -219,6 +274,12 @@ export default function CreateSession({ onBack, onCreated }: CreateSessionProps)
     if (currentStep === 5 && enrollmentType === "Individual" && selectedStudents.length === 0) {
       toast.error("Please select at least one student");
       return;
+    }
+    if (currentStep === 6 && publicPageEnabled) {
+      if (heroHeading.trim() && !heroSubheading.trim()) {
+        toast.error("Please enter a subheading for the hero section");
+        return;
+      }
     }
     if (currentStep < stepsList.length) setCurrentStep(currentStep + 1);
   };
@@ -308,6 +369,27 @@ export default function CreateSession({ onBack, onCreated }: CreateSessionProps)
 
       if (thumbnailFile) {
         formData.append("thumbnail", thumbnailFile);
+      }
+
+      // Public Page CMS fields
+      formData.append("publicPageEnabled", publicPageEnabled ? "true" : "false");
+      if (publicPageEnabled) {
+        formData.append("heroHeading", heroHeading.trim());
+        formData.append("heroSubheading", heroSubheading.trim());
+        if (learningOutcomes.length > 0) {
+          formData.append("learningOutcomes", JSON.stringify(learningOutcomes));
+        }
+        formData.append("targetAudience", targetAudience.trim());
+        formData.append("prerequisites", prerequisites.trim());
+        if (faqs.length > 0) {
+          formData.append("faqs", JSON.stringify(faqs));
+        }
+        formData.append("metaTitle", metaTitle.trim());
+        formData.append("metaDescription", metaDescription.trim());
+        formData.append("metaKeywords", metaKeywords.trim());
+        if (heroImageFile) {
+          formData.append("heroImage", heroImageFile);
+        }
       }
 
       const response = await AdminAPI.createSession(formData);
@@ -886,6 +968,229 @@ export default function CreateSession({ onBack, onCreated }: CreateSessionProps)
           )}
 
           {currentStep === 6 && (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-300 max-w-3xl">
+              <div className="mb-8">
+                <h2 className="text-lg font-bold text-gray-900 mb-1">Public Page</h2>
+                <p className="text-sm text-gray-500">
+                  Configure the public landing page content for this session.
+                </p>
+              </div>
+
+              {/* Enable Toggle */}
+              <div className="flex items-center justify-between mb-8 border-b border-gray-100 pb-6">
+                <div>
+                  <span className="text-sm font-medium text-gray-900">Enable Public Page</span>
+                  <p className="text-xs text-gray-500 mt-0.5">Students can view this session on a public landing page</p>
+                </div>
+                <button
+                  onClick={() => setPublicPageEnabled(!publicPageEnabled)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    publicPageEnabled ? "bg-blue-600" : "bg-gray-200"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      publicPageEnabled ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {publicPageEnabled && (
+                <div className="space-y-6">
+                  {/* Hero Section */}
+                  <div className="text-xs font-semibold text-gray-500 mb-4 tracking-wider">HERO SECTION</div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Hero Heading</label>
+                    <input
+                      type="text"
+                      value={heroHeading}
+                      onChange={(e) => setHeroHeading(e.target.value)}
+                      placeholder="e.g. Master Academic Writing in 6 Weeks"
+                      className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 placeholder-gray-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Hero Subheading</label>
+                    <input
+                      type="text"
+                      value={heroSubheading}
+                      onChange={(e) => setHeroSubheading(e.target.value)}
+                      placeholder="e.g. Learn structured writing techniques from expert educators"
+                      className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 placeholder-gray-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Hero Background Image</label>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      className="hidden"
+                      id="heroImageUpload"
+                      onChange={(e) => handleHeroImageSelect(e.target.files?.[0] || null)}
+                    />
+                    <label
+                      htmlFor="heroImageUpload"
+                      className="border border-dashed border-blue-400 bg-blue-50/30 rounded-xl p-6 flex flex-col items-center justify-center gap-2 text-center transition-colors hover:bg-blue-50/50 cursor-pointer"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                        <i className="ri-image-add-line text-xl"></i>
+                      </div>
+                      <div>
+                        <span className="text-sm font-semibold text-gray-900">
+                          {heroImageFile ? heroImageFile.name : "Upload hero background image"}
+                        </span>
+                        <p className="text-xs text-gray-500 mt-1">JPG, PNG, or WebP up to 10 MB</p>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Learning Outcomes */}
+                  <div className="pt-6 border-t border-gray-100">
+                    <div className="text-xs font-semibold text-gray-500 mb-4 tracking-wider">LEARNING OUTCOMES</div>
+                    <div className="flex gap-2 mb-3">
+                      <input
+                        type="text"
+                        value={outcomeInput}
+                        onChange={(e) => setOutcomeInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addOutcome(); } }}
+                        placeholder="Type an outcome and press Enter or Add"
+                        className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 placeholder-gray-400"
+                      />
+                      <button
+                        onClick={addOutcome}
+                        className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                      >
+                        Add
+                      </button>
+                    </div>
+                    {learningOutcomes.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {learningOutcomes.map((outcome, i) => (
+                          <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 text-sm rounded-full border border-green-200">
+                            {outcome}
+                            <button onClick={() => removeOutcome(i)} className="text-green-500 hover:text-green-700">
+                              <i className="ri-close-line"></i>
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Target Audience & Prerequisites */}
+                  <div className="pt-6 border-t border-gray-100 grid grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Target Audience</label>
+                      <input
+                        type="text"
+                        value={targetAudience}
+                        onChange={(e) => setTargetAudience(e.target.value)}
+                        placeholder="e.g. Graduate students, researchers"
+                        className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 placeholder-gray-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Prerequisites</label>
+                      <input
+                        type="text"
+                        value={prerequisites}
+                        onChange={(e) => setPrerequisites(e.target.value)}
+                        placeholder="e.g. Basic writing skills"
+                        className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 placeholder-gray-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* FAQs */}
+                  <div className="pt-6 border-t border-gray-100">
+                    <div className="text-xs font-semibold text-gray-500 mb-4 tracking-wider">FAQs</div>
+                    <div className="space-y-3 mb-4">
+                      <input
+                        type="text"
+                        value={faqQuestion}
+                        onChange={(e) => setFaqQuestion(e.target.value)}
+                        placeholder="Question"
+                        className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 placeholder-gray-400"
+                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={faqAnswer}
+                          onChange={(e) => setFaqAnswer(e.target.value)}
+                          placeholder="Answer"
+                          className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 placeholder-gray-400"
+                        />
+                        <button
+                          onClick={addFaq}
+                          className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                    {faqs.length > 0 && (
+                      <div className="space-y-2">
+                        {faqs.map((faq, i) => (
+                          <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900">{faq.question}</p>
+                              <p className="text-xs text-gray-500 mt-0.5">{faq.answer}</p>
+                            </div>
+                            <button onClick={() => removeFaq(i)} className="text-gray-400 hover:text-red-500 mt-0.5">
+                              <i className="ri-close-line"></i>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* SEO */}
+                  <div className="pt-6 border-t border-gray-100">
+                    <div className="text-xs font-semibold text-gray-500 mb-4 tracking-wider">SEO</div>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Meta Title</label>
+                        <input
+                          type="text"
+                          value={metaTitle}
+                          onChange={(e) => setMetaTitle(e.target.value)}
+                          placeholder="e.g. Academic Writing Webinar | Yetzu"
+                          className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 placeholder-gray-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Meta Description</label>
+                        <textarea
+                          value={metaDescription}
+                          onChange={(e) => setMetaDescription(e.target.value)}
+                          placeholder="Brief description for search engines..."
+                          rows={2}
+                          className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 placeholder-gray-400 resize-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Meta Keywords</label>
+                        <input
+                          type="text"
+                          value={metaKeywords}
+                          onChange={(e) => setMetaKeywords(e.target.value)}
+                          placeholder="writing, academic, webinar (comma-separated)"
+                          className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 placeholder-gray-400"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentStep === 7 && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="mb-8">
                 <h2 className="text-lg font-bold text-gray-900 mb-1">Review & Create</h2>
@@ -935,6 +1240,55 @@ export default function CreateSession({ onBack, onCreated }: CreateSessionProps)
                     </div>
                   )}
                 </div>
+
+                {/* Public Page CMS Review */}
+                <div className="pt-6 border-t border-gray-200 mt-6">
+                  <p className="text-sm font-semibold text-gray-900 mb-3">Public Page</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Status</p>
+                      <p className="font-medium">{publicPageEnabled ? "Enabled" : "Disabled"}</p>
+                    </div>
+                    {publicPageEnabled && (
+                      <>
+                        {heroHeading && (
+                          <div>
+                            <p className="text-sm text-gray-500">Hero Heading</p>
+                            <p className="font-medium text-sm">{heroHeading}</p>
+                          </div>
+                        )}
+                        {learningOutcomes.length > 0 && (
+                          <div className="col-span-2">
+                            <p className="text-sm text-gray-500">Learning Outcomes</p>
+                            <p className="font-medium text-sm">{learningOutcomes.join(" · ")}</p>
+                          </div>
+                        )}
+                        {faqs.length > 0 && (
+                          <div className="col-span-2">
+                            <p className="text-sm text-gray-500">FAQs</p>
+                            <p className="font-medium text-sm">{faqs.length} items</p>
+                          </div>
+                        )}
+                        {(heroImageFile || metaTitle) && (
+                          <>
+                            {heroImageFile && (
+                              <div>
+                                <p className="text-sm text-gray-500">Hero Image</p>
+                                <p className="font-medium text-sm">{heroImageFile.name}</p>
+                              </div>
+                            )}
+                            {metaTitle && (
+                              <div>
+                                <p className="text-sm text-gray-500">Meta Title</p>
+                                <p className="font-medium text-sm">{metaTitle}</p>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -956,11 +1310,11 @@ export default function CreateSession({ onBack, onCreated }: CreateSessionProps)
                 Cancel
               </button>
               <button
-                onClick={currentStep === 6 ? handleSubmit : handleNext}
+                onClick={currentStep === 7 ? handleSubmit : handleNext}
                 disabled={isSubmitting}
                 className="px-6 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
               >
-                {isSubmitting ? "Creating..." : currentStep === 6 ? "Create Session" : "Next"}
+                {isSubmitting ? "Creating..." : currentStep === 7 ? "Create Session" : "Next"}
               </button>
             </div>
           </div>

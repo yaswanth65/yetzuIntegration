@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Store locally (in-memory) for local dev UI visibility
     const enrollmentId = generateEnrollmentId();
     const enrollment: EnrollmentRecord = {
       id: enrollmentId,
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
     };
 
     enrollments.set(enrollmentId, enrollment);
-    console.log(`[Payment Webhook] Enrollment created:`, enrollment);
+    console.log(`[Payment Webhook] Local enrollment created:`, enrollment);
 
     return NextResponse.json({
       success: true,

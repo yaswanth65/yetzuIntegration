@@ -70,11 +70,22 @@ const mapAssignment = (item: any, index: number) => {
     item.educator?.name ||
     item.educator?.Name ||
     "Educator";
+  const courseId = String(
+    item.courseId ||
+      item.sessionId ||
+      item.submission?.courseId ||
+      item.course?._id ||
+      item.course?.id ||
+      item.session?._id ||
+      item.session?.id ||
+      "",
+  );
 
   return {
     id: String(item._id || item.id || item.assignmentId || index),
     title: item.title || item.assignmentTitle || "Untitled Assignment",
     sessionName,
+    courseId,
     mentorName,
     mentorImage:
       item.mentorImage ||
@@ -140,6 +151,7 @@ export default function AssignmentPage() {
     String(
       assignment?.courseId ||
         assignment?.sessionId ||
+        assignment?.submission?.courseId ||
         assignment?.course?._id ||
         assignment?.course?.id ||
         assignment?.session?._id ||
@@ -385,9 +397,15 @@ export default function AssignmentPage() {
                       <div className="flex items-center justify-between bg-[#F8FAFC] rounded-[12px] p-3 mb-5 mt-auto border border-gray-100/80">
                         <div className="flex items-start gap-2.5 pr-2">
                           <LinkIcon size={16} className="text-gray-500 mt-0.5 shrink-0" strokeWidth={1.5} />
-                          <span className="text-[14px] text-gray-800 leading-snug line-clamp-1">
-                            {item.sessionName}
-                          </span>
+                          {item.courseId ? (
+                            <Link href={`/s/sessions/${item.courseId}`} className="text-[14px] text-gray-800 leading-snug line-clamp-1 hover:text-blue-600 hover:underline transition-colors">
+                              {item.sessionName}
+                            </Link>
+                          ) : (
+                            <span className="text-[14px] text-gray-800 leading-snug line-clamp-1">
+                              {item.sessionName}
+                            </span>
+                          )}
                         </div>
                         
                         <div className="relative group shrink-0">

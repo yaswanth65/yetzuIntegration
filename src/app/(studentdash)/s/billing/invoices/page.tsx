@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { 
   Search, 
   Eye, 
@@ -12,91 +12,22 @@ import {
   X,
   ShieldCheck,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from "lucide-react";
+import { StudentAPI, BillingAPI } from "@/lib/api";
+import { toast } from "react-hot-toast";
 
 // --- MOCK DATA ---
-const INVOICES_DATA = [
-  {
-    id: "INV-2024-001",
-    service: "Webinar",
-    session: "Thesis Chapter 3 – Literature Review",
-    issued: "15 Jan 2024",
-    dueDate: "22 Jan 2024",
-    amount: "₹4,130",
-    status: "Paid",
-    method: "Card",
-  },
-  {
-    id: "INV-2024-002",
-    service: "Cohort",
-    session: "Research Paper Draft - Social",
-    issued: "20 Jan 2024",
-    dueDate: "27 Jan 2024",
-    amount: "₹2,596",
-    status: "Paid",
-    method: "UPI",
-  },
-  {
-    id: "INV-2024-003",
-    service: "Mentorship",
-    session: "Career Strategy Session – PhD",
-    issued: "01 Feb 2024",
-    dueDate: "08 Feb 2024",
-    amount: "₹5,900",
-    status: "Pending",
-    method: "Net Banking",
-  },
-  {
-    id: "INV-2024-004",
-    service: "Cohort",
-    session: "Academic Writing Masterclass",
-    issued: "05 Feb 2024",
-    dueDate: "12 Feb 2024",
-    amount: "₹1,770",
-    status: "Paid",
-    method: "Card",
-  },
-  {
-    id: "INV-2024-005",
-    service: "Mentorship",
-    session: "MBA Application Essay - Busir",
-    issued: "10 Feb 2024",
-    dueDate: "17 Feb 2024",
-    amount: "₹4,956",
-    status: "Failed",
-    method: "Card",
-  },
-  {
-    id: "INV-2024-006",
-    service: "Webinar",
-    session: "Literature Survey - Climate Ch",
-    issued: "15 Feb 2024",
-    dueDate: "22 Feb 2024",
-    amount: "₹3,304",
-    status: "Paid",
-    method: "UPI",
-  },
-  {
-    id: "INV-2024-007",
-    service: "Webinar",
-    session: "PhD Guidance Session - Disse",
-    issued: "20 Feb 2024",
-    dueDate: "27 Feb 2024",
-    amount: "₹8,850",
-    status: "Paid",
-    method: "Net Banking",
-  },
-  {
-    id: "INV-2024-008",
-    service: "Mentorship",
-    session: "Statistics for Research - SPSS",
-    issued: "01 Mar 2024",
-    dueDate: "08 Mar 2024",
-    amount: "₹2,124",
-    status: "Cancelled",
-    method: "Card",
-  },
+const FALLBACK_INVOICES = [
+  { id: "INV-2024-001", service: "Webinar", session: "Thesis Chapter 3 – Literature Review", issued: "15 Jan 2024", dueDate: "22 Jan 2024", amount: "₹4,130", status: "Paid", method: "Card" },
+  { id: "INV-2024-002", service: "Cohort", session: "Research Paper Draft - Social", issued: "20 Jan 2024", dueDate: "27 Jan 2024", amount: "₹2,596", status: "Paid", method: "UPI" },
+  { id: "INV-2024-003", service: "Mentorship", session: "Career Strategy Session – PhD", issued: "01 Feb 2024", dueDate: "08 Feb 2024", amount: "₹5,900", status: "Pending", method: "Net Banking" },
+  { id: "INV-2024-004", service: "Cohort", session: "Academic Writing Masterclass", issued: "05 Feb 2024", dueDate: "12 Feb 2024", amount: "₹1,770", status: "Paid", method: "Card" },
+  { id: "INV-2024-005", service: "Mentorship", session: "MBA Application Essay - Busir", issued: "10 Feb 2024", dueDate: "17 Feb 2024", amount: "₹4,956", status: "Failed", method: "Card" },
+  { id: "INV-2024-006", service: "Webinar", session: "Literature Survey - Climate Ch", issued: "15 Feb 2024", dueDate: "22 Feb 2024", amount: "₹3,304", status: "Paid", method: "UPI" },
+  { id: "INV-2024-007", service: "Webinar", session: "PhD Guidance Session - Disse", issued: "20 Feb 2024", dueDate: "27 Feb 2024", amount: "₹8,850", status: "Paid", method: "Net Banking" },
+  { id: "INV-2024-008", service: "Mentorship", session: "Statistics for Research - SPSS", issued: "01 Mar 2024", dueDate: "08 Mar 2024", amount: "₹2,124", status: "Cancelled", method: "Card" },
 ];
 
 // --- HELPERS ---
@@ -132,8 +63,69 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function InvoicesPage() {
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const perPage = 8;
+
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      try {
+        setIsLoading(true);
+        // Try overview API first (covers payment history)
+        const overview = await StudentAPI.getDashboardOverview();
+        const overviewData = overview?.data || overview;
+        const paymentHistory = overviewData?.paymentHistory || overviewData?.payments || overviewData?.invoices || [];
+        if (Array.isArray(paymentHistory) && paymentHistory.length > 0) {
+          setInvoices(paymentHistory);
+          return;
+        }
+      } catch {
+        // fall through to BillingAPI
+      }
+      try {
+        const res = await BillingAPI.getInvoices({ page: currentPage, limit: perPage });
+        const list = res?.data?.list || res?.data?.invoices || res?.data || res?.list || res?.invoices || [];
+        if (Array.isArray(list) && list.length > 0) {
+          setInvoices(list);
+          return;
+        }
+      } catch {
+        // fall through to mock
+      }
+      console.warn("Invoice API unavailable, using fallback data");
+      setInvoices(FALLBACK_INVOICES);
+    };
+    fetchInvoices();
+  }, [currentPage]);
+
+  const filtered = invoices.filter((inv) =>
+    `${inv.id} ${inv.session} ${inv.service}`.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleDownload = async (invoiceId: string) => {
+    setDownloadingId(invoiceId);
+    try {
+      const response = await BillingAPI.downloadInvoice(invoiceId);
+      const blob = response?.data || response;
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `invoice-${invoiceId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success("Invoice downloaded");
+    } catch {
+      toast.error("Download failed. Feature may not be available yet.");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   // Close modal when clicking outside
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -141,6 +133,14 @@ export default function InvoicesPage() {
       setSelectedInvoice(null);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="w-full bg-[#F8F9FA] flex items-center justify-center min-h-[400px]">
+        <Loader2 size={32} className="animate-spin text-[#042BFD]" />
+      </div>
+    );
+  }
 
   return (
     <div className="font-sans relative">
@@ -172,7 +172,7 @@ export default function InvoicesPage() {
       {/* --- MAIN GRAY CONTENT AREA --- */}
       <div className="p-6 md:px-10">
         
-        {/* INVOICES TABLE (White Background) */}
+        {/* INVOICES TABLE */}
         <div className="bg-white rounded-[16px] border border-gray-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[1000px]">
@@ -190,58 +190,86 @@ export default function InvoicesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {INVOICES_DATA.map((invoice) => (
-                  <tr key={invoice.id} className="hover:bg-gray-50/60 transition-colors group">
-                    <td 
-                      className="py-4 px-6 text-[13px] whitespace-nowrap font-semibold text-[#042BFD] cursor-pointer hover:underline"
-                      onClick={() => setSelectedInvoice(invoice)}
-                    >
-                      {invoice.id}
-                    </td>
-                    <td className="py-4 px-6 text-[13px] text-gray-500">{invoice.service}</td>
-                    <td className="py-4 px-6 text-[13px] font-bold text-gray-800 truncate max-w-[200px]">{invoice.session}</td>
-                    <td className="py-4 px-6 text-[13px] text-gray-600">{invoice.issued}</td>
-                    <td className="py-4 px-6 text-[13px] text-gray-600">{invoice.dueDate}</td>
-                    <td className="py-4 px-6 text-[13px] font-bold text-gray-900">{invoice.amount}</td>
-                    <td className="py-4 px-6">{getStatusBadge(invoice.status)}</td>
-                    <td className="py-4 px-6 text-[13px] whitespace-nowrap text-gray-600">{invoice.method}</td>
-                    <td className="py-4 px-6 flex items-center justify-end gap-3 h-full">
-                      <button 
-                        className="p-1.5 text-gray-400 hover:text-gray-900 transition-colors"
-                        onClick={() => setSelectedInvoice(invoice)}
-                      >
-                        <Eye size={18} strokeWidth={1.5} />
-                      </button>
-                      <button className="p-1.5 text-gray-400 hover:text-gray-900 transition-colors">
-                        <Download size={18} strokeWidth={1.5} />
-                      </button>
-                      {/* Pay Now Button for Pending/Failed */}
-                      {(invoice.status === "Pending" || invoice.status === "Failed") && (
-                        <button className="ml-2 px-4 py-1.5 border border-gray-200 text-gray-700 rounded-[8px] text-[13px] font-semibold hover:bg-gray-50 transition-colors shrink-0 shadow-sm">
-                          Pay now
-                        </button>
-                      )}
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="px-6 py-16 text-center text-gray-500">
+                      No invoices found
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filtered.map((invoice) => (
+                    <tr key={invoice.id} className="hover:bg-gray-50/60 transition-colors group">
+                      <td 
+                        className="py-4 px-6 text-[13px] whitespace-nowrap font-semibold text-[#042BFD] cursor-pointer hover:underline"
+                        onClick={() => setSelectedInvoice(invoice)}
+                      >
+                        {invoice.id}
+                      </td>
+                      <td className="py-4 px-6 text-[13px] text-gray-500">{invoice.service}</td>
+                      <td className="py-4 px-6 text-[13px] font-bold text-gray-800 truncate max-w-[200px]">{invoice.session}</td>
+                      <td className="py-4 px-6 text-[13px] text-gray-600">{invoice.issued}</td>
+                      <td className="py-4 px-6 text-[13px] text-gray-600">{invoice.dueDate}</td>
+                      <td className="py-4 px-6 text-[13px] font-bold text-gray-900">{invoice.amount}</td>
+                      <td className="py-4 px-6">{getStatusBadge(invoice.status)}</td>
+                      <td className="py-4 px-6 text-[13px] whitespace-nowrap text-gray-600">{invoice.method}</td>
+                      <td className="py-4 px-6 flex items-center justify-end gap-3 h-full">
+                        <button 
+                          className="p-1.5 text-gray-400 hover:text-gray-900 transition-colors"
+                          onClick={() => setSelectedInvoice(invoice)}
+                        >
+                          <Eye size={18} strokeWidth={1.5} />
+                        </button>
+                        <button
+                          onClick={() => handleDownload(invoice.id)}
+                          disabled={downloadingId === invoice.id}
+                          className="p-1.5 text-gray-400 hover:text-gray-900 transition-colors disabled:opacity-40"
+                        >
+                          <Download size={18} strokeWidth={1.5} />
+                        </button>
+                        {(invoice.status === "Pending" || invoice.status === "Failed") && (
+                          <button className="ml-2 px-4 py-1.5 border border-gray-200 text-gray-700 rounded-[8px] text-[13px] font-semibold hover:bg-gray-50 transition-colors shrink-0 shadow-sm">
+                            Pay now
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
 
           {/* Pagination */}
           <div className="border-t border-gray-100 px-6 py-4 flex items-center justify-between bg-white">
-            <span className="text-[13px] text-gray-500 font-medium">Showing 1-8 of 15 invoices</span>
+            <span className="text-[13px] text-gray-500 font-medium">
+              Showing 1-{Math.min(perPage, filtered.length)} of {filtered.length} invoices
+            </span>
             <div className="flex items-center gap-1.5">
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 transition-colors">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 transition-colors disabled:opacity-30"
+              >
                 <ChevronLeft size={16} />
               </button>
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-900 text-white font-medium text-[13px]">
-                1
-              </button>
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium text-[13px] transition-colors">
-                2
-              </button>
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors">
+              {Array.from({ length: Math.ceil(invoices.length / perPage) || 1 }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-8 h-8 flex items-center justify-center rounded-lg font-medium text-[13px] transition-colors ${
+                    currentPage === i + 1
+                      ? "bg-gray-900 text-white"
+                      : "border border-gray-200 text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(Math.ceil(invoices.length / perPage), p + 1))}
+                disabled={currentPage >= Math.ceil(invoices.length / perPage)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 transition-colors disabled:opacity-30"
+              >
                 <ChevronRight size={16} />
               </button>
             </div>
@@ -394,7 +422,6 @@ export default function InvoicesPage() {
                   </div>
                 </div>
 
-                {/* Security Badge */}
                 <div className="bg-[#F0F5FF] border border-[#D6E4FF] rounded-xl p-3 flex items-center gap-3">
                   <ShieldCheck size={18} className="text-[#042BFD] shrink-0" />
                   <p className="text-[12px] text-[#042BFD] font-medium">
@@ -407,8 +434,16 @@ export default function InvoicesPage() {
 
             {/* Modal Footer */}
             <div className="p-6 border-t border-gray-100 shrink-0 bg-white">
-              <button className="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-900 font-semibold text-[14px] py-3.5 rounded-xl hover:bg-gray-50 transition-colors shadow-sm">
-                <Download size={18} strokeWidth={2} />
+              <button
+                onClick={() => handleDownload(selectedInvoice.id)}
+                disabled={downloadingId === selectedInvoice.id}
+                className="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-900 font-semibold text-[14px] py-3.5 rounded-xl hover:bg-gray-50 transition-colors shadow-sm disabled:opacity-50"
+              >
+                {downloadingId === selectedInvoice.id ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <Download size={18} strokeWidth={2} />
+                )}
                 Download Invoice
               </button>
             </div>

@@ -19,7 +19,7 @@ import {
   Award,
   CheckCircle2,
   Send,
-  Ticket
+  Headphones
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
@@ -404,16 +404,16 @@ export default function DashNavbar({
             )}
           </div>
 
-          {/* ── Tickets (Mobile) ── */}
+          {/* ── Help & Support (Mobile) ── */}
           <Link
-            href="/s/tickets"
+            href="/s/help"
             className={`p-2 rounded-xl border transition-colors sm:hidden ${
-              pathname?.includes("/s/tickets")
+              pathname?.includes("/s/help")
                 ? "bg-white border-[#042BFD] text-[#042BFD]"
                 : "text-gray-500 hover:bg-gray-50 border-gray-100"
             }`}
           >
-            <Ticket className="h-5 w-5" strokeWidth={1.5} />
+            <Headphones className="h-5 w-5" strokeWidth={1.5} />
           </Link>
 
           {/* ── Chat ── */}

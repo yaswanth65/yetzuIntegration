@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useCart } from "@/providers/CartProvider";
 import useSession from "@/hooks/useSession";
 import { PaymentAPI } from "@/lib/api";
+import { loadRazorpay, openRazorpayCheckout } from "@/lib/razorpay";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -53,41 +54,94 @@ export default function CartPage() {
 
   const handleCheckout = async () => {
     if (cartCount === 0) return;
+    if (!isUserLoggedIn) {
+      toast.error("Please log in to proceed.");
+      router.push("/login?callback=/cart");
+      return;
+    }
 
     setIsCheckingOut(true);
     try {
-      // Loop through cart items and process payments/enrollments sequentially
-      for (const item of cartItems) {
-        // Enforce a minimum amount of 1 if the cost is 0 for payment verification (unless it's discount-applied free)
-        let amount = Number(item.cost || 0);
-        if (discountAmount === subtotal) {
-          amount = 0; // Fully free coupon
-        }
+      await loadRazorpay();
 
-        // Step 1: Create order
-        const orderResult = await PaymentAPI.createOrder({
-          amount: amount <= 0 ? 1 : amount,
-          sessionId: item._id,
-        });
+      const totalAmount = Math.max(1, total);
+      const sessionIds = cartItems.map((item) => item._id).filter(Boolean);
 
-        // Step 2: Verify payment (this triggers backend enrollment webhook)
-        const userId = orderResult?.userId || user?.id || "";
-        await PaymentAPI.verifyPayment({
-          userId: userId,
-          sessionId: item._id,
-          amount: amount <= 0 ? 1 : amount,
-        });
+      // Step 1: Try creating a single Razorpay order for all items
+      const orderResult = await PaymentAPI.createOrder({
+        amount: totalAmount,
+        sessionIds,
+      });
+
+      const orderData = orderResult?.data || orderResult;
+      const razorpayOrderId = orderData?.orderId || orderData?.id || "";
+      const keyId = orderData?.keyId || "";
+
+      if (!razorpayOrderId || !keyId) {
+        throw new Error("Failed to create payment order.");
       }
 
-      toast.success("Success! Enrolled in sessions.");
-      clearCart();
-      router.push("/s/dashboard");
+      // Step 2: Open Razorpay checkout
+      openRazorpayCheckout({
+        keyId,
+        orderId: razorpayOrderId,
+        amount: totalAmount,
+        currency: orderData?.currency || "INR",
+        title: `Yetzu Cart (${cartCount} items)`,
+        userName: user?.name,
+        userEmail: user?.email,
+        onSuccess: async (paymentId: string, orderId: string, signature: string) => {
+          // Payment captured — trigger enrollment for each item via local webhook
+          try {
+            const userId = user?.id || "";
+            for (const item of cartItems) {
+              await PaymentAPI.verifyPayment({
+                userId,
+                sessionId: item._id,
+                amount: Math.max(1, Number(item.cost) || 1),
+              });
+            }
+            toast.success("Success! Enrolled in sessions.");
+            clearCart();
+            router.push("/s/dashboard");
+          } catch (err: any) {
+            console.error("Enrollment after payment failed:", err);
+            toast.error(err?.message || "Payment succeeded but enrollment failed. Contact support.");
+            setIsCheckingOut(false);
+          }
+        },
+        onDismiss: () => {
+          setIsCheckingOut(false);
+          toast("Payment cancelled.", { icon: "ℹ️" });
+        },
+      });
     } catch (error: any) {
-      console.error("Sequential checkout error:", error);
-      toast.error(
-        error?.message || "Checkout failed for one or more courses. Please check your dashboard."
-      );
-    } finally {
+      const errMsg = error?.response?.data?.error || error?.message || "";
+      const isUnavailable = errMsg.includes("unavailable") || errMsg.includes("cannot be purchased");
+
+      if (isUnavailable) {
+        // Fallback: enroll items individually via local webhook (dev/test)
+        console.warn("createOrder unavailable, falling back to local webhook for each item");
+        try {
+          const userId = user?.id || "";
+          for (const item of cartItems) {
+            await PaymentAPI.verifyPayment({
+              userId,
+              sessionId: item._id,
+              amount: Math.max(1, Number(item.cost) || 1),
+            });
+          }
+          toast.success("Success! Enrolled in sessions.");
+          clearCart();
+          router.push("/s/dashboard");
+          return;
+        } catch (fallbackErr: any) {
+          console.error("Local webhook fallback failed:", fallbackErr);
+          toast.error(fallbackErr?.response?.data?.error || "Checkout failed. Please try again.");
+        }
+      } else {
+        toast.error(errMsg || "Checkout failed. Please try again.");
+      }
       setIsCheckingOut(false);
     }
   };

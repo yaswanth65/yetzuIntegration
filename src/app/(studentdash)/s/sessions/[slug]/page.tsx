@@ -173,7 +173,7 @@ export default function SessionSlugPage() {
           enrolledData || []
         );
         
-        // Find current session
+        // Find current session from enrolled list
         const sessionMatch = sessionList.find(
           (item: any) => {
             const ids = [
@@ -194,33 +194,33 @@ export default function SessionSlugPage() {
           throw new Error("Session not found. Please check your enrollment.");
         }
 
-        const fullCourseData = sessionMatch.fullCourseData || sessionMatch;
+        const courseData = sessionMatch.fullCourseData || sessionMatch;
         
         const startDate = parseDateValue(
           sessionMatch.sessionTime || 
-          fullCourseData.startDateTime || 
-          fullCourseData.scheduledDate || 
-          fullCourseData.date ||
+          courseData.startDateTime || 
+          courseData.scheduledDate || 
+          courseData.date ||
           sessionMatch.startDateTime
         );
         
-        const educator = sessionMatch.educator || fullCourseData.educator || {};
+        const educator = sessionMatch.educator || courseData.educator || {};
         const mentorName = educator.name || 
           sessionMatch.educatorName || 
-          fullCourseData.educator?.name || 
-          fullCourseData.mentorName || 
+          courseData.educator?.name || 
+          courseData.mentorName || 
           "Educator";
         
         const title = sessionMatch.courseTitle || 
-          fullCourseData.title || 
+          courseData.title || 
           sessionMatch.sessionTitle || 
-          fullCourseData.courseTitle || 
+          courseData.courseTitle || 
           "Session";
         
         const courseId = String(
           sessionMatch.courseId || 
-          fullCourseData._id || 
-          fullCourseData.id || 
+          courseData._id || 
+          courseData.id || 
           sessionMatch.sessionId || 
           sessionMatch._id ||
           sessionMatch.id || 
@@ -237,7 +237,7 @@ export default function SessionSlugPage() {
         }
 
         // Get educator assignments from this session
-        const educatorAssignments = asArray(fullCourseData?.assignments || sessionMatch.assignments || []);
+        const educatorAssignments = asArray(courseData?.assignments || sessionMatch.assignments || []);
         
         // Helper to get assignment ID
         const getAssignmentId = (assignment: any): string =>
@@ -268,7 +268,7 @@ export default function SessionSlugPage() {
           if (!id) continue;
           
           // Check if this student assignment belongs to current session
-          const itemCourseId = String(item.courseId || item.sessionId || item.course?._id || "");
+          const itemCourseId = String(item.courseId || item.sessionId || item.submission?.courseId || item.course?._id || "");
           if (itemCourseId && itemCourseId !== courseId) continue;
           
           const existing = mergedById.get(id) || {};
@@ -297,19 +297,19 @@ export default function SessionSlugPage() {
           type: String(
             sessionMatch.sessionType || 
             sessionMatch.type || 
-            fullCourseData.type || 
-            fullCourseData.sessionType || 
+            courseData.type || 
+            courseData.sessionType || 
             sessionMatch.subtitle || 
-            fullCourseData.subtitle || 
+            courseData.subtitle || 
             "Session"
           ),
           mentor: {
             name: mentorName,
             role: educator.email || 
               sessionMatch.subtitle || 
-              fullCourseData.subtitle || 
+              courseData.subtitle || 
               educator.role || 
-              fullCourseData.category || 
+              courseData.category || 
               "Session Mentor",
             avatar: mentorName
               ? `https://ui-avatars.com/api/?name=${encodeURIComponent(mentorName)}&background=042BFD&color=fff`
@@ -319,10 +319,10 @@ export default function SessionSlugPage() {
             date: formatDate(startDate),
             time: formatTimeRange(sessionMatch, startDate),
             duration: formatDuration(sessionMatch, startDate),
-            attendees: `${sessionMatch.enrolledCount || fullCourseData.enrolledCount || sessionMatch.attendees || sessionMatch.maxStudents || 0} attendees`,
+            attendees: `${sessionMatch.enrolledCount || courseData.enrolledCount || sessionMatch.attendees || sessionMatch.maxStudents || 0} attendees`,
           },
           joinUrl: sessionMatch.joinUrl ||
-            sessionMatch.fullCourseData?.joinUrl ||
+            sessionMatch.courseData?.joinUrl ||
             sessionMatch.webinerLink ||
             sessionMatch.course?.webinerLink ||
             sessionMatch.cohortLink ||
@@ -331,13 +331,13 @@ export default function SessionSlugPage() {
             sessionMatch.course?.mentorshipLink ||
             sessionMatch.meetingUrl ||
             sessionMatch.meetingLink ||
-            fullCourseData.joinUrl ||
-            fullCourseData.webinerLink ||
-            fullCourseData.cohortLink ||
-            fullCourseData.mentorshipLink,
+            courseData.joinUrl ||
+            courseData.webinerLink ||
+            courseData.cohortLink ||
+            courseData.mentorshipLink,
           startIso: startDate?.toISOString(),
           assignments: assignmentsWithSubmissions,
-          resources: toResourceList(fullCourseData || sessionMatch),
+          resources: toResourceList(courseData || sessionMatch),
         });
       } catch (fetchError: any) {
         console.error("Student session detail fetch failed", fetchError);

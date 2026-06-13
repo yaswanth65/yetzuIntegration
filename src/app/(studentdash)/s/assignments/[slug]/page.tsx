@@ -279,6 +279,7 @@ export default function AssignmentSlugPage() {
           String(
             assignment?.courseId ||
               assignment?.sessionId ||
+              assignment?.submission?.courseId ||
               assignment?.course?._id ||
               assignment?.course?.id ||
               assignment?.session?._id ||
@@ -665,7 +666,7 @@ export default function AssignmentSlugPage() {
 
             {(uploadedFiles.length > 0 || assignmentData.submittedFiles.length > 0) && (
               <div className="mt-2 md:mt-4 flex flex-col gap-3">
-                {[...assignmentData.submittedFiles, ...uploadedFiles.map((item) => ({ id: item.id, name: item.file.name }))].map((fileObj) => (
+                {[...assignmentData.submittedFiles, ...uploadedFiles.map((item) => ({ id: item.id, name: item.file.name, url: undefined }))].map((fileObj) => (
                   <div key={fileObj.id} className="border border-gray-200 rounded-[16px] p-4 flex items-center justify-between gap-4 bg-white">
                     <div className="flex items-center gap-4 min-w-0">
                       <div className="w-11 h-11 bg-[#EEF2FF] text-[#042BFD] rounded-[12px] flex items-center justify-center text-[11px] font-bold tracking-wider shrink-0 border border-[#E0E7FF]">
@@ -677,10 +678,19 @@ export default function AssignmentSlugPage() {
                       <button onClick={() => handleRemoveFile(fileObj.id)} className="p-2 text-gray-400 hover:text-red-500 transition-colors">
                         <X size={18} />
                       </button>
-                    ) : (
-                      <button className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-900 transition-colors shrink-0">
+                    ) : fileObj.url ? (
+                      <a
+                        href={fileObj.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-900 transition-colors shrink-0"
+                      >
                         <Download size={20} strokeWidth={1.5} />
-                      </button>
+                      </a>
+                    ) : (
+                      <div className="w-10 h-10 flex items-center justify-center text-gray-300 shrink-0">
+                        <Download size={20} strokeWidth={1.5} />
+                      </div>
                     )}
                   </div>
                 ))}

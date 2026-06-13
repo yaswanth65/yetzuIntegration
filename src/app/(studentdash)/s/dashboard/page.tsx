@@ -350,7 +350,7 @@ export default function OverviewPage() {
     { id: 1, label: "Signed up!", icon: "/images/shake-hand.svg", active: true },
     { id: 2, label: "Sessions", icon: "/images/calander.svg", active: upcomingSessions.length > 0 },
     { id: 3, label: "Assignments", icon: "/images/assignment.svg", active: pendingAssignments.length > 0 },
-    { id: 4, label: isCompleted ? "Completed" : "Certifications", icon: isCompleted ? "/images/flag.svg" : "/images/certificate.svg", active: isCompleted }
+    { id: 4, label: isCompleted ? "Completed" : "Certifications", icon: isCompleted ? "/images/flag.svg" : "/images/certificate.svg", active: pendingAssignments.length > 0 || isCompleted }
   ];
 
   return (
@@ -391,8 +391,10 @@ export default function OverviewPage() {
           {!isActuallyEmpty && (
             <>
               <div className="hidden xl:flex items-center justify-end overflow-x-auto w-auto pb-0 z-10 no-scrollbar">
-                {trackerSteps.map((step, index) => {
+                  {trackerSteps.map((step, index) => {
                   const isLast = index === trackerSteps.length - 1;
+                  const nextStep = !isLast ? trackerSteps[index + 1] : null;
+                  const barFill = nextStep?.active ? "w-full" : "w-0";
                   return (
                     <React.Fragment key={`desktop-${step.id}`}>
                       <div className={`flex flex-col items-center gap-1.5 shrink-0 transition-opacity ${step.active ? 'opacity-100' : 'opacity-50'}`}>
@@ -402,14 +404,9 @@ export default function OverviewPage() {
                         <span className={`text-[12px] font-medium ${step.active ? 'text-gray-900' : 'text-gray-500'}`}>{step.label}</span>
                       </div>
                       {!isLast && (
-                        index === 0 ? (
-                          <div className="w-16 h-[4px] bg-gray-200 rounded-full mb-6 mx-3 shrink-0 relative flex items-center">
-                            <div className="w-[60%] h-full rounded-full bg-[#10B981]"></div>
-                            <div className="absolute left-[60%] w-2.5 h-2.5 bg-[#10B981] rounded-full -ml-1.5 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
-                          </div>
-                        ) : (
-                          <div className="w-8 h-[2px] border-t-2 border-dashed border-gray-300 mb-6 mx-3 shrink-0 opacity-50"></div>
-                        )
+                        <div className="w-16 h-[4px] bg-gray-200 rounded-full mb-6 mx-3 shrink-0 relative flex items-center">
+                          <div className={`${barFill} h-full rounded-full bg-[#10B981] transition-all duration-500`}></div>
+                        </div>
                       )}
                     </React.Fragment>
                   );
@@ -419,9 +416,10 @@ export default function OverviewPage() {
               <div className="flex xl:hidden w-full justify-between items-end z-10 mt-3 gap-1.5">
                 {trackerSteps.map((step, index) => {
                   let fillWidth = "w-0";
-                  if (index === 0) fillWidth = "w-full"; 
-                  else if (index === 1 && step.active) fillWidth = isCompleted ? "w-full" : "w-[40%]"; 
-                  else if (index > 1 && step.active) fillWidth = "w-full"; 
+                  if (index === 0) fillWidth = "w-full";
+                  else if (index === 1) fillWidth = upcomingSessions.length > 0 ? "w-full" : "w-0";
+                  else if (index === 2) fillWidth = pendingAssignments.length > 0 ? "w-full" : "w-0";
+                  else if (index === 3) fillWidth = isCompleted ? "w-full" : "w-0";
 
                   return (
                     <div key={`mobile-${step.id}`} className="flex flex-col items-center flex-1 gap-2.5 overflow-hidden">

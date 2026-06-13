@@ -152,15 +152,19 @@ export const PublicSessionsAPI = {
 };
 
 export const PaymentAPI = {
-  createOrder: async (payload: { amount: number; currency?: string; sessionId: string; userId?: string }) => {
+  createOrder: async (payload: { amount: number; currency?: string; sessionId?: string; sessionIds?: string[]; userId?: string }) => {
     try {
       const userId = getUserId();
-      const body = {
+      const body: Record<string, any> = {
         amount: payload.amount,
         currency: payload.currency || "INR",
-        sessionId: payload.sessionId,
         userId: userId
       };
+      if (payload.sessionIds && payload.sessionIds.length > 0) {
+        body.sessionIds = payload.sessionIds;
+      } else if (payload.sessionId) {
+        body.sessionId = payload.sessionId;
+      }
       console.log("PaymentAPI.createOrder payload:", body);
       const response = await authApi.post("/api/payment/order", body);
       return dataOf(response);
@@ -179,7 +183,7 @@ export const PaymentAPI = {
             entity: {
               id: "pay_" + Date.now(),
               order_id: "order_" + Date.now(),
-              amount: payload.amount * 100, // Convert to paise
+              amount: payload.amount * 100,
               currency: "INR",
               notes: {
                 userId: payload.userId,
@@ -192,12 +196,22 @@ export const PaymentAPI = {
 
       console.log("[PaymentAPI] verifyPayment payload:", JSON.stringify(body, null, 2));
 
-      const response = await authApi.post("/api/payment/webhook", body, {
+      // Call the LOCAL webhook route (not proxied to production)
+      const response = await fetch("/api/payment/webhook", {
+        method: "POST",
         headers: {
+          "Content-Type": "application/json",
           "x-webhook-test-token": "TqSxD9F3-ru7ZCt"
-        }
+        },
+        body: JSON.stringify(body),
       });
-      return dataOf(response);
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData?.error || `Webhook returned ${response.status}`);
+      }
+
+      return await response.json();
     } catch (error) {
       logApiFailure("PaymentAPI.verifyPayment", error, { payload });
       throw error;
@@ -239,9 +253,28 @@ export const StudentAPI = {
     return StudentAPI.getEnrolledSessions();
   },
 
+  // GET /api/public/sessions/{{sessionId}} (no auth required, uses sessionId not courseId)
+  getPublicSession: async (sessionId: string) => {
+    try {
+      const response = await api.get(`/api/public/sessions/${sessionId}`);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("StudentAPI.getPublicSession", error, { sessionId });
+      throw error;
+    }
+  },
+
+  // GET /api/student/dashboard/overview (from Postman spec)
   getDashboardOverview: async () => {
-    // getOverview returns 500 - use me() instead
-    return StudentAPI.me();
+    try {
+      const response = await authApi.post("/api/student/dashboard/overview", {}, {
+        withCredentials: true,
+      });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("StudentAPI.getDashboardOverview", error);
+      return StudentAPI.me();
+    }
   },
 
   getProfile: async () => {
@@ -262,6 +295,18 @@ export const StudentAPI = {
       return dataOf(response);
     } catch (error) {
       logApiFailure("StudentAPI.getNotifications", error);
+      throw error;
+    }
+  },
+
+  getCertificates: async () => {
+    try {
+      const response = await authApi.get("/api/student/certificates", {
+        withCredentials: true,
+      });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("StudentAPI.getCertificates", error);
       throw error;
     }
   },
@@ -335,12 +380,12 @@ export const StudentAPI = {
     };
 
     try {
-      const response = await authApi.put("/api/dashboard/updateStudentDetails", payload);
+      const response = await authApi.put("/api/student/edit-profile", payload);
       return dataOf(response);
     } catch (primaryError) {
       logApiFailure("StudentAPI.editProfile.primary", primaryError, { payload });
       try {
-        const fallback = await authApi.put("/api/student/edit-profile", payload);
+        const fallback = await authApi.put("/api/dashboard/updateStudentDetails", payload);
         return dataOf(fallback);
       } catch (fallbackError) {
         logApiFailure("StudentAPI.editProfile.fallback", fallbackError, { payload });
@@ -353,11 +398,23 @@ export const StudentAPI = {
   getAssignments: async () => {
     try {
       const response = await authApi.get("/api/student/assignments", {
-        withCredentials: true, // Send cookies automatically (interceptor adds Authorization + x-user-id)
+        withCredentials: true,
       });
       return dataOf(response);
     } catch (error) {
       logApiFailure("StudentAPI.getAssignments", error);
+      throw error;
+    }
+  },
+
+  getAssignmentDetail: async (assignmentId: string) => {
+    try {
+      const response = await authApi.get(`/api/student/assignments/${assignmentId}`, {
+        withCredentials: true,
+      });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("StudentAPI.getAssignmentDetail", error, { assignmentId });
       throw error;
     }
   },
@@ -412,6 +469,20 @@ export const StudentAPI = {
     }
   },
 
+  rescheduleSession: async (payload: { sessionId: string; reason: string; proposedDate: string }) => {
+    if (!payload.sessionId || !payload.reason || !payload.proposedDate) {
+      throw new Error("Session, reason, and proposed date are required.");
+    }
+
+    try {
+      const response = await authApi.post("/api/student/session/reschedule-request", payload);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("StudentAPI.rescheduleSession", error, { payload });
+      throw error;
+    }
+  },
+
   rescheduleCourse: async (payload: { courseId: string; reason: string; proposedDate: string }) => {
     if (!payload.courseId || !payload.reason || !payload.proposedDate) {
       throw new Error("Course, reason, and proposed date are required.");
@@ -438,7 +509,10 @@ export const StudentAPI = {
 
   getChatMessages: async (educatorId: string) => {
     try {
-      const response = await authApi.post("/api/Studentchat/messages", { educatorId });
+      const response = await authApi.get("/api/Studentchat/messages", {
+        params: { educatorId },
+        withCredentials: true,
+      });
       return dataOf(response);
     } catch (error) {
       logApiFailure("StudentAPI.getChatMessages", error, { educatorId });
@@ -570,11 +644,6 @@ export const EducatorAPI = {
     throw new Error("sessionId or courseId is required.");
   }
 
-  // 🔥 TEMP FIX: map sessionId → courseId
-  if (sessionId && !courseId) {
-    formData.set("courseId", sessionId as string);
-  }
-
   try {
     const response = await authApi.post(
       "/api/educator/assignments/create",
@@ -588,47 +657,20 @@ export const EducatorAPI = {
     logApiFailure("EducatorAPI.createAssignment.primary", primaryError, {
       keys: Array.from(formData.keys()),
     });
-
-    try {
-      const fallback = await authApi.post(
-        "/api/educator/assignment/create",
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-      return dataOf(fallback);
-    } catch (fallbackError) {
-      logApiFailure("EducatorAPI.createAssignment.fallback", fallbackError, {
-        keys: Array.from(formData.keys()),
-      });
-      throw fallbackError;
-    }
+    throw primaryError;
   }
 },
 
-  // POST /api/educator/assignments/list (from Postman: status=published)
-  getAssignments: async () => {
+  getAssignments: async (params?: { status?: string; search?: string }) => {
     try {
-      const response = await authApi.post("/api/educator/assignments/list", {
-        status: "published",
-      }, {
+      const response = await authApi.get("/api/educator/assignments/list", {
+        params: { status: params?.status || "published", search: params?.search || "" },
         withCredentials: true,
       });
       return dataOf(response);
-    } catch (primaryError) {
-      logApiFailure("EducatorAPI.getAssignments.primary", primaryError);
-      try {
-        const fallback = await authApi.post("/api/educator/assignment/list", {
-          status: "published",
-        }, {
-          withCredentials: true,
-        });
-        return dataOf(fallback);
-      } catch (fallbackError) {
-        logApiFailure("EducatorAPI.getAssignments.fallback", fallbackError);
-        throw fallbackError;
-      }
+    } catch (error) {
+      logApiFailure("EducatorAPI.getAssignments", error);
+      throw error;
     }
   },
 
@@ -704,14 +746,105 @@ export const EducatorAPI = {
     }
   },
 
-  uploadSessionResource: async (sessionId: string, formData: FormData) => {
+  getAssignmentSessionOptions: async (params?: { search?: string; status?: string; onlyAssignable?: boolean; includeAll?: boolean }) => {
     try {
-      const response = await authApi.post(`/api/educator/sessions/${sessionId}/resources`, formData, {
+      const response = await authApi.get("/api/educator/assignments/session-options", {
+        params: {
+          search: params?.search || "",
+          status: params?.status || "all",
+          onlyAssignable: params?.onlyAssignable ?? true,
+          includeAll: params?.includeAll ?? false,
+        },
+        withCredentials: true,
+      });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.getAssignmentSessionOptions", error, { params });
+      throw error;
+    }
+  },
+
+  uploadSessionResource: async (sessionId: string, formData: FormData) => {
+    if (!formData.get('description')) {
+      formData.set('description', formData.get('title') || '');
+    }
+    try {
+      const response = await authApi.post(`/api/educator/sessions/${sessionId}/files`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       return dataOf(response);
     } catch (error) {
       logApiFailure("EducatorAPI.uploadSessionResource", error, { sessionId });
+      throw error;
+    }
+  },
+
+  getSessionFiles: async (sessionId: string) => {
+    try {
+      const response = await authApi.get(`/api/educator/sessions/${sessionId}/files`, {
+        withCredentials: true,
+      });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.getSessionFiles", error, { sessionId });
+      throw error;
+    }
+  },
+
+  updateSessionFile: async (sessionId: string, formData: FormData) => {
+    try {
+      const response = await authApi.put(`/api/educator/sessions/${sessionId}/files`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.updateSessionFile", error, { sessionId });
+      throw error;
+    }
+  },
+
+  deleteSessionFile: async (sessionId: string, resourceId: string) => {
+    try {
+      const response = await authApi.delete(`/api/educator/sessions/${sessionId}/files`, {
+        params: { resourceId },
+        withCredentials: true,
+      });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.deleteSessionFile", error, { sessionId, resourceId });
+      throw error;
+    }
+  },
+
+  getSubmissions: async (params?: { page?: number; limit?: number; status?: string; assignmentId?: string; sessionId?: string; studentId?: string; search?: string }) => {
+    try {
+      const response = await authApi.get("/api/educator/assignments/submissions", {
+        params: {
+          page: params?.page ?? 1,
+          limit: params?.limit ?? 10,
+          status: params?.status || "all",
+          assignmentId: params?.assignmentId || "",
+          sessionId: params?.sessionId || "",
+          studentId: params?.studentId || "",
+          search: params?.search || "",
+        },
+        withCredentials: true,
+      });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.getSubmissions", error, { params });
+      throw error;
+    }
+  },
+
+  getSubmissionById: async (submissionId: string) => {
+    try {
+      const response = await authApi.get(`/api/educator/assignments/submissions/${submissionId}`, {
+        withCredentials: true,
+      });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("EducatorAPI.getSubmissionById", error, { submissionId });
       throw error;
     }
   },
@@ -762,7 +895,7 @@ export const EducatorAPI = {
 
   addSubmissionComment: async (submissionId: string, educatorRemark: string) => {
     try {
-      const response = await authApi.post(`/api/educator/assignments/submissions/${submissionId}`, { educatorRemark });
+      const response = await authApi.patch(`/api/educator/assignments/submissions/${submissionId}`, { educatorRemark });
       return dataOf(response);
     } catch (error) {
       logApiFailure("EducatorAPI.addSubmissionComment", error, { submissionId, educatorRemark });
@@ -838,6 +971,53 @@ export const EducatorAPI = {
       return dataOf(response);
     } catch (error) {
       logApiFailure("EducatorAPI.getTicketById", error, { ticketId });
+      throw error;
+    }
+  },
+};
+
+export const HelpArticlesAPI = {
+  getAll: async (params?: { search?: string; page?: number; limit?: number }) => {
+    try {
+      const response = await authApi.get("/api/student/help/articles", { params });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("HelpArticlesAPI.getAll", error, { params });
+      throw error;
+    }
+  },
+
+  getById: async (articleId: string) => {
+    try {
+      const response = await authApi.get(`/api/student/help/articles/${articleId}`);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("HelpArticlesAPI.getById", error, { articleId });
+      throw error;
+    }
+  },
+};
+
+export const BillingAPI = {
+  getInvoices: async (params?: { page?: number; limit?: number; search?: string }) => {
+    try {
+      const response = await authApi.get("/api/student/billing/invoices", { params });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("BillingAPI.getInvoices", error, { params });
+      throw error;
+    }
+  },
+
+  downloadInvoice: async (invoiceId: string) => {
+    try {
+      const response = await authApi.get(`/api/student/invoices/${invoiceId}/download`, {
+        responseType: "blob",
+        withCredentials: true,
+      });
+      return response;
+    } catch (error) {
+      logApiFailure("BillingAPI.downloadInvoice", error, { invoiceId });
       throw error;
     }
   },
@@ -1468,6 +1648,268 @@ export const AdminAPI = {
       return dataOf(response);
     } catch (error) {
       logApiFailure("AdminAPI.updateTicket", error, { ticketId, payload });
+      throw error;
+    }
+  },
+
+  deleteTicket: async (ticketId: string) => {
+    try {
+      const response = await authApi.delete(`/api/admin/tickets/${ticketId}`);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.deleteTicket", error, { ticketId });
+      throw error;
+    }
+  },
+
+  // ── Analytics ────────────────────────────────────────────────────────────────
+
+  getAnalytics: async (params?: { rangeDays?: number; days?: number; range?: string }) => {
+    try {
+      const response = await authApi.get("/api/admin/analytics", { params });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.getAnalytics", error, { params });
+      throw error;
+    }
+  },
+
+  exportAnalytics: async (params?: { rangeDays?: number; days?: number; range?: string; format?: string }) => {
+    try {
+      const response = await authApi.get("/api/admin/analytics/export", {
+        params,
+        responseType: params?.format === "json" ? "json" : "blob",
+      });
+      return response;
+    } catch (error) {
+      logApiFailure("AdminAPI.exportAnalytics", error, { params });
+      throw error;
+    }
+  },
+
+  // ── User sub-routes ─────────────────────────────────────────────────────────
+
+  patchUserStatus: async (userId: string, payload: { status: string }) => {
+    try {
+      const response = await authApi.patch(`/api/admin/users/${userId}`, payload);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.patchUserStatus", error, { userId, payload });
+      throw error;
+    }
+  },
+
+  assignUserSessions: async (userId: string, payload: { sessionIds: string[] }) => {
+    try {
+      const response = await authApi.post(`/api/admin/users/${userId}/sessions`, payload);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.assignUserSessions", error, { userId, payload });
+      throw error;
+    }
+  },
+
+  getUserNotifications: async (userId: string) => {
+    try {
+      const response = await authApi.get(`/api/admin/users/${userId}/notifications`);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.getUserNotifications", error, { userId });
+      throw error;
+    }
+  },
+
+  // ── Assignments ─────────────────────────────────────────────────────────────
+
+  getAssignments: async (params?: { page?: number; limit?: number; search?: string; status?: string; sessionId?: string; educatorId?: string }) => {
+    try {
+      const response = await authApi.get("/api/admin/assignments", { params });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.getAssignments", error, { params });
+      throw error;
+    }
+  },
+
+  createAssignment: async (payload: {
+    title: string;
+    description?: string;
+    sessionId?: string;
+    dueDate?: string;
+    assignedStudents?: string[];
+  }) => {
+    try {
+      const response = await authApi.post("/api/admin/assignments/create", payload);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.createAssignment", error, { payload });
+      throw error;
+    }
+  },
+
+  getAssignmentById: async (assignmentId: string) => {
+    try {
+      const response = await authApi.get(`/api/admin/assignments/${assignmentId}`);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.getAssignmentById", error, { assignmentId });
+      throw error;
+    }
+  },
+
+  updateAssignment: async (assignmentId: string, payload: Record<string, any>) => {
+    try {
+      const response = await authApi.put(`/api/admin/assignments/${assignmentId}`, payload);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.updateAssignment", error, { assignmentId, payload });
+      throw error;
+    }
+  },
+
+  deleteAssignment: async (assignmentId: string) => {
+    try {
+      const response = await authApi.delete(`/api/admin/assignments/${assignmentId}`);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.deleteAssignment", error, { assignmentId });
+      throw error;
+    }
+  },
+
+  // ── CMS ─────────────────────────────────────────────────────────────────────
+
+  getCmsPages: async () => {
+    try {
+      const response = await authApi.get("/api/cms/pages");
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.getCmsPages", error);
+      throw error;
+    }
+  },
+
+  getCmsPage: async (pageKey: string) => {
+    try {
+      const response = await authApi.get(`/api/cms/pages/${pageKey}`);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.getCmsPage", error, { pageKey });
+      throw error;
+    }
+  },
+
+  updateCmsPage: async (pageKey: string, payload: {
+    pageTitle?: string;
+    status?: string;
+    sortOrder?: number;
+    metadata?: Record<string, any>;
+  }) => {
+    try {
+      const response = await authApi.put(`/api/cms/pages/${pageKey}`, payload);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.updateCmsPage", error, { pageKey, payload });
+      throw error;
+    }
+  },
+
+  getCmsSection: async (pageKey: string, sectionKey: string) => {
+    try {
+      const response = await authApi.get(`/api/cms/pages/${pageKey}/sections/${sectionKey}`);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.getCmsSection", error, { pageKey, sectionKey });
+      throw error;
+    }
+  },
+
+  updateCmsSection: async (pageKey: string, sectionKey: string, payload: {
+    sectionTitle?: string;
+    sortOrder?: number;
+    metadata?: Record<string, any>;
+    data?: Record<string, any>;
+  }) => {
+    try {
+      const response = await authApi.put(`/api/cms/pages/${pageKey}/sections/${sectionKey}`, payload);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.updateCmsSection", error, { pageKey, sectionKey, payload });
+      throw error;
+    }
+  },
+
+  uploadCmsMedia: async (file: File, title?: string, altText?: string) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      if (title) formData.append("title", title);
+      if (altText) formData.append("altText", altText);
+      const response = await authApi.post("/api/cms/media", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.uploadCmsMedia", error, { title });
+      throw error;
+    }
+  },
+
+  // ── Contacts ────────────────────────────────────────────────────────────────
+
+  getContacts: async (params?: { page?: number; limit?: number }) => {
+    try {
+      const response = await authApi.get("/api/admin/contacts", { params });
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.getContacts", error, { params });
+      throw error;
+    }
+  },
+
+  createContact: async (payload: {
+    name: string;
+    email: string;
+    subject: string;
+    mobile?: string;
+    medical_school_affiliation?: string;
+    description?: string;
+  }) => {
+    try {
+      const response = await authApi.post("/api/admin/contacts", payload);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.createContact", error, { payload });
+      throw error;
+    }
+  },
+
+  getContactById: async (contactId: string) => {
+    try {
+      const response = await authApi.get(`/api/admin/contacts/${contactId}`);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.getContactById", error, { contactId });
+      throw error;
+    }
+  },
+
+  deleteContact: async (contactId: string) => {
+    try {
+      const response = await authApi.delete(`/api/admin/contacts/${contactId}`);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.deleteContact", error, { contactId });
+      throw error;
+    }
+  },
+
+  replyToContact: async (contactId: string, payload: { replySubject: string; replyMessage: string }) => {
+    try {
+      const response = await authApi.post(`/api/admin/contacts/${contactId}/reply`, payload);
+      return dataOf(response);
+    } catch (error) {
+      logApiFailure("AdminAPI.replyToContact", error, { contactId, payload });
       throw error;
     }
   },

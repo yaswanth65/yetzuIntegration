@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { 
   Search, 
   CheckCircle2, 
@@ -9,8 +9,10 @@ import {
   ChevronRight, 
   ShieldCheck,
   X,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from "lucide-react";
+import { StudentAPI } from "@/lib/api";
 
 // --- MOCK DATA ---
 const SUBSCRIPTIONS_DATA = [
@@ -71,8 +73,38 @@ const getStatusBadge = (status: string) => {
 
 export default function SubscriptionsPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [subscriptions, setSubscriptions] = useState(SUBSCRIPTIONS_DATA);
+  const [isLoading, setIsLoading] = useState(true);
   const [isManageModalOpen, setIsManageModalOpen] = useState(false);
   const [isCancelConfirmModalOpen, setIsCancelConfirmModalOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchSubscriptions = async () => {
+      try {
+        setIsLoading(true);
+        const res = await StudentAPI.getDashboardOverview();
+        const data = res?.data || res;
+        const subs = data?.subscriptions || data?.subscription ? [data.subscription] : [];
+        if (Array.isArray(subs) && subs.length > 0) {
+          setSubscriptions(subs);
+        }
+      } catch {
+        console.warn("Subscriptions API unavailable, using fallback data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchSubscriptions();
+  }, []);
+
+  const filteredSubs = subscriptions.filter((sub) =>
+    sub.planName?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const activeCount = filteredSubs.filter((s) => s.status?.toLowerCase() === "active").length;
+  const pausedCancelledCount = filteredSubs.filter((s) =>
+    s.status?.toLowerCase() === "paused" || s.status?.toLowerCase() === "cancelled"
+  ).length;
 
   // Handlers for Modals
   const openManageModal = () => setIsManageModalOpen(true);
@@ -83,6 +115,14 @@ export default function SubscriptionsPage() {
     setIsCancelConfirmModalOpen(true); // Open cancel confirmation
   };
   const closeCancelModal = () => setIsCancelConfirmModalOpen(false);
+
+  if (isLoading) {
+    return (
+      <div className="w-full bg-[#F8F9FA] flex items-center justify-center min-h-[400px]">
+        <Loader2 size={32} className="animate-spin text-[#042BFD]" />
+      </div>
+    );
+  }
 
   return (
     <div className="font-sans relative">
@@ -180,7 +220,7 @@ export default function SubscriptionsPage() {
             </div>
             <div>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">TOTAL PLANS</p>
-              <p className="text-[24px] font-bold text-gray-900 leading-none">3</p>
+              <p className="text-[24px] font-bold text-gray-900 leading-none">{subscriptions.length}</p>
             </div>
           </div>
           
@@ -190,7 +230,7 @@ export default function SubscriptionsPage() {
             </div>
             <div>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">ACTIVE</p>
-              <p className="text-[24px] font-bold text-gray-900 leading-none">1</p>
+              <p className="text-[24px] font-bold text-gray-900 leading-none">{activeCount}</p>
             </div>
           </div>
 
@@ -200,7 +240,7 @@ export default function SubscriptionsPage() {
             </div>
             <div>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">PAUSED / CANCELLED</p>
-              <p className="text-[24px] font-bold text-gray-900 leading-none">2</p>
+              <p className="text-[24px] font-bold text-gray-900 leading-none">{pausedCancelledCount}</p>
             </div>
           </div>
         </div>
@@ -226,7 +266,7 @@ export default function SubscriptionsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {SUBSCRIPTIONS_DATA.map((sub) => (
+                {filteredSubs.map((sub) => (
                   <tr key={sub.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="py-5 px-6">
                       <p className="text-[14px] font-semibold text-gray-900">{sub.planName}</p>

@@ -6,6 +6,7 @@ import {
   useGetCourses,
 } from "@/lib/queries/courses/useCoursesService";
 import useSession from "@/hooks/useSession";
+import { loadRazorpay, openRazorpayCheckout } from "@/lib/razorpay";
 import toast from "react-hot-toast";
 import Image from "next/image";
 import {
@@ -55,7 +56,7 @@ export default function CourseDetailPage() {
   const { data: allCourses, isLoading: isCoursesLoading } = useGetCourses();
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const { addToCart, isInCart } = useCart();
-  const { isUserLoggedIn } = useSession();
+  const { user, isUserLoggedIn } = useSession();
 
   const randomCourses = useMemo(() => {
     if (!allCourses || !courseId) return [];
@@ -100,35 +101,82 @@ export default function CourseDetailPage() {
       router.push(`/login?callback=/courses/${courseId}`);
       return;
     }
+    const amount = Number(course.cost);
+    if (amount <= 0) {
+      toast.error("This course is not available for purchase.");
+      return;
+    }
     setIsCreatingOrder(true);
     try {
-      let amount = Number(course.cost || 0);
-      if (amount <= 0) amount = 1;
-      
-      // Step 1: Create order
+      await loadRazorpay();
+
+      // Step 1: Try creating Razorpay order on production
       const orderResult = await PaymentAPI.createOrder({
-        amount: amount,
+        amount,
         sessionId: courseId,
       });
-      
-      console.log("Order created:", orderResult);
-      
-      // Step 2: Get user ID and verify payment (triggers webhook → enrollment)
-      const userId = orderResult?.userId || "";
-      const paymentResult = await PaymentAPI.verifyPayment({
-        userId: userId,
-        sessionId: courseId,
-        amount: amount,
+
+      const orderData = orderResult?.data || orderResult;
+      const razorpayOrderId = orderData?.orderId || orderData?.id || "";
+      const keyId = orderData?.keyId || "";
+
+      if (!razorpayOrderId || !keyId) {
+        throw new Error("Failed to create payment order. Missing order ID or key.");
+      }
+
+      // Step 2: Open Razorpay checkout
+      openRazorpayCheckout({
+        keyId,
+        orderId: razorpayOrderId,
+        amount,
+        currency: orderData?.currency || "INR",
+        title: course.title || "Course Purchase",
+        userName: user?.name,
+        userEmail: user?.email,
+        onSuccess: async (paymentId: string, orderId: string, signature: string) => {
+          // Payment captured — trigger enrollment via local webhook
+          try {
+            await PaymentAPI.verifyPayment({
+              userId: user?.id || "",
+              sessionId: courseId,
+              amount,
+            });
+            toast.success(`Enrolled successfully in ${course.title}!`);
+            router.push("/s/dashboard");
+          } catch (err: any) {
+            console.error("Enrollment after payment failed:", err);
+            toast.error(err?.message || "Payment succeeded but enrollment failed. Contact support.");
+            setIsCreatingOrder(false);
+          }
+        },
+        onDismiss: () => {
+          setIsCreatingOrder(false);
+          toast("Payment cancelled.", { icon: "ℹ️" });
+        },
       });
-      
-      console.log("Payment verified:", paymentResult);
-      
-      toast.success(`Enrolled successfully in ${course.title}! Check your dashboard for details.`);
-      router.push("/s/dashboard");
     } catch (error: any) {
-      console.error("Payment failed:", error);
-      toast.error(error?.message || "Unable to complete enrollment. Please try again.");
-    } finally {
+      const errMsg = error?.response?.data?.error || error?.message || "";
+      const isUnavailable = errMsg.includes("unavailable") || errMsg.includes("cannot be purchased");
+
+      if (isUnavailable) {
+        // Fallback: enroll via local webhook (dev/test)
+        console.warn("createOrder unavailable, falling back to local webhook");
+        try {
+          await PaymentAPI.verifyPayment({
+            userId: user?.id || "",
+            sessionId: courseId,
+            amount,
+          });
+          toast.success(`Enrolled successfully in ${course.title}!`);
+          router.push("/s/dashboard");
+          return;
+        } catch (fallbackErr: any) {
+          console.error("Local webhook fallback also failed:", fallbackErr);
+          toast.error(fallbackErr?.response?.data?.error || "Unable to complete enrollment. Please try again.");
+        }
+      } else {
+        toast.error(errMsg || "Unable to complete enrollment. Please try again.");
+      }
       setIsCreatingOrder(false);
     }
   };

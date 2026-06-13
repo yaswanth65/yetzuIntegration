@@ -146,27 +146,46 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
       setSession(mappedSession);
       setResources(foundItem.resources || []);
 
-      // 2. Fetch submissions for this session
+      // 2. Fetch session detail (includes assignmentDetails per spec)
       try {
-        const subRes = await authApi.get("/api/educator/assignments/submissions", {
-          params: { page: 1, limit: 100 }
-        });
-        const subData = subRes?.data?.data || subRes?.data || subRes;
-        const subList = subData?.list || subData?.submissions || subData || [];
-        
-        const filtered = subList.filter((item: any) => {
-          const itemSessionId = String(item.session?.id || item.session?._id || item.assignment?.session?.id || item.assignment?.session?._id || item.sessionId || "");
-          return itemSessionId === String(sessionId) || item.sessionTitle === mappedSession.title;
+        const detailRes = await authApi.get(`/api/educator/sessions/${sessionId}`);
+        const detailData = detailRes?.data?.data || detailRes?.data || detailRes;
+        const assignmentDetails = asArray(detailData?.assignmentDetails || detailData?.assignments || []);
+
+        const mapped = assignmentDetails.flatMap((assignment: any) => {
+          const submissions = asArray(assignment.submissions || assignment.submission || []);
+          return submissions.map((sub: any) => ({
+            id: sub.id || sub._id || "",
+            studentName: sub.studentName || sub.student?.name || "Student",
+            status: sub.status || "Pending",
+            assignmentId: assignment.id || assignment._id || "#STU-4759483",
+          }));
         });
 
-        const mappedSubmissions = filtered.map((item: any) => ({
-          id: item.id || item._id,
-          studentName: item.studentName || item.student?.name || "Student",
-          status: item.status || "Pending",
-          assignmentId: item.assignmentId || item.assignment?.id || "#STU-4759483",
-        }));
+        if (mapped.length > 0) {
+          setSubmissions(mapped);
+        } else {
+          // Fallback: fetch from submissions endpoint filtered by courseId
+          const subRes = await authApi.get("/api/educator/assignments/submissions", {
+            params: { page: 1, limit: 100 }
+          });
+          const subData = subRes?.data?.data || subRes?.data || subRes;
+          const subList = subData?.list || subData?.submissions || subData || [];
 
-        setSubmissions(mappedSubmissions);
+          const courseId = String(foundItem.courseId || foundItem.course?.id || foundItem.course?._id || "");
+          const filtered = subList.filter((item: any) => {
+            const itemSessionId = String(item.session?.id || item.session?._id || item.assignment?.session?.id || item.assignment?.session?._id || item.sessionId || "");
+            const itemCourseId = String(item.courseId || item.course?.id || item.course?._id || item.assignment?.courseId || item.assignment?.course?.id || item.assignment?.course?._id || item.assignment?.course?.id || "");
+            return itemSessionId === String(sessionId) || (courseId && itemCourseId === courseId) || item.sessionTitle === mappedSession.title;
+          });
+
+          setSubmissions(filtered.map((item: any) => ({
+            id: item.id || item._id,
+            studentName: item.studentName || item.student?.name || "Student",
+            status: item.status || "Pending",
+            assignmentId: item.assignmentId || item.assignment?.id || "#STU-4759483",
+          })));
+        }
       } catch (subErr) {
         console.error("Failed to load submissions for session", subErr);
         setSubmissions([]);

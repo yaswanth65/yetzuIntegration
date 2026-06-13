@@ -200,9 +200,32 @@ export default function SessionsPage() {
       setError("");
 
       try {
-        const enrolledRes = await StudentAPI.getEnrolledCourses();
+        const [enrolledRes, localEnrollRes] = await Promise.all([
+          StudentAPI.getEnrolledCourses(),
+          fetch("/api/payment/webhook").then(r => r.ok ? r.json() : { enrollments: [] }).catch(() => ({ enrollments: [] }))
+        ]);
         const enrolledData = enrolledRes?.data || enrolledRes;
         const enrolledList = asArray(enrolledData?.enrolledCourses || enrolledData?.courses || enrolledData);
+
+        // Merge local (in-memory) enrollments from fallback webhook
+        const localEnrollments = asArray(localEnrollRes?.enrollments || []);
+        const enrolledIds = new Set(enrolledList.map((item: any) => item.courseId || item.course?.id || item.id || ""));
+        for (const local of localEnrollments) {
+          if (local.status !== "enrolled") continue;
+          const cid = local.sessionId || local.courseId;
+          if (cid && !enrolledIds.has(cid)) {
+            enrolledList.push({
+              courseId: cid,
+              course: {
+                id: cid,
+                title: "Local Enrollment",
+                cost: local.amount || 0,
+              },
+              enrolledAt: local.enrolledAt,
+            });
+            enrolledIds.add(cid);
+          }
+        }
         
         const now = new Date();
         const mappedSessions = enrolledList.map((item: any) => {
