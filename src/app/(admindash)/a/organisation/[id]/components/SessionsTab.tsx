@@ -18,13 +18,6 @@ export default function SessionsTab({ sessions }: SessionsTabProps) {
 
   return (
     <div className="flex flex-col gap-6 w-full pb-10">
-      
-      {/* Top Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <SummaryCard value="Writing Workshop" subtitle="65%" label="Active Session" valueColor="text-green-500" />
-        <SummaryCard value="83.7%" label="Average Attendance" valueColor="text-blue-600" />
-        <SummaryCard value="3" label="Missed Sessions" valueColor="text-red-500" />
-      </div>
 
       {/* Table Section */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">

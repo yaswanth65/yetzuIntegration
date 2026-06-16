@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AdminAPI } from '@/lib/api';
 
 import ProgressBar from './components/ProgressBar';
@@ -22,11 +22,82 @@ const defaultPermissions = [
   { code: "assignments", enabled: false, limit: null, usedCount: 0, accessExpiry: null },
 ];
 
-export default function CreateOrganizationPage() {
+const buildPermissionDefaults = () => ({
+  webinars: false,
+  cohorts: false,
+  mentorship: false,
+  certification_courses: false,
+  assignments: false,
+});
+
+const normalizeNumber = (value: any) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
+
+const normalizeStudents = (students: any[] = []) =>
+  students
+    .map((student: any) => ({
+      name: String(student?.name || student?.fullName || student?.studentName || '').trim(),
+      email: String(student?.email || student?.mail || '').trim(),
+      password: String(student?.password || 'Pass123!'),
+      mobileNo: String(student?.mobileNo || student?.mobile || student?.phone || '').trim(),
+    }))
+    .filter((student) => student.name || student.email);
+
+const normalizePermissions = (permissions: any = []) => {
+  const toggles = buildPermissionDefaults();
+  const limits: Record<string, number | null> = {
+    webinars: null,
+    cohorts: null,
+    mentorship: null,
+    certification_courses: null,
+    assignments: null,
+  };
+
+  const list = Array.isArray(permissions)
+    ? permissions
+    : Array.isArray(permissions?.permissions)
+      ? permissions.permissions
+      : [];
+
+  list.forEach((item: any) => {
+    const code = String(item?.code || item?.permission || '').trim();
+    if (!(code in toggles)) return;
+    toggles[code as keyof typeof toggles] = Boolean(item?.enabled ?? item?.active ?? item?.isEnabled ?? item?.value);
+    const rawLimit = item?.limit ?? item?.maxLimit ?? item?.usageLimit;
+    limits[code] = rawLimit === undefined || rawLimit === null || rawLimit === '' ? null : Number(rawLimit);
+  });
+
+  return { toggles, limits };
+};
+
+const normalizeBillingData = (organization: any) => {
+  const invoiceAmount = organization?.invoice?.amount ?? organization?.payment?.amount ?? organization?.basePrice ?? organization?.revenueGenerated ?? organization?.revenue;
+  return {
+    model: organization?.billingModel || organization?.plan || 'flat',
+    pricingType: organization?.pricingType || 'fixed',
+    basePrice: normalizeNumber(invoiceAmount),
+    currency: organization?.currency || organization?.invoice?.currency || organization?.payment?.currency || 'USD',
+    billingCycle: organization?.billingCycle || 'monthly',
+    paymentMethod: organization?.payment?.paymentMethod || organization?.paymentMethod || 'credit',
+  };
+};
+
+const isUuidLike = (value: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
+function CreateOrganizationPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const mode = searchParams?.get('mode') === 'edit' ? 'edit' : 'create';
+  const organizationId = searchParams?.get('id') || searchParams?.get('organizationId') || '';
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingOrganization, setIsLoadingOrganization] = useState(false);
   const [stepErrors, setStepErrors] = useState<string[]>([]);
+  const [organizationStatus, setOrganizationStatus] = useState('active');
+  const [originalOrganization, setOriginalOrganization] = useState<any>(null);
 
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const NAME_REGEX = /^.{2,}$/;
@@ -121,6 +192,72 @@ export default function CreateOrganizationPage() {
     nextBillingDate: '',
   });
 
+  useEffect(() => {
+    if (mode !== 'edit' || !organizationId || !isUuidLike(organizationId)) return;
+
+    let mounted = true;
+
+    const loadOrganization = async () => {
+      try {
+        setIsLoadingOrganization(true);
+        const response = await AdminAPI.getOrganization(organizationId);
+        const org = response?.data?.organization || response?.organization || response?.data || response;
+        if (!mounted) return;
+
+        setOriginalOrganization(org || null);
+        setOrganizationStatus(String(org?.status || 'active').toLowerCase());
+        setFormData({
+          name: String(org?.name || org?.organizationName || org?.title || '').trim(),
+          type: String(org?.type || org?.organizationType || '').trim(),
+          email: String(org?.email || org?.adminEmail || '').trim(),
+          emailDomain: String(org?.emailDomain || '').trim(),
+          location: String(org?.location || org?.city || org?.address || '').trim(),
+          description: String(org?.description || org?.about || '').trim(),
+        });
+        setAdminData({
+          name: String(org?.primaryContactName || org?.adminName || org?.contactName || '').trim(),
+          email: String(org?.adminEmail || org?.contactEmail || org?.email || '').trim(),
+          mobileNo: String(org?.mobileNo || org?.phone || org?.contactPhone || '').trim(),
+          roleTitle: String(org?.roleTitle || org?.adminRole || 'owner').trim(),
+          phoneCode: String(org?.phoneCode || '+1'),
+        });
+
+        const loadedStudents = normalizeStudents(org?.students || org?.studentList || org?.members || []);
+        setStudents(loadedStudents);
+        setImportMethod(loadedStudents.length > 0 ? 'manual' : 'manual');
+
+        const permissionState = normalizePermissions(org?.accessPermissions || org?.permissions);
+        setPermissionToggles(permissionState.toggles);
+        setPermissionLimits(permissionState.limits);
+
+        setBillingData(normalizeBillingData(org));
+        setInvoiceData({
+          invoiceId: String(org?.invoice?.invoiceId || org?.invoice?.id || org?.invoiceId || '').trim(),
+          amount: normalizeNumber(org?.invoice?.amount || org?.payment?.amount || org?.revenueGenerated || org?.revenue),
+          currency: String(org?.invoice?.currency || org?.payment?.currency || 'USD'),
+          invoiceDate: String(org?.invoice?.invoiceDate || org?.invoice?.issueDate || org?.createdAt || '').trim(),
+          paymentDate: String(org?.payment?.paymentDate || org?.invoice?.paymentDate || '').trim(),
+          paymentMethod: String(org?.payment?.paymentMethod || org?.paymentMethod || 'credit'),
+          billingCycle: String(org?.billingCycle || 'monthly'),
+          planType: String(org?.invoice?.planType || org?.planType || 'basic'),
+          paymentStatus: String(org?.invoice?.paymentStatus || org?.payment?.paymentStatus || 'pending'),
+          nextBillingDate: String(org?.invoice?.nextBillingDate || org?.nextBillingDate || '').trim(),
+        });
+      } catch (error) {
+        console.error('Failed to fetch organization for editing:', error);
+        alert('We could not load this organization for editing. Please try again.');
+      } finally {
+        if (mounted) setIsLoadingOrganization(false);
+      }
+    };
+
+    loadOrganization();
+
+    return () => {
+      mounted = false;
+    };
+  }, [mode, organizationId]);
+
   const totalSteps = 6;
 
   const updateFormData = (field: string, value: string) => {
@@ -170,54 +307,81 @@ export default function CreateOrganizationPage() {
     }));
   };
 
-  const handleCreateOrganization = async () => {
+  const buildStudentPayload = () => {
+    if (students.length > 0) {
+      return students.map(s => ({
+        name: s.name.trim(),
+        email: s.email.trim(),
+        password: s.password || 'Pass123!',
+        ...(s.mobileNo.trim() ? { mobileNo: s.mobileNo.trim() } : {}),
+      }));
+    }
+
+    return mode === 'create'
+      ? [{ name: 'Demo Student', email: 'demo@org.local', password: 'Pass123!' }]
+      : [];
+  };
+
+  const buildOrganizationPayload = () => ({
+    name: formData.name.trim(),
+    organizationName: formData.name.trim(),
+    type: formData.type,
+    email: formData.email.trim(),
+    status: organizationStatus || String(originalOrganization?.status || 'active').toLowerCase(),
+    billingCycle: billingData.billingCycle,
+    primaryContactName: adminData.name.trim() || formData.name.trim(),
+    adminEmail: adminData.email.trim() || formData.email.trim(),
+    phoneCode: adminData.phoneCode || '+1',
+    mobileNo: adminData.mobileNo || '',
+    roleTitle: adminData.roleTitle || 'owner',
+    accessPlan: originalOrganization?.accessPlan || 'basic',
+    location: formData.location || '',
+    description: formData.description || '',
+    students: buildStudentPayload(),
+    accessPermissions: buildPermissionsPayload(),
+    invoice: {
+      amount: billingData.basePrice || 0,
+      currency: billingData.currency || 'USD',
+      billingCycle: billingData.billingCycle,
+      paymentStatus: invoiceData.paymentStatus || 'pending',
+      invoiceId: invoiceData.invoiceId || undefined,
+      paymentDate: invoiceData.paymentDate || undefined,
+      nextBillingDate: invoiceData.nextBillingDate || undefined,
+      planType: invoiceData.planType || undefined,
+      paymentMethod: billingData.paymentMethod || invoiceData.paymentMethod || 'credit',
+    },
+    payment: {
+      amount: billingData.basePrice || 0,
+      currency: billingData.currency || 'USD',
+      paymentMethod: billingData.paymentMethod || invoiceData.paymentMethod || 'credit',
+      paymentStatus: invoiceData.paymentStatus || 'pending',
+      paymentDate: invoiceData.paymentDate || undefined,
+      transactionRef: invoiceData.invoiceId || undefined,
+      nextBillingDate: invoiceData.nextBillingDate || undefined,
+    },
+  });
+
+  const handleSubmitOrganization = async () => {
     try {
       setIsSubmitting(true);
 
-      const accessPermissions = buildPermissionsPayload();
-      const studentList = students.length > 0
-        ? students.map(s => ({
-            name: s.name.trim(),
-            email: s.email.trim(),
-            password: s.password || 'Pass123!',
-            ...(s.mobileNo.trim() ? { mobileNo: s.mobileNo.trim() } : {}),
-          }))
-        : [{ name: 'Demo Student', email: 'demo@org.local', password: 'Pass123!' }];
+      const payload = buildOrganizationPayload();
 
-      await AdminAPI.createOrganization({
-        name: formData.name.trim(),
-        organizationName: formData.name.trim(),
-        type: formData.type,
-        email: formData.email.trim(),
-        status: 'active',
-        billingCycle: billingData.billingCycle,
-        primaryContactName: adminData.name.trim() || formData.name.trim(),
-        adminEmail: adminData.email.trim() || formData.email.trim(),
-        phoneCode: adminData.phoneCode || '+1',
-        mobileNo: adminData.mobileNo || '',
-        roleTitle: adminData.roleTitle || 'owner',
-        accessPlan: 'basic',
-        location: formData.location || '',
-        description: formData.description || '',
-        students: studentList,
-        accessPermissions,
-        invoice: {
-          amount: billingData.basePrice || 0,
-          currency: billingData.currency || 'INR',
-          billingCycle: billingData.billingCycle,
-          paymentStatus: 'pending',
-        },
-        payment: {
-          amount: billingData.basePrice || 0,
-          currency: billingData.currency || 'INR',
-          paymentMethod: billingData.paymentMethod || 'credit',
-          paymentStatus: 'pending',
-        },
-      });
-      router.push('/a/organisation/all');
+      if (mode === 'edit') {
+        if (!organizationId || !isUuidLike(organizationId)) {
+          throw new Error('Missing organization ID for update.');
+        }
+
+        await AdminAPI.updateOrganization(organizationId, payload);
+        await AdminAPI.updateAccessPermissions(organizationId, payload.accessPermissions);
+        router.push(`/a/organisation/${organizationId}`);
+      } else {
+        await AdminAPI.createOrganization(payload);
+        router.push('/a/organisation/all');
+      }
     } catch (error: any) {
-      console.error('Failed to create organization:', error);
-      alert(error?.message || 'Failed to create organization. Please try again.');
+      console.error(`Failed to ${mode === 'edit' ? 'update' : 'create'} organization:`, error);
+      alert(error?.message || `Failed to ${mode === 'edit' ? 'update' : 'create'} organization. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -229,8 +393,13 @@ export default function CreateOrganizationPage() {
       <div className="w-full px-6 py-5 flex items-center justify-between border-b border-gray-100 bg-white">
         <Link href="/a/organisation" className="flex items-center gap-2 text-slate-800 font-bold hover:text-blue-600 transition-colors">
           <ChevronLeft className="w-5 h-5" />
-          <span className="text-lg">Create Organisation</span>
+          <span className="text-lg">{mode === 'edit' ? 'Edit Organisation' : 'Create Organisation'}</span>
         </Link>
+        {mode === 'edit' && organizationId && (
+          <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+            Editing {organizationId}
+          </span>
+        )}
       </div>
 
       {/* Progress Bar */}
@@ -240,7 +409,14 @@ export default function CreateOrganizationPage() {
 
       {/* Form Content Wrapper */}
       <div className="flex-1 w-full bg-[#fcfcfc] py-8 px-4">
-        {renderStep()}
+        {mode === 'edit' && isLoadingOrganization ? (
+          <div className="mx-auto max-w-2xl rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-sm">
+            <p className="text-sm font-semibold text-slate-900">Loading organization details...</p>
+            <p className="mt-2 text-sm text-gray-500">We’re pulling the current data so you can update it safely.</p>
+          </div>
+        ) : (
+          renderStep()
+        )}
       </div>
 
       {/* Fixed Footer */}
@@ -264,13 +440,14 @@ export default function CreateOrganizationPage() {
             </button>
             
             {currentStep === totalSteps ? (
-              <button onClick={handleCreateOrganization} disabled={isSubmitting} className="px-6 py-2.5 bg-[#0A0A0A] hover:bg-gray-800 text-white rounded-xl text-sm font-bold transition-colors disabled:opacity-60">
-                {isSubmitting ? 'Creating...' : 'Create Organization'}
+              <button onClick={handleSubmitOrganization} disabled={isSubmitting || isLoadingOrganization} className="px-6 py-2.5 bg-[#0A0A0A] hover:bg-gray-800 text-white rounded-xl text-sm font-bold transition-colors disabled:opacity-60">
+                {isSubmitting ? (mode === 'edit' ? 'Updating...' : 'Creating...') : (mode === 'edit' ? 'Update Organization' : 'Create Organization')}
               </button>
             ) : (
               <button 
                 onClick={handleNext}
-                className="px-8 py-2.5 bg-[#0A0A0A] hover:bg-gray-800 text-white rounded-xl text-sm font-bold transition-colors"
+                disabled={isLoadingOrganization}
+                className="px-8 py-2.5 bg-[#0A0A0A] hover:bg-gray-800 text-white rounded-xl text-sm font-bold transition-colors disabled:opacity-60"
               >
                 Next
               </button>
@@ -279,5 +456,13 @@ export default function CreateOrganizationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CreateOrganizationPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-sm text-gray-500">Loading organization form...</div>}>
+      <CreateOrganizationPageContent />
+    </Suspense>
   );
 }

@@ -52,14 +52,15 @@ export default function OverviewTab({ user }: OverviewTabProps) {
     month: "long",
     day: "numeric",
     year: "numeric"
-  }) : "Not available";
+  }) : "N/A";
 
   const lastLogin = user.lastLogin ? new Date(user.lastLogin).toLocaleString("en-US", {
     month: "short",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit"
-  }) : "Never";
+  }) : "N/A";
+  const activities = Array.isArray(user.activities) ? user.activities : [];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -75,13 +76,13 @@ export default function OverviewTab({ user }: OverviewTabProps) {
           />
           <StatCard 
             label="Assignments" 
-            value="0" 
+            value={0} 
             icon={GraduationCap} 
             colorClass="bg-purple-600" 
           />
           <StatCard 
             label="Attendance" 
-            value="94%" 
+            value={`${user.attendanceRate ?? 0}%`} 
             icon={Calendar} 
             colorClass="bg-emerald-600" 
           />
@@ -118,7 +119,7 @@ export default function OverviewTab({ user }: OverviewTabProps) {
             <InfoItem 
               icon={Building2} 
               label="Organization" 
-              value={user.organization?.name || "Independent"} 
+              value={user.organization?.name || "N/A"} 
             />
             <InfoItem 
               icon={Briefcase} 
@@ -128,7 +129,7 @@ export default function OverviewTab({ user }: OverviewTabProps) {
             <InfoItem 
               icon={GraduationCap} 
               label="Qualification" 
-              value={user.qualification || "Not specified"} 
+              value={user.qualification || "N/A"} 
             />
             <InfoItem 
               icon={MapPin} 
@@ -145,32 +146,27 @@ export default function OverviewTab({ user }: OverviewTabProps) {
         <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
           <h3 className="text-base font-bold text-[#021165] tracking-tight mb-6">Recent Activity</h3>
           <div className="space-y-6">
-            {[
-              { text: "Enrolled in Medicine Masterclass", time: "2 hours ago", type: "enroll" },
-              { text: "Submitted assignment 'Report'", time: "Yesterday", type: "assignment" },
-              { text: "Logged in from new IP", time: "2 days ago", type: "login" },
-              { text: "Joined session 'Introduction'", time: "May 25", type: "session" },
-            ].map((activity, idx) => (
-              <div key={idx} className="flex gap-4 group">
+            {activities.length > 0 ? activities.map((activity: any, idx: number) => (
+              <div key={activity.id || idx} className="flex gap-4 group">
                 <div className="flex flex-col items-center">
                   <div className="w-2.5 h-2.5 rounded-full bg-blue-600 mt-1.5 shadow-[0_0_0_4px_rgba(37,99,235,0.1)] group-hover:scale-125 transition-transform" />
-                  {idx !== 3 && <div className="w-px h-full bg-slate-100 my-1" />}
+                  {idx !== activities.length - 1 && <div className="w-px h-full bg-slate-100 my-1" />}
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-700 leading-tight">{activity.text}</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{activity.time}</p>
+                  <p className="text-sm font-bold text-slate-700 leading-tight">{activity.title || activity.description || "N/A"}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{activity.activity_time || activity.created_at || "N/A"}</p>
                 </div>
               </div>
-            ))}
+            )) : (
+              <p className="text-sm text-slate-500">No recent activity.</p>
+            )}
           </div>
         </div>
 
         {/* Quick Actions / Notes */}
         <div className="bg-[#021165] rounded-2xl p-6 text-white shadow-xl shadow-blue-900/10">
           <h3 className="text-base font-bold mb-4 tracking-tight">Admin Notes</h3>
-          <p className="text-sm text-blue-100/70 font-medium leading-relaxed mb-6">
-            This student has shown high engagement in recent writing workshops. Consider for advanced track.
-          </p>
+          <p className="text-sm text-blue-100/70 font-medium leading-relaxed mb-6">N/A</p>
           <button className="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all border border-white/10">
             Add New Note
           </button>

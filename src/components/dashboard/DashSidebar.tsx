@@ -129,7 +129,7 @@ export default function DashSidebar({ role, isOpen, onClose }: DashSidebarProps)
                                     className={`
                                         flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200
                                         ${isActive
-                                            ? "bg-[#F3F4F6] text-black font-medium"
+                                            ? "bg-[#F3F4F6] text-[#042BFD] font-medium"
                                             : "text-[#4B5563] hover:text-black hover:bg-gray-50"}
                                     `}
                                 >
@@ -167,7 +167,7 @@ export default function DashSidebar({ role, isOpen, onClose }: DashSidebarProps)
                                 <div className="ml-[27px] pl-3 border-l border-gray-200 flex flex-col gap-1 mt-1 mb-2">
                                     <Link 
                                         href={`${basePath}/billing/overview`} 
-                                        className="flex items-center gap-3 px-3 py-2.5 bg-[#F3F4F6] text-black font-medium rounded-xl transition-colors"
+                                        className="flex items-center gap-3 px-3 py-2.5 bg-[#F3F4F6] text-[#042BFD] font-medium rounded-xl transition-colors"
                                     >
                                         <Menu size={18} strokeWidth={1.5} />
                                         <span className="text-[14px]">Overview</span>

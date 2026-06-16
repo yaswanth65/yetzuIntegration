@@ -8,17 +8,19 @@ interface ContactTableProps {
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const normalized = status.toLowerCase();
   const cfg: Record<string, { bg: string; text: string }> = {
     Pending: { bg: "bg-[#EFF6FF]", text: "text-[#1447E6]" },
     Resolved: { bg: "bg-[#ECFDF5]", text: "text-[#007A55]" },
+    Closed: { bg: "bg-[#F3F4F6]", text: "text-[#717182]" },
   };
-  const c = cfg[status] || { bg: "bg-[#F3F4F6]", text: "text-[#717182]" };
+  const c = cfg[status] || cfg.Closed;
   return (
     <span
       className={`inline-flex items-center px-2 py-0.5 rounded ${c.bg} ${c.text}`}
       style={{ fontFamily: "'Inter', sans-serif", fontWeight: 500, fontSize: "11px", lineHeight: "16px", letterSpacing: "0.0644531px" }}
     >
-      {status}
+      {normalized === "closed" ? "Closed" : status}
     </span>
   );
 }
@@ -134,7 +136,11 @@ export default function ContactTable({ onViewClick }: ContactTableProps) {
               </span>
             </div>
             <div className="flex items-center px-4">
-              <StatusBadge status={item.status || 'Pending'} />
+              <StatusBadge status={
+                item.reply_message || item.reply_sent_at || item.replyMessage || item.replySentAt
+                  ? "Closed"
+                  : item.status || 'Pending'
+              } />
             </div>
             <div className="flex items-center px-4">
               <button

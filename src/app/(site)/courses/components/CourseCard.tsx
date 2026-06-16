@@ -55,8 +55,17 @@ const handleEnroll = async () => {
 
     setIsBuying(true);
     try {
-      let amount = Number(course.cost || 0);
-      if (amount <= 0) amount = 1;
+      const amount = Number(course.cost || 0);
+
+      if (amount <= 0) {
+        await PaymentAPI.createOrder({
+          sessionIds: [course._id],
+          currency: "INR",
+        });
+        toast.success(`Successfully enrolled in ${course.title}!`);
+        window.location.href = `/courses/${course._id}`;
+        return;
+      }
 
       // Step 1: Create Razorpay order
       const orderResult = await PaymentAPI.createOrder({

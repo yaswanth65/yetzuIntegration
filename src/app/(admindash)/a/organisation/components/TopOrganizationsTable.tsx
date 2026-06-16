@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AdminAPI, asArray } from '@/lib/api';
-import type { TimeRange } from '../page';
+import type { TimeRange } from '../types';
 
 const mapOrganization = (org: any, index: number) => {
   const students = Number(org.students || org.totalStudents || org.studentCount || org.studentsCount || 0);
@@ -13,7 +13,8 @@ const mapOrganization = (org: any, index: number) => {
   const formattedRevenue = typeof rawRevenue === 'number' ? `$${rawRevenue.toLocaleString()}` : rawRevenue;
 
   return {
-    id: org.id || org._id || org.organizationId || org.orgId || index + 1,
+    id: org.id || org._id || org.organizationId || org.orgId || '',
+    code: org.orgId || org.code || org.organizationCode || org.orgCode || `ORG-${index + 1}`,
     name: org.name || org.organizationName || 'Untitled Organization',
     students,
     activeUsers,
@@ -93,7 +94,7 @@ export default function TopOrganizationsTable({ timeRange }: { timeRange: TimeRa
             {organizationsData.map((org, index) => (
               <tr key={org.id || index} className="hover:bg-gray-50/50 transition-colors group">
                 <td className="py-4 px-5 text-sm font-semibold text-[#3B82F6]">
-                  <Link href={`/a/organisation/${org.id}`} className="hover:underline">
+                  <Link href={org.id ? `/a/organisation/${org.id}` : '#'} className="hover:underline">
                     {org.name}
                   </Link>
                 </td>

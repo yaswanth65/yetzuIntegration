@@ -65,6 +65,8 @@ export default function page() {
             educator: educatorName,
             students: Number(studentsCount) || 0,
             date: String(date || "TBD"),
+            startDateTime: String(item.startDateTime || item.scheduleDate || item.date || ""),
+            endDateTime: String(item.endDateTime || ""),
             status: String(status === "Upcoming" ? "Scheduled" : status),
             sessionCode: String(item.sessionCode || ""),
             startTime: String(item.startTime || ""),

@@ -36,7 +36,6 @@ export default function OverviewTab({
   engagementScore = 0,
   progressScore = 0,
   paymentScore = 0,
-  avgCompletionRate = 0,
   sessionsJoined = 0,
   quickStats = {},
 }: {
@@ -45,12 +44,11 @@ export default function OverviewTab({
   engagementScore?: number;
   progressScore?: number;
   paymentScore?: number;
-  avgCompletionRate?: number;
   sessionsJoined?: number;
   quickStats?: any;
 }) {
   const o = organization || {};
-  const totalStudents = Number(o.totalStudents || o.studentCount || 0);
+  const totalStudents = Number(o.totalStudents || o.studentCount || o.students?.length || 0);
   const educatorCount = Number(o.educatorCount || 0);
   const sessionCount = Number(o.sessionCount || sessionsJoined || 0);
   const revenue = Number(o.revenueGenerated || o.revenue || 0);
@@ -79,7 +77,6 @@ export default function OverviewTab({
           <StatCard value={totalStudents} label="Total Students" valueColor="text-blue-600" />
           <StatCard value={educatorCount} label="Educators" valueColor="text-green-500" />
           <StatCard value={sessionCount} label="Sessions" valueColor="text-purple-500" />
-          <StatCard value={`${avgCompletionRate}%`} label="Avg Completion Rate" valueColor="text-orange-500" />
           <StatCard value={formatCurrency(revenue)} label="Total Revenue" valueColor="text-teal-500" />
           <StatCard value="—" label="Certificates Issued" valueColor="text-cyan-500" />
         </div>

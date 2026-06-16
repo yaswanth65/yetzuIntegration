@@ -10,19 +10,20 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import type { AnalyticsChartBlock } from '../types';
 
-const data = [
-  { month: 'Oct', revenue: 40000 },
-  { month: 'Nov', revenue: 43000 },
-  { month: 'Dec', revenue: 45000 },
-  { month: 'Jan', revenue: 54000 },
-  { month: 'Feb', revenue: 62000 },
-  { month: 'Mar', revenue: 70000 },
-];
+interface Props {
+  data?: AnalyticsChartBlock;
+}
 
 const formatYAxis = (value: number) => `$${value / 1000}k`;
 
-export default function RevenueChart() {
+export default function RevenueChart({ data }: Props) {
+  const chartData = (data?.series || []).map((item, index) => ({
+    month: item.month || item.label || data?.labels?.[index] || `Item ${index + 1}`,
+    revenue: Number(item.value || 0),
+  }));
+
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
       <div className="flex items-center justify-between mb-4">
@@ -35,7 +36,7 @@ export default function RevenueChart() {
         </button>
       </div>
       <ResponsiveContainer width="100%" height={180}>
-        <BarChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 0 }} barSize={32}>
+        <BarChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }} barSize={32}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
           <XAxis
             dataKey="month"

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -11,22 +10,23 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import type { AnalyticsChartBlock } from '../types';
 
-const data = [
-  { month: 'Oct', users: 3500 },
-  { month: 'Nov', users: 5200 },
-  { month: 'Dec', users: 7000 },
-  { month: 'Jan', users: 9200 },
-  { month: 'Feb', users: 11400 },
-  { month: 'Mar', users: 13800 },
-];
+interface Props {
+  data?: AnalyticsChartBlock;
+}
 
 const formatYAxis = (value: number) => {
   if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
   return value.toString();
 };
 
-export default function UserGrowthChart() {
+export default function UserGrowthChart({ data }: Props) {
+  const chartData = (data?.series || []).map((item, index) => ({
+    month: item.month || item.label || data?.labels?.[index] || `Item ${index + 1}`,
+    users: Number(item.value || 0),
+  }));
+
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
       <div className="flex items-center justify-between mb-4">
@@ -39,7 +39,7 @@ export default function UserGrowthChart() {
         </button>
       </div>
       <ResponsiveContainer width="100%" height={180}>
-        <LineChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+        <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
           <XAxis
             dataKey="month"

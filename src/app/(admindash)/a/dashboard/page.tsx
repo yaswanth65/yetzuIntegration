@@ -10,51 +10,92 @@ import AlertIssues from "./components/AlertIssues";
 import SupportTickets from "./components/SupportTickets";
 import SessionDetailsPanel from "../../components/SessionDetailsPanel";
 import { Session } from "@/app/(admindash)/types/SessionType";
-import { AdminAPI, asArray } from "@/lib/api";
+import { AdminAPI } from "@/lib/api";
+
+type OverviewResponse = {
+  cards?: Record<string, any>;
+  revenueBreakdown?: Array<{ month: string; amount: number }>;
+  liveActivityFeed?: Array<Record<string, any>>;
+  alerts?: Array<Record<string, any>>;
+  recentSessions?: Array<Record<string, any>>;
+  recentTickets?: Array<Record<string, any>>;
+};
+
+const toSession = (item: Record<string, any>, index: number): Session => {
+  const rawDate = item.date || item.scheduledDate || item.startDateTime || item.createdAt;
+  const date = rawDate ? new Date(rawDate) : null;
+  const status = item.status || item.Status || "Scheduled";
+  const studentsCount =
+    typeof item.studentsCount === "number"
+      ? item.studentsCount
+      : typeof item.students === "number"
+        ? item.students
+        : Array.isArray(item.students)
+          ? item.students.length
+          : typeof item.attendees === "number"
+            ? item.attendees
+            : typeof item.enrolledCount === "number"
+              ? item.enrolledCount
+              : 0;
+
+  const dateLabel = date
+    ? `${String(date.getUTCDate()).padStart(2, "0")} ${date.toLocaleDateString("en-GB", {
+        month: "short",
+        timeZone: "UTC",
+      })}, ${date.getUTCFullYear()}`
+    : "TBD";
+  const timeLabel = date
+    ? `${String(date.getUTCHours()).padStart(2, "0")}:${String(date.getUTCMinutes()).padStart(2, "0")}`
+    : "09:00 AM";
+
+  return {
+    id: String(item.sessionCode || item.id || item._id || `SESSION-${index + 1}`),
+    title: item.title || item.sessionName || "Session",
+    type: item.sessionType || item.type || "Webinar",
+    educator: item.educator?.name || item.educatorName || item.mentorName || "Educator",
+    students: studentsCount,
+    attendees: studentsCount,
+    date: dateLabel,
+    dateTime: rawDate || undefined,
+    startTime: item.startTime || timeLabel,
+    endTime: item.endTime || item.endDateTime || "",
+    status: status === "Upcoming" || status === "upcoming" ? "Scheduled" : status,
+  };
+};
 
 export default function AdminDashboardPage() {
+  const [overview, setOverview] = useState<OverviewResponse | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    const fetchSessions = async () => {
+    const fetchOverview = async () => {
       try {
-        const response = await AdminAPI.getSessions({ page: 1, limit: 5 });
-        setSessions(asArray(response).map((item: any, index: number) => {
-          const rawDate = item.date || item.scheduledDate || item.startDateTime || item.createdAt;
-          const status = item.status || item.Status || "Scheduled";
-          
-          let studentsCount = 0;
-          const stu = item.students;
-          if (typeof stu === 'number' && !isNaN(stu)) {
-            studentsCount = stu;
-          } else if (Array.isArray(stu)) {
-            studentsCount = stu.length;
-          } else if (typeof item.attendees === 'number' && !isNaN(item.attendees)) {
-            studentsCount = item.attendees;
-          } else if (typeof item.enrolledCount === 'number' && !isNaN(item.enrolledCount)) {
-            studentsCount = item.enrolledCount;
-          }
-          
-          return {
-            id: item.sessionCode || item.id || item._id || `SESSION-${index + 1}`,
-            title: item.title || "Session",
-            type: item.sessionType || item.type || "Webinar",
-            educator: item.educator?.name || item.educatorName || item.mentorName || "Educator",
-            students: studentsCount,
-            attendees: studentsCount,
-            date: rawDate ? new Date(rawDate).toLocaleDateString() : "TBD",
-            dateTime: rawDate || undefined,
-            startTime: item.startTime || "09:00 AM",
-            endTime: item.endTime || "10:00 AM",
-            status: status === "Upcoming" || status === "upcoming" ? "Scheduled" : status,
-          };
-        }) as Session[]);
+        const response: any = await AdminAPI.getOverview();
+        const data = response?.data || response || {};
+        const overviewData: OverviewResponse = {
+          cards: data.cards || {},
+          revenueBreakdown: Array.isArray(data.revenueBreakdown) ? data.revenueBreakdown : [],
+          liveActivityFeed: Array.isArray(data.liveActivityFeed) ? data.liveActivityFeed : [],
+          alerts: Array.isArray(data.alerts) ? data.alerts : [],
+          recentSessions: Array.isArray(data.recentSessions) ? data.recentSessions : [],
+          recentTickets: Array.isArray(data.recentTickets) ? data.recentTickets : [],
+        };
+        setOverview(overviewData);
+        setSessions((overviewData.recentSessions || []).map(toSession));
       } catch {
+        setOverview({
+          cards: {},
+          revenueBreakdown: [],
+          liveActivityFeed: [],
+          alerts: [],
+          recentSessions: [],
+          recentTickets: [],
+        });
         setSessions([]);
       }
     };
-    fetchSessions();
+    fetchOverview();
   }, []);
 
   return (
@@ -68,7 +109,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* --- STATS SECTION (KPI Cards) --- */}
-      <OverViewStats />
+      <OverViewStats cards={overview?.cards} />
 
       {/* --- RECENT SESSIONS CARDS SECTION --- */}
       <div className="space-y-6">
@@ -80,16 +121,16 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* --- REVENUE SECTION --- */}
-      <RevenueChart />
+      <RevenueChart revenueBreakdown={overview?.revenueBreakdown || []} />
 
       {/* --- ACTIVITY & ALERTS SECTION --- */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <LiveActivityFeed />
-        <AlertIssues />
+        <LiveActivityFeed items={overview?.liveActivityFeed || []} />
+        <AlertIssues alerts={overview?.alerts || []} />
       </div>
 
       {/* --- TICKETS SECTION --- */}
-      <SupportTickets />
+      <SupportTickets tickets={overview?.recentTickets || []} />
 
       {/* --- DETAILS PANEL OVERLAY --- */}
       {selectedSession && (

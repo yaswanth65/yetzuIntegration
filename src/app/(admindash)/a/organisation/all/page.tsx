@@ -20,6 +20,7 @@ import { AdminAPI, asArray } from '@/lib/api';
 
 type OrganizationRow = {
   id: string;
+  code: string;
   name: string;
   type: string;
   students: number;
@@ -49,14 +50,24 @@ const formatDate = (value: any) => {
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
+const csvEscape = (value: any) => {
+  const text = String(value ?? '');
+  if (/[",\n]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+  return text;
+};
+
 const mapOrganization = (org: any, index: number): OrganizationRow => {
-  const id = org.id || org._id || org.organizationId || org.orgId || `ORG-${index + 1}`;
+  const id = org.id || org._id || org.organizationId || org.orgId || '';
+  const code = org.orgId || org.code || org.organizationCode || org.orgCode || `ORG-${index + 1}`;
   const students = Number(org.students || org.totalStudents || org.studentCount || org.studentsCount || 0);
   const active = Number(org.active || org.activeStudents || org.activeUsers || 0);
   const activePercent = Number(org.activePercent ?? org.activePercentage ?? (students ? Math.round((active / students) * 100) : 0));
 
   return {
     id,
+    code,
     name: org.name || org.organizationName || org.title || 'Untitled Organization',
     type: toTitle(org.type || org.organizationType || 'institution'),
     students,
@@ -187,6 +198,40 @@ export default function AllOrganizationsPage() {
     }
   };
 
+  const handleExportOrganizations = () => {
+    if (filteredData.length === 0) {
+      alert('No organizations available to export.');
+      return;
+    }
+
+    const headers = ['Org ID', 'Organisation Code', 'Organisation Name', 'Type', 'Total Students', 'Active Students', 'Active %', 'Access Plan', 'Revenue Generated', 'Subscription', 'Created Date'];
+    const rows = filteredData.map((org) => ([
+      org.id,
+      org.code,
+      org.name,
+      org.type,
+      org.students,
+      org.active,
+      `${org.activePercent}%`,
+      org.plan,
+      org.revenue,
+      org.status,
+      org.date,
+    ]));
+
+    const csv = [headers, ...rows]
+      .map((row) => row.map(csvEscape).join(','))
+      .join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `organisations-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const filteredData = organizationsData.filter((org) => {
     const matchesSearch = org.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           org.id.toLowerCase().includes(searchQuery.toLowerCase());
@@ -275,7 +320,7 @@ export default function AllOrganizationsPage() {
               )}
             </div>
 
-            <button className="flex items-center gap-2 bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+            <button onClick={handleExportOrganizations} className="flex items-center gap-2 bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
               <Download className="w-4 h-4" /> Export
             </button>
             <Link href="/a/organisation/create" className="flex items-center gap-2 bg-[#0A0A0A] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-black/90 transition-colors ml-auto md:ml-0 whitespace-nowrap">
@@ -332,9 +377,9 @@ export default function AllOrganizationsPage() {
                   filteredData.map((org) => (
                     <tr key={org.id} className="hover:bg-gray-50/50 transition-colors group">
                       <td className="py-4 px-5 w-12"><input type="checkbox" className="rounded text-blue-600 border-gray-300 w-[14px] h-[14px]" /></td>
-                      <td className="py-4 pr-5 text-[13px] font-medium text-gray-500" title={org.id}>{shortenId(org.id)}</td>
+                      <td className="py-4 pr-5 text-[13px] font-medium text-gray-500" title={org.id || org.code}>{shortenId(org.code || org.id)}</td>
                       <td className="py-4 px-5">
-                        <Link href={`/a/organisation/${org.id}`} className="flex flex-col hover:opacity-80">
+                        <Link href={org.id ? `/a/organisation/${org.id}` : '#'} className="flex flex-col hover:opacity-80">
                           <span className="text-[14px] font-semibold text-blue-600 hover:underline leading-tight">{org.name}</span>
                           <span className="text-[12px] font-medium text-gray-400 mt-0.5">{org.type}</span>
                         </Link>
@@ -363,12 +408,12 @@ export default function AllOrganizationsPage() {
                         
                         {activeDropdown === org.id && (
                           <div className="absolute right-8 top-10 w-40 bg-white rounded-xl shadow-[0px_4px_24px_rgba(0,0,0,0.12)] border border-gray-50 py-1.5 z-[60]">
-                             <Link href={`/a/organisation/${org.id}`} className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-[13px] font-medium text-gray-700 transition-colors">
+                             <Link href={org.id ? `/a/organisation/${org.id}` : '#'} className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-[13px] font-medium text-gray-700 transition-colors">
                                 <Eye className="w-4 h-4 text-gray-400" /> View Details
                              </Link>
-                              <button className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-[13px] font-medium text-gray-700 transition-colors">
+                              <Link href={org.id ? `/a/organisation/create?mode=edit&id=${encodeURIComponent(String(org.id))}` : '#'} className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-[13px] font-medium text-gray-700 transition-colors">
                                  <Edit2 className="w-4 h-4 text-gray-400" /> Edit
-                              </button>
+                              </Link>
                               <button onClick={() => handleSuspendOrganization(org)} className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-[13px] font-medium text-gray-700 transition-colors">
                                  <Pause className="w-4 h-4 text-gray-400" /> Suspend
                               </button>

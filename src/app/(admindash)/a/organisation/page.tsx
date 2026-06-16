@@ -5,8 +5,7 @@ import StatCards from './components/StatCards';
 import OrganizationGrowthChart from './components/OrganizationGrowthChart';
 import AlertsAndIssues from './components/AlertsAndIssues';
 import TopOrganizationsTable from './components/TopOrganizationsTable';
-
-export type TimeRange = '1M' | '3M' | '6M' | '1Y' | 'All';
+import type { TimeRange } from './types';
 
 export default function OrganizationPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>('1M');

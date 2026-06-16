@@ -62,6 +62,9 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
             setUser(data?.user);
             setIsUserLoggedIn(true);
             Cookies.set('isUserLoggedIn', "true", { expires: 1 });
+            if (data?.user?.role) {
+                Cookies.set("userRole", String(data.user.role).toLowerCase(), { expires: 1 });
+            }
         }
     }, [data, isSuccess]);
 

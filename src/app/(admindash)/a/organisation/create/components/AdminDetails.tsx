@@ -82,7 +82,6 @@ export default function AdminDetails({ data, onChange, errors }: AdminDetailsPro
               <option value="super_admin">Super Admin</option>
               <option value="owner">Owner</option>
               <option value="manager">Manager</option>
-              <option value="editor">Editor</option>
               <option value="viewer">Viewer</option>
             </select>
           </div>

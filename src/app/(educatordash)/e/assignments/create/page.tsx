@@ -18,8 +18,8 @@ type SessionOption = {
 
 function CreateAssignmentContent() {
   const searchParams = useSearchParams();
-  const preselectedSessionId = searchParams.get("sessionId") || "";
-  const hideFiles = searchParams.get("hideFiles") === "true";
+  const preselectedSessionId = searchParams?.get("sessionId") || "";
+  const hideFiles = searchParams?.get("hideFiles") === "true";
 
   const [step, setStep] = useState(1);
   const [sessions, setSessions] = useState<SessionOption[]>([]);

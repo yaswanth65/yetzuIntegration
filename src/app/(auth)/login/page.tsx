@@ -9,12 +9,13 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Checkbox from "@/components/ui/Checkbox";
 import Script from "next/script";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchAndSetUserProfile } from "@/lib/axios";
 import useSession from "@/hooks/useSession";
 import Cookies from "js-cookie";
 import { useGoogleLoginMutation, useLoginMutation } from "@/lib/queries/identityService/useIdentityService";
 import SubHeading from "@/components/Typography/SubHeading";
+import { useSearchParams } from "next/navigation";
 
 const LoginSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Email is required"),
@@ -26,26 +27,39 @@ const LoginSchema = Yup.object().shape({
 
 export default function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const googleButtonRef = useRef<HTMLDivElement | null>(null);
+  const [googleButtonReady, setGoogleButtonReady] = useState(false);
   const { setUser, setIsUserLoggedIn } = useSession();
   const { mutateAsync: login, isPending: isLoginPending } = useLoginMutation();
   const { mutateAsync: googleSignIn, isPending: isGoogleSignInPending } = useGoogleLoginMutation();
   const isPending = isLoginPending || isGoogleSignInPending;
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  const callback = searchParams?.get("callback");
+
+  const resolveRedirect = (fallback: string) => {
+    if (callback && callback.startsWith("/")) {
+      router.push(callback);
+      return;
+    }
+    router.push(fallback);
+  };
 
   const initializeGoogleButtons = () => {
-    if (typeof window === "undefined" || !(window as any).google || !googleClientId) return;
+    if (typeof window === "undefined" || !(window as any).google || !googleClientId || !googleButtonRef.current) return;
     const google = (window as any).google;
     google.accounts.id.initialize({
       client_id: googleClientId,
       callback: handleGoogleCredentialResponse,
     });
-    google.accounts.id.renderButton(document.getElementById("google-login"), {
+    google.accounts.id.renderButton(googleButtonRef.current, {
       theme: "outline",
       size: "large",
-      width: "full",
+      width: 320,
       shape: "rectangular",
       text: "continue_with",
     });
+    setGoogleButtonReady(true);
   };
 
   useEffect(() => {
@@ -58,7 +72,16 @@ export default function LoginForm() {
       if (data?.userData && data?.userProfileData) {
         setIsUserLoggedIn(true);
         toast.success("Google sign-in successful!");
-        router.push("/");
+        const userRole = data.userProfileData.role;
+        if (userRole === "admin") {
+          resolveRedirect("/a/dashboard");
+        } else if (userRole === "educator") {
+          resolveRedirect("/e/dashboard");
+        } else if (userRole === "student") {
+          resolveRedirect("/s/dashboard");
+        } else {
+          resolveRedirect("/");
+        }
       } else {
         toast.error("Google sign-in failed!");
       }
@@ -86,13 +109,13 @@ onSubmit={async (values) => {
               
               const userRole = data.userProfileData.role;
               if (userRole === "admin") {
-                router.push("/a/dashboard");
+                resolveRedirect("/a/dashboard");
               } else if (userRole === "educator") {
-                router.push("/e/dashboard");
+                resolveRedirect("/e/dashboard");
               } else if (userRole === "student") {
-                router.push("/s/dashboard");
+                resolveRedirect("/s/dashboard");
               } else {
-                router.push("/");
+                resolveRedirect("/");
               }
             } else {
               toast.error("Invalid credentials!");
@@ -164,7 +187,28 @@ onSubmit={async (values) => {
               <div className="flex-1 border-t border-gray-300" />
             </div>
 
-            <div id="google-login" className="w-full"></div>
+            <div className="w-full min-h-[44px] flex items-center justify-center">
+              <div ref={googleButtonRef} id="google-login" className="w-full flex items-center justify-center" />
+              {!googleButtonReady && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const google = typeof window !== "undefined" ? (window as any).google : null;
+                    if (google?.accounts?.id) {
+                      google.accounts.id.prompt();
+                    } else {
+                      toast.error("Google sign-in is still loading. Please try again in a moment.");
+                    }
+                  }}
+                  className="w-full max-w-[320px] h-[44px] flex items-center justify-center gap-3 rounded-xl border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                >
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-[12px] font-semibold text-[#4285F4]">
+                    G
+                  </span>
+                  Continue with Google
+                </button>
+              )}
+            </div>
 
             <p className="text-xs lg:text-sm text-center mt-2 text-gray-600">
               Don’t have an account?{" "}

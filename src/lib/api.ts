@@ -152,14 +152,16 @@ export const PublicSessionsAPI = {
 };
 
 export const PaymentAPI = {
-  createOrder: async (payload: { amount: number; currency?: string; sessionId?: string; sessionIds?: string[]; userId?: string }) => {
+  createOrder: async (payload: { amount?: number; currency?: string; sessionId?: string; sessionIds?: string[]; userId?: string }) => {
     try {
       const userId = getUserId();
       const body: Record<string, any> = {
-        amount: payload.amount,
         currency: payload.currency || "INR",
         userId: userId
       };
+      if (typeof payload.amount === "number") {
+        body.amount = payload.amount;
+      }
       if (payload.sessionIds && payload.sessionIds.length > 0) {
         body.sessionIds = payload.sessionIds;
       } else if (payload.sessionId) {
@@ -1243,13 +1245,7 @@ export const AdminAPI = {
     }
   },
 
-  updateOrganization: async (organizationId: string, payload: {
-    name?: string;
-    type?: string;
-    email?: string;
-    status?: string;
-    billingCycle?: string;
-  }) => {
+  updateOrganization: async (organizationId: string, payload: Record<string, any>) => {
     try {
       const response = await authApi.put(`/api/admin/organizations/${organizationId}`, payload);
       return dataOf(response);

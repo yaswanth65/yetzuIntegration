@@ -21,10 +21,29 @@ export default function BillingDetails({ data, onChange, errors }: BillingDetail
     onChange({ ...data, [field]: value });
   };
 
+  const cycleMeta = (() => {
+    switch (data.billingCycle) {
+      case 'quarterly':
+        return { label: 'quarter', multiplier: 3 };
+      case 'yearly':
+        return { label: 'year', multiplier: 12 };
+      default:
+        return { label: 'month', multiplier: 1 };
+    }
+  })();
+
+  const estimatedTotal = (data.basePrice || 0) * cycleMeta.multiplier;
+
   const cycles = [
     { id: 'monthly', label: 'Monthly', desc: 'Billed every month' },
     { id: 'quarterly', label: 'Quarterly', desc: 'Billed every 3 months' },
     { id: 'yearly', label: 'Yearly', desc: 'Billed once a year' },
+  ];
+
+  const paymentMethods = [
+    { id: 'credit', label: 'Credit Card', icon: <CreditCard className="w-5 h-5" /> },
+    { id: 'bank', label: 'Bank Transfer', icon: <CreditCard className="w-5 h-5" /> },
+    { id: 'upi', label: 'UPI', icon: <IndianRupee className="w-5 h-5" /> },
   ];
 
   return (
@@ -41,6 +60,7 @@ export default function BillingDetails({ data, onChange, errors }: BillingDetail
             </div>
           </div>
         )}
+
         <div className="space-y-1">
           <h2 className="text-xl font-bold text-slate-900">Billing Setup</h2>
           <p className="text-sm text-gray-500">Configure billing details and subscription plan.</p>
@@ -65,7 +85,7 @@ export default function BillingDetails({ data, onChange, errors }: BillingDetail
           <div className="space-y-3">
             <label className="block text-sm font-semibold text-slate-800">Billing Cycle</label>
             <div className="grid grid-cols-3 gap-3">
-              {cycles.map(c => (
+              {cycles.map((c) => (
                 <button
                   key={c.id}
                   onClick={() => update('billingCycle', c.id)}
@@ -86,11 +106,7 @@ export default function BillingDetails({ data, onChange, errors }: BillingDetail
           <div className="space-y-3 pt-2">
             <label className="block text-sm font-semibold text-slate-800">Payment Method</label>
             <div className="grid grid-cols-3 gap-3">
-              {[
-                { id: 'credit', label: 'Credit Card', icon: <CreditCard className="w-5 h-5" /> },
-                { id: 'bank', label: 'Bank Transfer', icon: <CreditCard className="w-5 h-5" /> },
-                { id: 'upi', label: 'UPI', icon: <IndianRupee className="w-5 h-5" /> },
-              ].map(pm => (
+              {paymentMethods.map((pm) => (
                 <button
                   key={pm.id}
                   onClick={() => update('paymentMethod', pm.id)}
@@ -111,9 +127,9 @@ export default function BillingDetails({ data, onChange, errors }: BillingDetail
         <div className="pt-4 flex justify-between items-end border-t border-gray-50">
           <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">ESTIMATED TOTAL</span>
           <span className="text-2xl font-bold text-slate-900">
-            ₹{(data.basePrice || 0).toLocaleString()}
+            ₹{estimatedTotal.toLocaleString()}
             <span className="text-sm text-gray-500 font-semibold">
-              /{data.billingCycle === 'yearly' ? 'year' : data.billingCycle === 'quarterly' ? 'quarter' : 'month'}
+              /{cycleMeta.label}
             </span>
           </span>
         </div>

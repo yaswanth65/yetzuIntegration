@@ -249,18 +249,24 @@ export default function OverviewPage() {
     }
     
     try {
-      let amount = Number(course.cost || course.price || 0);
-      if (amount <= 0) {
-        amount = 1;
-      }
-      
+      const amount = Number(course.cost || course.price || 0);
       const profileRes = await StudentAPI.getProfile();
       const userId = profileRes?.data?.id || profileRes?.id || profileRes?.user?.id;
       
       if (!userId) {
         throw new Error("Unable to get user profile");
       }
-      
+
+      if (amount <= 0) {
+        await PaymentAPI.createOrder({
+          sessionIds: [sessionId],
+          currency: "INR",
+        });
+        toast.success(`Enrolled successfully in ${course.title || "course"}!`);
+        await loadDashboardData();
+        return;
+      }
+
       const paymentResult = await PaymentAPI.verifyPayment({
         userId: userId,
         sessionId: sessionId,

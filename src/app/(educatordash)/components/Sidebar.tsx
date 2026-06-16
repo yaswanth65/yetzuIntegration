@@ -23,7 +23,7 @@ interface SidebarProps {
 }
 
 export default function EducatorSidebar({ isOpen, onClose }: SidebarProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() || "";
   const router = useRouter();
   const { user } = useSession();
   const { mutateAsync: logout } = useLogoutMutation();
@@ -72,13 +72,13 @@ export default function EducatorSidebar({ isOpen, onClose }: SidebarProps) {
                   href={item.path}
                   className={`flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all font-medium text-[15px] ${
                     isActive
-                      ? "bg-[#F1F3F5] text-black"
+                      ? "bg-[#F1F3F5] text-[#042BFD]"
                       : "text-gray-600 hover:text-black hover:bg-gray-50"
                   }`}
                 >
                   <Icon
                     size={20}
-                    className={`shrink-0 ${isActive ? "text-black" : "text-gray-500"}`}
+                    className={`shrink-0 ${isActive ? "text-[#042BFD]" : "text-gray-500"}`}
                   />
                   <span>{item.name}</span>
                 </Link>

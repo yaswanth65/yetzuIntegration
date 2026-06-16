@@ -35,12 +35,9 @@ export default function StudentsTab({ students }: StudentsTabProps) {
 
       {/* Table */}
       <div className="overflow-x-auto w-full">
-        <table className="w-full text-left border-collapse min-w-[900px]">
-          <thead>
-            <tr className="bg-[#FAFAFA] border-b border-gray-100">
-              <th className="py-3 px-4 w-12">
-                <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4" />
-              </th>
+          <table className="w-full text-left border-collapse min-w-[900px]">
+            <thead>
+              <tr className="bg-[#FAFAFA] border-b border-gray-100">
               <th className="py-3 px-4 text-xs font-semibold text-gray-500">Name</th>
               <th className="py-3 px-4 text-xs font-semibold text-gray-500">Email</th>
               <th className="py-3 px-4 text-xs font-semibold text-gray-500">Status</th>
@@ -64,9 +61,6 @@ export default function StudentsTab({ students }: StudentsTabProps) {
 
                 return (
                 <tr key={student.id || idx} className="hover:bg-gray-50 transition-colors">
-                  <td className="py-3 px-4">
-                    <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer" />
-                  </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${getInitialsColor(idx)}`}>

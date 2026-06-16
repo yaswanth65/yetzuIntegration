@@ -9,7 +9,7 @@ import { useOtpVerificationMutation } from "@/lib/queries/identityService/useIde
 export default function OTPVerification() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const email = searchParams.get("email");
+    const email = searchParams?.get("email");
     const { mutateAsync: verifyOtp, isPending } = useOtpVerificationMutation();
 
     const [otp, setOtp] = useState<string[]>(Array(6).fill(""));

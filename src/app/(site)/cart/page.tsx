@@ -62,10 +62,23 @@ export default function CartPage() {
 
     setIsCheckingOut(true);
     try {
+      const sessionIds = cartItems.map((item) => item._id).filter(Boolean);
+
+      if (total <= 0) {
+        await PaymentAPI.createOrder({
+          sessionIds,
+          currency: "INR",
+        });
+        toast.success("Success! Enrolled in sessions.");
+        clearCart();
+        setIsCheckingOut(false);
+        router.push("/s/dashboard");
+        return;
+      }
+
       await loadRazorpay();
 
       const totalAmount = Math.max(1, total);
-      const sessionIds = cartItems.map((item) => item._id).filter(Boolean);
 
       // Step 1: Try creating a single Razorpay order for all items
       const orderResult = await PaymentAPI.createOrder({

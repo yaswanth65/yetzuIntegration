@@ -81,6 +81,22 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function formatSessionDateTime(value?: string) {
+  if (!value) return "TBD";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "TBD";
+
+  const dateLabel = `${String(date.getUTCDate()).padStart(2, "0")}/${String(
+    date.getUTCMonth() + 1
+  ).padStart(2, "0")}/${date.getUTCFullYear()}`;
+  const timeLabel = `${String(date.getUTCHours()).padStart(2, "0")}:${String(
+    date.getUTCMinutes()
+  ).padStart(2, "0")}`;
+
+  return `${dateLabel} ${timeLabel}`;
+}
+
 export default function SessionTable({data,showHeader = true, title, onRowClick, selectedSessionId, className = "" }: Props) {
     const router = useRouter();
 
@@ -90,12 +106,13 @@ export default function SessionTable({data,showHeader = true, title, onRowClick,
       { key: "type", label: "Type" },
       { key: "educator", label: "Educator" },
       { key: "students", label: "Students" },
-      { key: "date", label: "Date" },
+      { key: "startDateTime", label: "Start Date Time" },
+      { key: "endDateTime", label: "End Date Time" },
       { key: "status", label: "Status" },
       { key: "actions", label: "Actions" },
     ];
 
-    const gridCols = "grid-cols-[minmax(130px,1.3fr)_minmax(150px,1.5fr)_minmax(105px,1fr)_minmax(150px,2fr)_minmax(85px,0.7fr)_minmax(140px,1.2fr)_minmax(115px,1fr)_minmax(75px,0.6fr)]";
+    const gridCols = "grid-cols-[minmax(130px,1.3fr)_minmax(150px,1.5fr)_minmax(105px,1fr)_minmax(150px,2fr)_minmax(85px,0.7fr)_minmax(145px,1.3fr)_minmax(145px,1.3fr)_minmax(115px,1fr)_minmax(75px,0.6fr)]";
 
     return (
         <div className={`w-full ${className}`}>
@@ -222,7 +239,7 @@ export default function SessionTable({data,showHeader = true, title, onRowClick,
                             </span>
                         </div>
 
-                        {/* Date */}
+                        {/* Start Date Time */}
                         <div className="flex items-center px-4">
                             <span 
                               className="text-[14px] text-[#717182]"
@@ -234,7 +251,23 @@ export default function SessionTable({data,showHeader = true, title, onRowClick,
                                 letterSpacing: "-0.150391px",
                               }}
                             >
-                              {String(item.date)}
+                              {formatSessionDateTime(item.startDateTime || item.dateTime?.toString() || item.date)}
+                            </span>
+                        </div>
+
+                        {/* End Date Time */}
+                        <div className="flex items-center px-4">
+                            <span 
+                              className="text-[14px] text-[#717182]"
+                              style={{
+                                fontFamily: "'Inter', sans-serif",
+                                fontWeight: 400,
+                                fontSize: "14px",
+                                lineHeight: "21px",
+                                letterSpacing: "-0.150391px",
+                              }}
+                            >
+                              {formatSessionDateTime(item.endDateTime)}
                             </span>
                         </div>
 

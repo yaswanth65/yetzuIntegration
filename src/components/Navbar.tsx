@@ -31,7 +31,7 @@ import { StudentAPI, asArray } from "@/lib/api";
 import { getTimeAgo } from "@/lib/utils/dateUtils";
 
 const Navbar = () => {
-  const pathname = usePathname();
+  const pathname = usePathname() || "";
   const isContactPage = pathname === "/contact-us";
 
   const { user } = useSession();
@@ -188,6 +188,7 @@ const Navbar = () => {
   };
 
   const menuItemsToUse = getUserMenuItems();
+  const isNavActive = (href: string) => href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <>
@@ -220,7 +221,11 @@ const Navbar = () => {
                 key={link.href}
                 href={link.href}
                 className={`font-medium transition-colors duration-200 ${
-                  isContactPage ? "hover:text-white" : "hover:text-[#2563eb]"
+                  isNavActive(link.href)
+                    ? "text-[#042BFD]"
+                    : isContactPage
+                      ? "hover:text-white"
+                      : "hover:text-[#2563eb]"
                 }`}
               >
                 {link.label}
@@ -490,7 +495,11 @@ const Navbar = () => {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-[#2563eb] rounded-lg transition-all duration-200 font-medium"
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 font-medium ${
+                    isNavActive(link.href)
+                      ? "text-[#042BFD] bg-blue-50"
+                      : "text-gray-700 hover:bg-blue-50 hover:text-[#2563eb]"
+                  }`}
                   onClick={() => setIsSidebarOpen(false)}
                 >
                   <Bell size={18} />

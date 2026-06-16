@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useRef, useState } from "react";
 import useSession from "@/hooks/useSession";
 import { api } from "@/lib/axios";
 import { useGoogleLoginMutation, useSignUpMutation } from "@/lib/queries/identityService/useIdentityService";
@@ -32,25 +33,28 @@ const SignupSchema = Yup.object().shape({
 export default function SignupForm() {
   const router = useRouter();
   const { setIsUserLoggedIn } = useSession();
+  const googleButtonRef = useRef<HTMLDivElement | null>(null);
+  const [googleButtonReady, setGoogleButtonReady] = useState(false);
   const { mutateAsync: googleSignIn, isPending: isGoogleSignInPending } = useGoogleLoginMutation();
   const { mutateAsync: signUp, isPending: isSignupPending } = useSignUpMutation();
   const isPending = isGoogleSignInPending || isSignupPending
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
   const initializeGoogleButtons = () => {
-    if (typeof window === "undefined" || !(window as any).google || !googleClientId) return;
+    if (typeof window === "undefined" || !(window as any).google || !googleClientId || !googleButtonRef.current) return;
     const google = (window as any).google;
     google.accounts.id.initialize({
       client_id: googleClientId,
       callback: handleGoogleCredentialResponse,
     });
-    google.accounts.id.renderButton(document.getElementById("google-login"), {
+    google.accounts.id.renderButton(googleButtonRef.current, {
       theme: "outline",
       size: "large",
-      width: "full",
+      width: 320,
       shape: "rectangular",
       text: "sign_up_with",
     });
+    setGoogleButtonReady(true);
   };
 
   useEffect(() => {
@@ -182,7 +186,28 @@ onSubmit={async (values) => {
               <hr className="flex-1 border-gray-300" />
             </div>
 
-            <div id="google-login"></div>
+            <div className="w-full min-h-[44px] flex items-center justify-center">
+              <div ref={googleButtonRef} id="google-login" className="w-full flex items-center justify-center" />
+              {!googleButtonReady && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const google = typeof window !== "undefined" ? (window as any).google : null;
+                    if (google?.accounts?.id) {
+                      google.accounts.id.prompt();
+                    } else {
+                      toast.error("Google sign-in is still loading. Please try again in a moment.");
+                    }
+                  }}
+                  className="w-full max-w-[320px] h-[44px] flex items-center justify-center gap-3 rounded-xl border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                >
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-[12px] font-semibold text-[#4285F4]">
+                    G
+                  </span>
+                  Sign up with Google
+                </button>
+              )}
+            </div>
 
             <p className="text-sm text-center text-gray-600 mt-2">
               Have an account?{" "}

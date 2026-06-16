@@ -7,6 +7,28 @@ import { asArray } from "@/lib/api";
 import TicketTable from "@/components/tickets/TicketTable";
 import TicketModal from "@/components/tickets/TicketModal";
 
+const toUserName = (value: any) => {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "object") {
+    return String(value.name || value.full_name || value.displayName || value.email || value.mobileno || value.role || value.id || "");
+  }
+  return String(value);
+};
+
+const normalizeTicket = (ticket: any) => ({
+  ...ticket,
+  subject: String(ticket?.subject || ticket?.title || "Untitled Ticket"),
+  description: typeof ticket?.description === "string" ? ticket.description : String(ticket?.description || ""),
+  status: String(ticket?.status || "open"),
+  priority: String(ticket?.priority || "medium"),
+  userName: toUserName(ticket?.userName || ticket?.from || ticket?.user),
+  from: toUserName(ticket?.from || ticket?.user),
+  comment: typeof ticket?.comment === "string" ? ticket.comment : String(ticket?.comment || ""),
+  createdAt: String(ticket?.createdAt || ticket?.created_at || ticket?.created_on || ""),
+  created_at: String(ticket?.created_at || ticket?.createdAt || ticket?.created_on || ""),
+});
+
 export default function AdminTicketsPage() {
   const [tickets, setTickets] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,7 +44,7 @@ export default function AdminTicketsPage() {
     try {
       const res = await AdminAPI.getTickets();
       const ticketsList = asArray(res?.data || res?.tickets || res);
-      setTickets(ticketsList);
+      setTickets(ticketsList.map(normalizeTicket));
     } catch (error) {
       console.error("Failed to load tickets:", error);
     } finally {

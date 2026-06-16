@@ -102,12 +102,19 @@ export default function CourseDetailPage() {
       return;
     }
     const amount = Number(course.cost);
-    if (amount <= 0) {
-      toast.error("This course is not available for purchase.");
-      return;
-    }
     setIsCreatingOrder(true);
     try {
+      if (amount <= 0) {
+        await PaymentAPI.createOrder({
+          sessionIds: [courseId],
+          currency: "INR",
+        });
+        toast.success(`Enrolled successfully in ${course.title}!`);
+        setIsCreatingOrder(false);
+        router.push("/s/dashboard");
+        return;
+      }
+
       await loadRazorpay();
 
       // Step 1: Try creating Razorpay order on production

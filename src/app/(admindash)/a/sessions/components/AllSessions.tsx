@@ -13,7 +13,7 @@ interface Props {
   data: Session[];
 }
 
-const tabs: Tab[] = ["All", "Upcoming", "Completed", "Missed", "Draft"];
+const tabs: Tab[] = ["All", "Upcoming", "Completed",];
 
 const tabStatusMap: Record<Exclude<Tab, "All">, Status> = {
   Upcoming: "Scheduled",
@@ -46,7 +46,9 @@ export default function AllSessions({ data }: Props) {
     setLocalData([]);
     if (data && data.length > 0) {
       const mappedData = data.map((item: any, index: number) => {
-        const rawDate = item.date || item.scheduledDate || item.startDateTime || item.createdAt;
+        const startDateTime = item.startDateTime || item.scheduleDate || item.date || item.scheduledDate || item.createdAt || "";
+        const endDateTime = item.endDateTime || "";
+        const rawDate = startDateTime;
         
         let educatorName = "Educator";
         const edu = item.educator;
@@ -110,6 +112,8 @@ export default function AllSessions({ data }: Props) {
           students: Number(studentsCount) || 0,
           date: rawDate ? dateTime.toLocaleDateString() : "TBD",
           dateTime: dateTime,
+          startDateTime: String(startDateTime),
+          endDateTime: String(endDateTime),
           status: String(status),
           sessionCode: String(item.sessionCode || ""),
           startTime: item.startTime || "",
@@ -126,7 +130,9 @@ export default function AllSessions({ data }: Props) {
       const response = await AdminAPI.getSessions({ limit: 200 });
       const rawData = asArray(response);
       const apiSessions = rawData.map((item: any, index: number) => {
-        const rawDate = item.date || item.scheduledDate || item.startDateTime || item.createdAt;
+        const startDateTime = item.startDateTime || item.scheduleDate || item.date || item.scheduledDate || item.createdAt || "";
+        const endDateTime = item.endDateTime || "";
+        const rawDate = startDateTime;
         
         let educatorName = "Educator";
         const edu = item.educator;
@@ -190,6 +196,8 @@ export default function AllSessions({ data }: Props) {
           students: Number(studentsCount) || 0,
           date: rawDate ? dateTime.toLocaleDateString() : "TBD",
           dateTime: dateTime,
+          startDateTime: String(startDateTime),
+          endDateTime: String(endDateTime),
           status: String(status),
           sessionCode: String(item.sessionCode || ""),
           startTime: item.startTime || "",
@@ -224,9 +232,7 @@ export default function AllSessions({ data }: Props) {
       options: [
         { label: "Scheduled", value: "Scheduled" },
         { label: "Completed", value: "Completed" },
-        { label: "Missed", value: "Missed" },
         { label: "Live", value: "Live" },
-        { label: "Draft", value: "draft" },
       ],
     },
     {
@@ -245,12 +251,6 @@ export default function AllSessions({ data }: Props) {
         { label: "1:1", value: "1:1" },
         { label: "Certification Course", value: "Certification Course" },
       ],
-    },
-    {
-      title: "Students Range",
-      type: "number-range",
-      minPlaceholder: "Min students",
-      maxPlaceholder: "Max students",
     },
   ];
 
@@ -485,7 +485,7 @@ export default function AllSessions({ data }: Props) {
               >
                 <option value="date">Sort by Date</option>
                 <option value="title">Sort by Name</option>
-                <option value="students">Sort by Students</option>
+                <option value="students">Sort by Educators</option>
               </select>
               <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#717182] pointer-events-none" size={14} />
             </div>

@@ -1,7 +1,7 @@
 "use client"
 import React, { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import type { TimeRange } from '../page';
+import type { TimeRange } from '../types';
 
 const ranges: TimeRange[] = ['1M', '3M', '6M', '1Y', 'All'];
 

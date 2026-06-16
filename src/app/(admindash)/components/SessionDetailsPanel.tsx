@@ -12,6 +12,29 @@ interface Props {
 
 type TabName = "Overview" | "Assignments" | "Files" | "Notes" | "Activity Logs";
 
+function formatDateTime(value?: string) {
+  if (!value) return "TBD";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "TBD";
+
+  const dateLabel = `${String(date.getUTCDate()).padStart(2, "0")}/${String(
+    date.getUTCMonth() + 1
+  ).padStart(2, "0")}/${date.getUTCFullYear()}`;
+  const timeLabel = `${String(date.getUTCHours()).padStart(2, "0")}:${String(
+    date.getUTCMinutes()
+  ).padStart(2, "0")}`;
+
+  return `${dateLabel} ${timeLabel}`;
+}
+
+function toDatetimeLocal(value?: string) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+}
+
 export default function SessionDetailsPanel({ session, onClose, onUpdate }: Props) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabName>("Overview");
@@ -42,9 +65,8 @@ export default function SessionDetailsPanel({ session, onClose, onUpdate }: Prop
         title: session.title,
         status: session.status,
         type: session.type,
-        date: session.date,
-        startTime: session.startTime,
-        endTime: session.endTime,
+        startDateTime: session.startDateTime || "",
+        endDateTime: session.endDateTime || "",
       });
       // Fetch fresh session details
       if (session.id) {
@@ -57,21 +79,28 @@ export default function SessionDetailsPanel({ session, onClose, onUpdate }: Prop
     setLoadingMeeting(true);
     try {
       const response = await AdminAPI.getSession(sessionId);
-      const data = response?.data || response;
-      setSessionData(data);
+      const data = response?.data?.data?.session || response?.data?.session || response?.data?.data || response?.data || response;
+      const startDateTime = data?.startDateTime || data?.scheduleDate || data?.startTime || session?.startDateTime || "";
+      const endDateTime = data?.endDateTime || data?.endTime || session?.endDateTime || "";
+      const resolvedSession = {
+        ...(session || {}),
+        ...(data || {}),
+        startDateTime,
+        endDateTime,
+      } as Session;
+      setSessionData(resolvedSession);
       setEditData({
-        title: data?.title || session?.title,
-        status: data?.status || session?.status,
-        type: data?.type || session?.type,
-        date: data?.date || session?.date,
-        startTime: data?.startTime || session?.startTime,
-        endTime: data?.endTime || session?.endTime,
+        title: resolvedSession.title || session?.title,
+        status: resolvedSession.status || session?.status,
+        type: resolvedSession.type || session?.type,
+        startDateTime: resolvedSession.startDateTime || "",
+        endDateTime: resolvedSession.endDateTime || "",
       });
       setMeetingLink(data?.sessionLink || data?.webinerLink || data?.meetingLink || "");
       
       // Fetch assignments for this session
-      if (data?.id) {
-        fetchAssignments(data.id);
+      if (resolvedSession.id) {
+        fetchAssignments(resolvedSession.id);
       }
     } catch (error) {
       console.error("Failed to fetch session details:", error);
@@ -209,21 +238,30 @@ export default function SessionDetailsPanel({ session, onClose, onUpdate }: Prop
                   )
                 },
                 {
-                  label: "Date",
+                  label: "Start Date Time",
                   value: isEditing ? (
                     <input
-                      type="date"
-                      value={typeof editData.date === 'string' && editData.date ? editData.date.split('T')[0] : editData.date}
-                      onChange={(e) => setEditData({ ...editData, date: e.target.value })}
+                      type="datetime-local"
+                      value={toDatetimeLocal(editData.startDateTime || currentSession.startDateTime)}
+                      onChange={(e) => setEditData({ ...editData, startDateTime: e.target.value })}
                       className="border rounded px-2 py-1 text-sm w-full"
                     />
                   ) : (
-                    currentSession.date || "TBD"
+                    formatDateTime(currentSession.startDateTime)
                   )
                 },
                 {
-                  label: "Time",
-                  value: `${currentSession.startTime || "N/A"} - ${currentSession.endTime || "N/A"}`
+                  label: "End Date Time",
+                  value: isEditing ? (
+                    <input
+                      type="datetime-local"
+                      value={toDatetimeLocal(editData.endDateTime || currentSession.endDateTime)}
+                      onChange={(e) => setEditData({ ...editData, endDateTime: e.target.value })}
+                      className="border rounded px-2 py-1 text-sm w-full"
+                    />
+                  ) : (
+                    formatDateTime(currentSession.endDateTime)
+                  )
                 },
                 {
                   label: "Type",

@@ -52,6 +52,10 @@ export const fetchAndSetUserProfile = async () => {
     if (userId) {
       Cookies.set("userId", userId, { secure: true, sameSite: "strict" });
     }
+    const userRole = data?.user?.role || data?.data?.user?.role;
+    if (userRole) {
+      Cookies.set("userRole", String(userRole).toLowerCase(), { secure: true, sameSite: "strict" });
+    }
     return data;
   } catch (error) {
     throw error;

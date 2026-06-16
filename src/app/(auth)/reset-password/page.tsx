@@ -12,8 +12,8 @@ const ResetPassword = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { mutateAsync: resetPassword, isPending, isSuccess } = useResetPasswordMutation();
-    const email = searchParams.get("email");
-    const otp = searchParams.get("otp");
+    const email = searchParams?.get("email");
+    const otp = searchParams?.get("otp");
 
     useEffect(() => {
         if (!email || !otp) {

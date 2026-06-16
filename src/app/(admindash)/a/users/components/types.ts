@@ -1,4 +1,4 @@
-export type Role = "Student" | "Educator" | "Admin" | "Editor" | "Institution" | "Translator";
+export type Role = "Student" | "Educator" | "Admin";
 export type Status = "Active" | "Suspended";
 export type TabType = "All Users" | "Students" | "Educators";
 

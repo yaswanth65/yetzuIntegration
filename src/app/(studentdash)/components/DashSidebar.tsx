@@ -264,7 +264,7 @@ const getEducatorNav = (basePath: string): NavItem[] => [
 ];
 
 export default function DashSidebar({ role, isOpen, onClose }: DashSidebarProps) {
-    const pathname = usePathname();
+    const pathname = usePathname() || "";
     const router = useRouter();
     const { mutateAsync: logout } = useLogoutMutation();
     const { user } = useSession();

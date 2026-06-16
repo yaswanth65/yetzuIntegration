@@ -38,6 +38,9 @@ const Badge = ({ children, colorClass }: { children: React.ReactNode, colorClass
   </span>
 );
 
+const arr = (value: any) => (Array.isArray(value) ? value : []);
+const num = (value: any) => Number(value || 0);
+
 export default function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const userId = resolvedParams.id;
@@ -86,43 +89,24 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
   const u = userData;
   const s = u.summary || {};
   const initials = u.name ? u.name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase() : "U";
+  const engagementSeries = arr(u.engagementOverview?.series);
+  const engagementLabels = arr(u.engagementOverview?.labels);
+  const chartData = engagementSeries.length > 0 && engagementLabels.length > 0
+    ? engagementLabels.map((label: string, i: number) => ({
+        name: String(label).split(' ')[0],
+        sessions: num(engagementSeries[0]?.data?.[i]),
+        usage: num(engagementSeries[1]?.data?.[i]),
+      }))
+    : [];
 
-  // Data for Engagement Overview Chart
-  // We'll mock it if not present, but try to use api data if available
-  const chartData = u.engagementOverview?.series ? 
-    u.engagementOverview.labels?.map((label: string, i: number) => ({
-      name: label.split(' ')[0], // just month
-      sessions: u.engagementOverview.series[0]?.data?.[i] || 0,
-      usage: u.engagementOverview.series[1]?.data?.[i] || 0,
-    })) || [] : [
-    { name: 'Oct', sessions: 2, usage: 3 },
-    { name: 'Nov', sessions: 3, usage: 4 },
-    { name: 'Dec', sessions: 4, usage: 6 },
-    { name: 'Jan', sessions: 6, usage: 5 },
-    { name: 'Feb', sessions: 7, usage: 8 },
-    { name: 'Mar', sessions: 3, usage: 4 },
-  ];
-
-  const programs = u.programsAndSessions || [
-    { programName: "Research Methods Batch 12", type: "Cohort", educatorName: "Dr. Sarah Chen", sessionCount: 10, sessionsAttended: 8, attendance: 80, status: "Active" },
-    { programName: "Academic Writing Fundamentals", type: "Webinar", educatorName: "Prof. James Wilson", sessionCount: 14, sessionsAttended: 12, attendance: 86, status: "Active" },
-    { programName: "Publication Ethics", type: "1:1", educatorName: "Dr. Anita Roy", sessionCount: 5, sessionsAttended: 4, attendance: 80, status: "Completed" }
-  ];
-
-  const assignments = u.assignmentsAndDocuments || [
-    { title: "Literature Review Paper", version: "v2", relatedSessionTitle: "Research Methods Batch 12", type: "PDF", status: "In Review", lastUpdated: "2 days ago", reviewer: "Dr. Sarah Chen", dueDate: "Apr 21, 2026" },
-    { title: "Research Proposal Draft", version: null, relatedSessionTitle: "Research Methods Batch 12", type: "DOC", status: "Pending", lastUpdated: "5 days ago", reviewer: "Dr. Sarah Chen", dueDate: "Apr 28, 2026" },
-    { title: "Academic Writing Essay", version: "v3", relatedSessionTitle: "Academic Writing Fundamer", type: "DOC", status: "Completed", lastUpdated: "1 week ago", reviewer: "Prof. James Wilson", dueDate: "Mar 30, 2026" },
-    { title: "Publication Ethics Case Study", version: null, relatedSessionTitle: "Publication Ethics", type: "PDF", status: "Completed", lastUpdated: "4 months ago", reviewer: "Dr. Anita Roy", dueDate: "Nov 25, 2025" }
-  ];
-
-  const payments = u.billingAndPayments?.transactions || [
-    { orderId: "INV-2601", plan: "Research Methods Batch 12", amount: 299, status: "Paid", method: "****4242", methodType: "visa", date: "Jan 12, 2026" },
-    { orderId: "INV-2602", plan: "Academic Writing Fundamentals", amount: 199, status: "Paid", method: "****4242", methodType: "visa", date: "Dec 8, 2025" },
-    { orderId: "INV-2603", plan: "Publication Ethics (1:1)", amount: 499, status: "Paid", method: "****7788", methodType: "mastercard", date: "Oct 30, 2025" },
-    { orderId: "INV-2604", plan: "Premium Membership - Q1", amount: 149, status: "Paid", method: "****4242", methodType: "visa", date: "Jan 1, 2026" },
-    { orderId: "INV-2605", plan: "Study Material Bundle", amount: 94, status: "Paid", method: "UPI", methodType: "upi", date: "Mar 1, 2026" }
-  ];
+  const programs = arr(u.programsAndSessions);
+  const assignments = arr(u.assignmentsAndDocuments);
+  const payments = arr(u.billingAndPayments?.transactions);
+  const activeCohort = u.activeCohort || null;
+  const dueAssignments = arr(u.dueAssignments);
+  const activeProgramsCount = num(s.activePrograms);
+  const pendingAssignmentsCount = num(s.pendingAssignments);
+  const totalSpendLabel = s.totalSpendLabel || "0";
 
   return (
     <div className="flex flex-col gap-6">
@@ -153,7 +137,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
               </div>
               <div className="flex items-center gap-2 text-gray-500 text-sm">
                 <Mail className="w-4 h-4" />
-                {u.email}
+                {u.email || "N/A"}
               </div>
             </div>
           </div>
@@ -167,19 +151,19 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
         <div className="flex items-center divide-x divide-gray-200 text-sm">
           <div className="pr-6">
             <span className="text-gray-500">Joined: </span>
-            <span className="font-medium text-gray-900">{u.joinedLabel || "Jan 12, 2026"}</span>
+            <span className="font-medium text-gray-900">{u.joinedLabel || "N/A"}</span>
           </div>
           <div className="px-6">
             <span className="text-gray-500">Last Active: </span>
-            <span className="font-medium text-gray-900">{u.lastActiveLabel || "2 hours ago"}</span>
+            <span className="font-medium text-gray-900">{u.lastActiveLabel || "N/A"}</span>
           </div>
           <div className="px-6">
             <span className="text-gray-500">Total Spend: </span>
-            <span className="font-medium text-gray-900 text-blue-600">{s.totalSpendLabel || "$1,240"}</span>
+            <span className="font-medium text-gray-900 text-blue-600">{totalSpendLabel}</span>
           </div>
           <div className="pl-6">
             <span className="text-gray-500">Active Programs: </span>
-            <span className="font-medium text-gray-900">{s.activePrograms ?? 2}</span>
+            <span className="font-medium text-gray-900">{activeProgramsCount}</span>
           </div>
         </div>
       </div>
@@ -192,7 +176,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
           </div>
           <div>
             <div className="text-sm text-gray-500 mb-0.5">Sessions Attended</div>
-            <div className="text-2xl font-semibold text-gray-900">{s.sessionsAttended ?? 24}</div>
+            <div className="text-2xl font-semibold text-gray-900">{s.sessionsAttended ?? 0}</div>
           </div>
         </div>
         <div className="bg-white border border-gray-200 rounded-[20px] p-5 flex items-center gap-4 shadow-sm">
@@ -201,7 +185,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
           </div>
           <div>
             <div className="text-sm text-gray-500 mb-0.5">Active Enrollments</div>
-            <div className="text-2xl font-semibold text-gray-900">{s.activeEnrollments ?? 2}</div>
+            <div className="text-2xl font-semibold text-gray-900">{s.activeEnrollments ?? 0}</div>
           </div>
         </div>
         <div className="bg-white border border-gray-200 rounded-[20px] p-5 flex items-center gap-4 shadow-sm">
@@ -210,7 +194,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
           </div>
           <div>
             <div className="text-sm text-gray-500 mb-0.5">Assignment Completion</div>
-            <div className="text-2xl font-semibold text-gray-900">{s.assignmentCompletion ?? "78%"}</div>
+            <div className="text-2xl font-semibold text-gray-900">{s.assignmentCompletion ?? "0%"}</div>
           </div>
         </div>
         <div className="bg-white border border-gray-200 rounded-[20px] p-5 flex items-center gap-4 shadow-sm">
@@ -219,7 +203,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
           </div>
           <div>
             <div className="text-sm text-gray-500 mb-0.5">Certificates Earned</div>
-            <div className="text-2xl font-semibold text-gray-900">{s.certificatesEarned ?? 3}</div>
+            <div className="text-2xl font-semibold text-gray-900">{s.certificatesEarned ?? 0}</div>
           </div>
         </div>
       </div>
@@ -260,13 +244,13 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-gray-900">Active Cohort</h3>
-                <p className="text-xs text-gray-500">Dr. Sarah Chen</p>
+                <p className="text-xs text-gray-500">{activeCohort?.educator?.name || "N/A"}</p>
               </div>
             </div>
-            <div className="text-sm font-medium text-gray-900 mb-2">Research Methods Batch 12</div>
+            <div className="text-sm font-medium text-gray-900 mb-2">{activeCohort?.title || "N/A"}</div>
             <div className="flex items-center gap-2 text-xs text-gray-600">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-              Next: Apr 22, 2026 – 3:00 PM IST
+              Next: {activeCohort?.startDateTime || "N/A"}
             </div>
           </div>
 
@@ -281,10 +265,10 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
                   <p className="text-xs text-orange-500">Requires attention</p>
                 </div>
               </div>
-              <span className="text-3xl font-semibold text-orange-500">{s.pendingAssignments ?? 3}</span>
+              <span className="text-3xl font-semibold text-orange-500">{pendingAssignmentsCount}</span>
             </div>
             <div className="text-xs text-gray-600 mt-4">
-              Next due: <span className="font-medium text-gray-900">Apr 21, 2026 – Literature Review</span>
+              Next due: <span className="font-medium text-gray-900">{dueAssignments[0]?.dueDate || "N/A"} - {dueAssignments[0]?.title || "N/A"}</span>
             </div>
           </div>
 
@@ -296,18 +280,14 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
               <h3 className="text-sm font-semibold text-gray-900">Upcoming Deadlines</h3>
             </div>
             <div className="space-y-3">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-600">Literature Review</span>
-                <span className="text-gray-400">Apr 21, 2026</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-600">Research Proposal Draf</span>
-                <span className="text-gray-400">Apr 28, 2026</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-600">Data Analysis Repor</span>
-                <span className="text-gray-400">May 5, 2026</span>
-              </div>
+              {dueAssignments.length > 0 ? dueAssignments.slice(0, 3).map((item: any) => (
+                <div key={item.id || item.assignmentId || item.title} className="flex justify-between items-center text-xs">
+                  <span className="text-gray-600">{item.title || "N/A"}</span>
+                  <span className="text-gray-400">{item.dueDate || "N/A"}</span>
+                </div>
+              )) : (
+                <div className="text-xs text-gray-500">No upcoming deadlines.</div>
+              )}
             </div>
           </div>
         </div>
@@ -318,7 +298,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
         <div className="p-5 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-semibold text-gray-900">Programs & Sessions</h2>
-            <Badge colorClass="bg-blue-50 text-blue-700">3</Badge>
+            <Badge colorClass="bg-blue-50 text-blue-700">{programs.length}</Badge>
           </div>
           <div className="flex items-center gap-3">
             <button className="flex items-center gap-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-50">
@@ -341,37 +321,43 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {programs.map((p: any, i: number) => (
+              {programs.length > 0 ? programs.map((p: any, i: number) => (
                 <tr key={i} className="hover:bg-gray-50/50">
                   <td className="px-5 py-4">
-                    <div className="font-medium text-gray-900">{p.programName || p.title}</div>
-                    <div className="text-xs text-gray-500 mt-1">Started {p.startDate || "Jan 15, 2026"}</div>
+                    <div className="font-medium text-gray-900">{p.programName || p.title || "N/A"}</div>
+                    <div className="text-xs text-gray-500 mt-1">Started {p.startDate || "N/A"}</div>
                   </td>
                   <td className="px-5 py-4">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                      <BookOpen className="w-3.5 h-3.5" /> {p.type}
+                      <BookOpen className="w-3.5 h-3.5" /> {p.type || "N/A"}
                     </span>
                   </td>
-                  <td className="px-5 py-4 text-gray-600">{p.educatorName || p.educator?.name}</td>
-                  <td className="px-5 py-4 text-gray-600">{p.sessionsAttended || p.sessions}/{p.sessionCount || 10}</td>
+                  <td className="px-5 py-4 text-gray-600">{p.educatorName || p.educator?.name || "N/A"}</td>
+                  <td className="px-5 py-4 text-gray-600">{p.sessions ?? 0}/{p.sessionCount ?? 0}</td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
                       <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-green-500 rounded-full" style={{ width: `${p.attendance || 80}%` }}></div>
+                        <div className="h-full bg-green-500 rounded-full" style={{ width: `${p.attendance || 0}%` }}></div>
                       </div>
-                      <span className="text-xs font-medium text-green-600">{p.attendance || 80}%</span>
+                      <span className="text-xs font-medium text-green-600">{p.attendance || 0}%</span>
                     </div>
                   </td>
                   <td className="px-5 py-4">
                     <Badge colorClass={p.status === "Active" ? "bg-green-50 text-green-700 border border-green-100" : "bg-gray-100 text-gray-600 border border-gray-200"}>
-                      {p.status}
+                      {p.status || "N/A"}
                     </Badge>
                   </td>
                   <td className="px-5 py-4 text-right">
                     <button className="text-gray-400 hover:text-gray-600"><FileText className="w-4 h-4" /></button>
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td className="px-5 py-6 text-sm text-gray-500" colSpan={7}>
+                    No programs found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -382,7 +368,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
         <div className="p-5 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-semibold text-gray-900">Assignments & Documents</h2>
-            <Badge colorClass="bg-orange-50 text-orange-600 border border-orange-100">3 pending</Badge>
+            <Badge colorClass="bg-orange-50 text-orange-600 border border-orange-100">{pendingAssignmentsCount} pending</Badge>
           </div>
           <ChevronUp className="w-5 h-5 text-gray-400" />
         </div>
@@ -400,7 +386,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {assignments.map((a: any, i: number) => (
+              {assignments.length > 0 ? assignments.map((a: any, i: number) => (
                 <tr key={i} className="hover:bg-gray-50/50">
                   <td className="px-5 py-4">
                     <div className="flex items-start gap-3">
@@ -409,16 +395,16 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
                       </div>
                       <div>
                         <div className="font-medium text-gray-900 flex items-center gap-2">
-                          {a.title}
+                          {a.title || "N/A"}
                           {a.version && <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded font-medium">{a.version}</span>}
                         </div>
-                        <div className="text-xs text-gray-500 mt-1">Due {a.dueDate}</div>
+                        <div className="text-xs text-gray-500 mt-1">Due {a.dueDate || "N/A"}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-4 text-gray-600">{a.relatedSessionTitle}</td>
+                  <td className="px-5 py-4 text-gray-600">{a.relatedSessionTitle || "N/A"}</td>
                   <td className="px-5 py-4">
-                    <Badge colorClass="bg-gray-100 text-gray-600">{a.type}</Badge>
+                    <Badge colorClass="bg-gray-100 text-gray-600">{a.type || "N/A"}</Badge>
                   </td>
                   <td className="px-5 py-4">
                     <Badge colorClass={
@@ -426,22 +412,28 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
                       a.status === 'In Review' ? "bg-yellow-50 text-yellow-700" :
                       "bg-gray-100 text-gray-600"
                     }>
-                      {a.status}
+                      {a.status || "N/A"}
                     </Badge>
                   </td>
                   <td className="px-5 py-4 text-gray-500 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5" /> {a.lastUpdated}
+                    <Clock className="w-3.5 h-3.5" /> {a.lastUpdated || "N/A"}
                   </td>
-                  <td className="px-5 py-4 text-gray-600">{a.reviewer}</td>
+                  <td className="px-5 py-4 text-gray-600">{a.reviewer || "N/A"}</td>
                   <td className="px-5 py-4 text-right">
                     <button className="text-gray-400 hover:text-gray-600"><Download className="w-4 h-4" /></button>
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td className="px-5 py-6 text-sm text-gray-500" colSpan={7}>
+                    No assignments found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
           <div className="p-4 text-center border-t border-gray-100">
-            <button className="text-blue-600 text-sm font-medium hover:underline">View All 5 Assignments</button>
+            <button className="text-blue-600 text-sm font-medium hover:underline">View All {assignments.length} Assignments</button>
           </div>
         </div>
       </div>
@@ -451,7 +443,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
         <div className="p-5 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-semibold text-gray-900">Payments & Billing</h2>
-            <Badge colorClass="bg-green-50 text-green-700 border border-green-100">Active</Badge>
+            <Badge colorClass="bg-green-50 text-green-700 border border-green-100">{payments.length > 0 ? "Active" : "N/A"}</Badge>
           </div>
           <ChevronUp className="w-5 h-5 text-gray-400" />
         </div>
@@ -463,7 +455,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
             </div>
             <div>
               <div className="text-xs text-gray-500">Total Paid</div>
-              <div className="text-lg font-semibold text-blue-600">{s.totalSpendLabel || "$1,240"}</div>
+              <div className="text-lg font-semibold text-blue-600">{totalSpendLabel}</div>
             </div>
           </div>
           <div className="w-px h-10 bg-gray-200"></div>
@@ -473,7 +465,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
             </div>
             <div>
               <div className="text-xs text-gray-500">Last Payment</div>
-              <div className="text-sm font-semibold text-gray-900">{u.billingAndPayments?.lastPaymentDate || "Mar 1, 2026"}</div>
+              <div className="text-sm font-semibold text-gray-900">{u.billingAndPayments?.lastPaymentDate || "N/A"}</div>
             </div>
           </div>
         </div>
@@ -492,23 +484,23 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {payments.map((p: any, i: number) => (
+              {payments.length > 0 ? payments.map((p: any, i: number) => (
                 <tr key={i} className="hover:bg-gray-50/50">
-                  <td className="px-5 py-4 text-blue-600 font-medium">{p.orderId}</td>
-                  <td className="px-5 py-4 text-gray-900">{p.plan}</td>
-                  <td className="px-5 py-4 font-semibold text-gray-900">${p.amount}</td>
+                  <td className="px-5 py-4 text-blue-600 font-medium">{p.orderId || "N/A"}</td>
+                  <td className="px-5 py-4 text-gray-900">{p.plan || "N/A"}</td>
+                  <td className="px-5 py-4 font-semibold text-gray-900">{p.amount ?? 0}</td>
                   <td className="px-5 py-4">
-                    <Badge colorClass="bg-green-50 text-green-700">{p.status}</Badge>
+                    <Badge colorClass="bg-green-50 text-green-700">{p.status || "N/A"}</Badge>
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
                       <div className={`px-2 py-0.5 rounded text-[10px] font-bold ${p.methodType === 'visa' ? 'bg-blue-900 text-white' : p.methodType === 'mastercard' ? 'bg-orange-500 text-white' : 'bg-blue-50 text-blue-600'}`}>
-                        {p.methodType ? p.methodType.toUpperCase() : "CARD"}
+                        {p.methodType ? p.methodType.toUpperCase() : "N/A"}
                       </div>
-                      <span className="text-gray-600">{p.method}</span>
+                      <span className="text-gray-600">{p.method || "N/A"}</span>
                     </div>
                   </td>
-                  <td className="px-5 py-4 text-gray-500">{p.date}</td>
+                  <td className="px-5 py-4 text-gray-500">{p.date || "N/A"}</td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3 text-gray-400">
                       <button className="hover:text-gray-600"><Send className="w-4 h-4" /></button>
@@ -517,7 +509,13 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
                     </div>
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td className="px-5 py-6 text-sm text-gray-500" colSpan={7}>
+                    No payments found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

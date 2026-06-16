@@ -9,40 +9,25 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts';
-
-const data = [
-  { date: 'Mar 27', webinars: 26000, cohorts: 21000, mentorships: 14000 },
-  { date: 'Mar 28', webinars: 27000, cohorts: 21500, mentorships: 14500 },
-  { date: 'Mar 29', webinars: 27500, cohorts: 22000, mentorships: 15000 },
-  { date: 'Mar 30', webinars: 28000, cohorts: 21800, mentorships: 15200 },
-  { date: 'Mar 31', webinars: 27800, cohorts: 22200, mentorships: 15500 },
-  { date: 'Apr 1', webinars: 28200, cohorts: 22500, mentorships: 15800 },
-  { date: 'Apr 2', webinars: 28800, cohorts: 23000, mentorships: 16000 },
-];
+import type { AnalyticsChartBlock } from '../types';
 
 const tabs = ['1M', '3M', '6M', '1Y', 'All'];
 
+interface Props {
+  data?: AnalyticsChartBlock;
+}
+
 const formatYAxis = (value: number) => `$${value / 1000}k`;
 
-const CustomLegend = () => (
-  <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-2">
-    {[
-      { color: '#6366f1', label: 'Webinars' },
-      { color: '#14b8a6', label: 'Cohorts' },
-      { color: '#86efac', label: 'Mentorships' },
-    ].map((item) => (
-      <div key={item.label} className="flex items-center gap-1.5">
-        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-        <span className="text-xs text-gray-500">{item.label}</span>
-      </div>
-    ))}
-  </div>
-);
-
-export default function RevenueBreakdownChart() {
+export default function RevenueBreakdownChart({ data }: Props) {
   const [activeTab, setActiveTab] = useState('1M');
+  const chartData = (data?.series || []).map((item, index) => ({
+    date: item.month || item.label || data?.labels?.[index] || `Item ${index + 1}`,
+    webinars: Number(item.value || 0),
+    cohorts: 0,
+    mentorships: 0,
+  }));
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 h-full relative overflow-hidden">
@@ -74,19 +59,11 @@ export default function RevenueBreakdownChart() {
       </div>
 
       <ResponsiveContainer width="100%" height={180}>
-        <AreaChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+        <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
           <defs>
             <linearGradient id="webinarsGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#6366f1" stopOpacity={0.15} />
               <stop offset="95%" stopColor="#6366f1" stopOpacity={0.02} />
-            </linearGradient>
-            <linearGradient id="cohortsGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.15} />
-              <stop offset="95%" stopColor="#14b8a6" stopOpacity={0.02} />
-            </linearGradient>
-            <linearGradient id="mentorshipsGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#86efac" stopOpacity={0.15} />
-              <stop offset="95%" stopColor="#86efac" stopOpacity={0.02} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
@@ -119,23 +96,8 @@ export default function RevenueBreakdownChart() {
             strokeWidth={2}
             fill="url(#webinarsGrad)"
           />
-          <Area
-            type="monotone"
-            dataKey="cohorts"
-            stroke="#14b8a6"
-            strokeWidth={2}
-            fill="url(#cohortsGrad)"
-          />
-          <Area
-            type="monotone"
-            dataKey="mentorships"
-            stroke="#86efac"
-            strokeWidth={2}
-            fill="url(#mentorshipsGrad)"
-          />
         </AreaChart>
       </ResponsiveContainer>
-      <CustomLegend />
     </div>
   );
 }

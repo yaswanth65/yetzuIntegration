@@ -1,7 +1,5 @@
 "use client";
 
-import { AdminAPI } from "@/lib/api";
-import { useEffect, useState } from "react";
 import { Users, GraduationCap, Calendar, Award, TrendingUp, TrendingDown } from "lucide-react";
 
 const statsCards = [
@@ -39,35 +37,19 @@ const statsCards = [
   },
 ];
 
-export default function OverViewStats() {
-  const [stats, setStats] = useState(statsCards);
-  const [loading, setLoading] = useState(true);
+interface OverViewStatsProps {
+  cards?: Record<string, any>;
+}
 
-  useEffect(() => {
-    const fetchOverview = async () => {
-      try {
-        const response: any = await AdminAPI.getOverview();
-        const data = response?.data || response;
-        const cards = data?.cards || data;
-        
-        if (data) {
-          setStats([
-            { ...statsCards[0], value: String(cards.activeStudents ?? cards.totalStudents ?? 0) },
-            { ...statsCards[1], value: String(cards.activeEducators ?? cards.totalEducators ?? 0) },
-            { ...statsCards[2], value: String(cards.sessionsToday ?? cards.upcomingSessions?.length ?? 0) },
-            { ...statsCards[3], value: String(cards.certificatesIssued ?? 0) },
-          ]);
-        }
-      } catch {
-        setStats(statsCards);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchOverview();
-  }, []);
+export default function OverViewStats({ cards }: OverViewStatsProps) {
+  const stats = [
+    { ...statsCards[0], value: String(cards?.activeStudents ?? cards?.totalStudents ?? 0) },
+    { ...statsCards[1], value: String(cards?.activeEducators ?? cards?.totalEducators ?? 0) },
+    { ...statsCards[2], value: String(cards?.sessionsToday ?? cards?.upcomingSessions?.length ?? 0) },
+    { ...statsCards[3], value: String(cards?.certificatesIssued ?? 0) },
+  ];
 
-  if (loading) {
+  if (!cards) {
     return (
       <div className="flex flex-wrap gap-6">
         {statsCards.map((_, i) => (

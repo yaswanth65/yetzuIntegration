@@ -11,6 +11,8 @@ export interface Session {
   attendees?: number;
   date: string;
   dateTime?: Date | string;
+  startDateTime?: string;
+  endDateTime?: string;
   startTime?: string;
   endTime?: string;
   status: string;

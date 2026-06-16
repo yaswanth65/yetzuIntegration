@@ -8,35 +8,22 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
+import type { AnalyticsChartBlock } from '../types';
 
-const data = [
-  { month: 'Oct', yetToSubmit: 65, completed: 82, overdue: 8 },
-  { month: 'Nov', yetToSubmit: 60, completed: 80, overdue: 8 },
-  { month: 'Dec', yetToSubmit: 55, completed: 82, overdue: 25 },
-  { month: 'Jan', yetToSubmit: 50, completed: 75, overdue: 8 },
-  { month: 'Feb', yetToSubmit: 45, completed: 78, overdue: 45 },
-  { month: 'Mar', yetToSubmit: 35, completed: 85, overdue: 8 },
-];
+interface Props {
+  data?: AnalyticsChartBlock;
+}
 
-const CustomLegend = () => (
-  <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2">
-    {[
-      { color: '#6366f1', label: 'Yet to Submit' },
-      { color: '#2dd4bf', label: 'Completed' },
-      { color: '#f87171', label: 'Overdue' },
-    ].map((item) => (
-      <div key={item.label} className="flex items-center gap-1.5">
-        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-        <span className="text-xs text-gray-500">{item.label}</span>
-      </div>
-    ))}
-  </div>
-);
+export default function AssignmentPerformanceChart({ data }: Props) {
+  const chartData = (data?.series || []).map((item, index) => ({
+    month: item.month || item.label || data?.labels?.[index] || `Item ${index + 1}`,
+    yetToSubmit: Number(item.value || 0),
+    completed: 0,
+    overdue: 0,
+  }));
 
-export default function AssignmentPerformanceChart() {
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
       <div className="flex items-center justify-between mb-4">
@@ -50,7 +37,7 @@ export default function AssignmentPerformanceChart() {
       </div>
 
       <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 0 }} barSize={18} barGap={3}>
+        <BarChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }} barSize={18} barGap={3}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
           <XAxis
             dataKey="month"
@@ -80,7 +67,6 @@ export default function AssignmentPerformanceChart() {
           <Bar dataKey="overdue" name="Overdue" fill="#f87171" radius={[3, 3, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
-      <CustomLegend />
     </div>
   );
 }

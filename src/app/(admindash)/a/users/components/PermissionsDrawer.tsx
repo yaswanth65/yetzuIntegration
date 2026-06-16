@@ -8,9 +8,10 @@ interface PermissionsDrawerProps {
 }
 
 export function PermissionsDrawer({ isOpen, onClose }: PermissionsDrawerProps) {
+  const totalUsers = permissionsRoles.reduce((sum, role) => sum + role.users, 0);
+
   return (
     <>
-      {/* Drawer Overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-40 transition-opacity"
@@ -18,7 +19,6 @@ export function PermissionsDrawer({ isOpen, onClose }: PermissionsDrawerProps) {
         />
       )}
 
-      {/* Drawer Panel */}
       <div
         className={`fixed inset-y-0 right-0 z-50 w-full max-w-[800px] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
@@ -30,10 +30,8 @@ export function PermissionsDrawer({ isOpen, onClose }: PermissionsDrawerProps) {
               <Shield className="w-5 h-5 text-slate-700" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">
-                Roles & Permissions
-              </h2>
-              <p className="text-sm text-slate-500">6 roles · 14 users</p>
+              <h2 className="text-lg font-semibold text-slate-900">Roles & Permissions</h2>
+              <p className="text-sm text-slate-500">{permissionsRoles.length} roles · {totalUsers} users</p>
             </div>
           </div>
           <button
@@ -49,27 +47,13 @@ export function PermissionsDrawer({ isOpen, onClose }: PermissionsDrawerProps) {
             <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
                 <tr className="border-b border-slate-200 bg-white">
-                  <th className="px-4 py-4 text-xs font-semibold text-slate-500 w-48 font-inter">
-                    Role
-                  </th>
-                  <th className="px-4 py-4 text-xs font-semibold text-slate-500 text-center">
-                    Manage<br/>Users
-                  </th>
-                  <th className="px-4 py-4 text-xs font-semibold text-slate-500 text-center">
-                    Manage<br/>Sessions
-                  </th>
-                  <th className="px-4 py-4 text-xs font-semibold text-slate-500 text-center">
-                    Manage<br/>Assignments
-                  </th>
-                  <th className="px-4 py-4 text-xs font-semibold text-slate-500 text-center">
-                    View<br/>Analytics
-                  </th>
-                  <th className="px-4 py-4 text-xs font-semibold text-slate-500 text-center">
-                    Manage<br/>Billing
-                  </th>
-                  <th className="px-4 py-4 text-xs font-semibold text-slate-500 text-center">
-                    Manage<br/>Settings
-                  </th>
+                  <th className="px-4 py-4 text-xs font-semibold text-slate-500 w-48 font-inter">Role</th>
+                  <th className="px-4 py-4 text-xs font-semibold text-slate-500 text-center">Manage<br />Users</th>
+                  <th className="px-4 py-4 text-xs font-semibold text-slate-500 text-center">Manage<br />Sessions</th>
+                  <th className="px-4 py-4 text-xs font-semibold text-slate-500 text-center">Manage<br />Assignments</th>
+                  <th className="px-4 py-4 text-xs font-semibold text-slate-500 text-center">View<br />Analytics</th>
+                  <th className="px-4 py-4 text-xs font-semibold text-slate-500 text-center">Manage<br />Billing</th>
+                  <th className="px-4 py-4 text-xs font-semibold text-slate-500 text-center">Manage<br />Settings</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white">

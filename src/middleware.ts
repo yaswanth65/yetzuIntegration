@@ -1,17 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const protectedRoutes = [
-  "/dashboard",
-  "/profile",
-  "/settings",
-  "/account",
-  "/home",
-  // "/s",
-  "/a/",
-  // "/e",
-];
-
 const authRoutes = [
   "/login",
   "/signup",
@@ -20,38 +9,54 @@ const authRoutes = [
   "/otp-verification",
 ];
 
+const protectedRoutes = ["/a", "/e", "/s", "/profile"];
+
 const publicRoutes = [
-  "/e/dashboard",
-   "/a/dashboard",
-      "/a/security",
-   "/a/sessions",
-    "/a/content-management",
-  "/assignments",
+  "/",
   "/about",
-  "/courses",
+  "/assignments",
   "/blog",
   "/contact-us",
+  "/courses",
   "/legal",
+  "/cart",
+  "/awards",
 ];
 
-export function middleware(request: NextRequest) {
-  const isUserLoggedIn = request.cookies.get("isUserLoggedIn")?.value;
-  const { pathname } = request.nextUrl;
+const getDashboardUrl = (role?: string | null) => {
+  switch ((role || "").toLowerCase()) {
+    case "admin":
+      return "/a/dashboard";
+    case "educator":
+      return "/e/dashboard";
+    case "student":
+      return "/s/dashboard";
+    default:
+      return "/";
+  }
+};
 
-  const isPublic = publicRoutes.some((route) => pathname.startsWith(route));
-  const isProtected = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
-  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+const isRouteMatch = (pathname: string, route: string) =>
+  route === "/" ? pathname === "/" : pathname === route || pathname.startsWith(`${route}/`);
+
+export function middleware(request: NextRequest) {
+  const isUserLoggedIn = request.cookies.get("isUserLoggedIn")?.value === "true" ||
+    Boolean(request.cookies.get("jwtToken")?.value);
+  const userRole = request.cookies.get("userRole")?.value;
+  const { pathname, search } = request.nextUrl;
+
+  const isAuthRoute = authRoutes.some((route) => isRouteMatch(pathname, route));
+  const isPublic = publicRoutes.some((route) => isRouteMatch(pathname, route));
+  const isProtected = protectedRoutes.some((route) => isRouteMatch(pathname, route));
 
   if (!isUserLoggedIn && isProtected && !isPublic) {
     const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("callback", `${pathname}${search}`);
     return NextResponse.redirect(loginUrl);
   }
 
   if (isUserLoggedIn && isAuthRoute) {
-    const dashboardUrl = new URL("/", request.url);
-    return NextResponse.redirect(dashboardUrl);
+    return NextResponse.redirect(new URL(getDashboardUrl(userRole), request.url));
   }
 
   return NextResponse.next();

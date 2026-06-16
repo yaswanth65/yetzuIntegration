@@ -67,6 +67,8 @@ const useLoginMutation = (): UseMutationResult<
         Cookies.set("jwtToken", data.userData.jwtToken, { expires: 1 });
         const userId = getJwtUserId(data.userData.jwtToken);
         if (userId) Cookies.set("userId", userId, { expires: 1 });
+        const userRole = data?.userProfileData?.role?.toLowerCase();
+        if (userRole) Cookies.set("userRole", userRole, { expires: 1 });
         if (variables?.rememberMe) {
           Cookies.set("refreshToken", data.userData.refresh_token, {
             expires: 7,
@@ -91,6 +93,8 @@ const useGoogleLoginMutation = (): UseMutationResult<
         Cookies.set("jwtToken", data.userData.jwtToken, { expires: 1 });
         const userId = getJwtUserId(data.userData.jwtToken);
         if (userId) Cookies.set("userId", userId, { expires: 1 });
+        const userRole = data?.userProfileData?.role?.toLowerCase();
+        if (userRole) Cookies.set("userRole", userRole, { expires: 1 });
         Cookies.set("refreshToken", data.userData.refresh_token, { expires: 7 });
       }
       queryClient.invalidateQueries({ queryKey: ["getUserProfile"] });
@@ -118,6 +122,7 @@ const useLogoutMutation = (): UseMutationResult<
       Cookies.remove("isUserLoggedIn");
       Cookies.remove("userId");
       Cookies.remove("userName");
+      Cookies.remove("userRole");
       queryClient.removeQueries({ queryKey: ["getUserProfile"] });
     },
   });

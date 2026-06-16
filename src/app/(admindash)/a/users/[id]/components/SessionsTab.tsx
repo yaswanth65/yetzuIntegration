@@ -101,7 +101,7 @@ export default function SessionsTab({ user }: SessionsTabProps) {
                 <div className="flex items-center gap-2">
                   <Calendar className="w-3.5 h-3.5 text-slate-400" />
                   <span className="text-xs font-bold text-slate-600">
-                    {session.scheduleDate ? new Date(session.scheduleDate).toLocaleDateString() : 'TBD'}
+                    {session.scheduleDate ? new Date(session.scheduleDate).toLocaleDateString() : 'N/A'}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -130,7 +130,7 @@ export default function SessionsTab({ user }: SessionsTabProps) {
                     <Users className="w-3 h-3 text-slate-400" />
                   </div>
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                    Educator: {session.educator?.name || 'Assigned'}
+                    Educator: {session.educator?.name || 'N/A'}
                   </span>
                 </div>
                 <button className="flex items-center gap-1.5 text-xs font-black text-blue-600 hover:gap-2 transition-all">
