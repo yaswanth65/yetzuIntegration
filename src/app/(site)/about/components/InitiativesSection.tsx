@@ -1,6 +1,6 @@
 export default function InitiativesSection() {
   return (
-    <section className="w-full px-0 sm:px-6 md:px-12 lg:px-20 xl:px-[108px] py-12 md:py-14 lg:py-16">
+    <section className="w-full px-4 sm:px-6 md:px-12 lg:px-20 xl:px-[108px] py-12 md:py-14 lg:py-16">
       <div className="w-full">
         <div className="flex flex-col gap-6 lg:gap-14">
           {/* Header */}
@@ -15,7 +15,7 @@ export default function InitiativesSection() {
           </div>
 
           {/* Cards Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-0 sm:gap-4 lg:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}

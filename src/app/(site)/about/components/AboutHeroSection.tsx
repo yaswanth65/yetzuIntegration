@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Button from "@/components/ui/Button";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
@@ -14,16 +14,96 @@ const heroImages = [
   "/images/Hero Section.png",
 ];
 
+// Triple the images to allow seamless infinite scrolling in both directions
+const displayImages = [...heroImages, ...heroImages, ...heroImages];
+
 export default function AboutHeroSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isAutoScrolling = useRef(false);
+
+  // Initialize position to the middle set to allow scrolling left immediately
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    const container = scrollRef.current;
+    
+    const timeout = setTimeout(() => {
+      if (!container) return;
+      const items = container.children;
+      if (items.length >= heroImages.length * 2) {
+        const firstItem = items[0] as HTMLElement;
+        const set2FirstItem = items[heroImages.length] as HTMLElement;
+        const jumpDistance = set2FirstItem.offsetLeft - firstItem.offsetLeft;
+        
+        container.style.scrollBehavior = "auto";
+        container.scrollLeft = jumpDistance;
+      }
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  // Autoplay functionality
+  useEffect(() => {
+    const interval = setInterval(() => {
+      scroll("right");
+    }, 3000); // Auto scroll every 3 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleScroll = useCallback(() => {
+    if (!scrollRef.current || isAutoScrolling.current) return;
+    const container = scrollRef.current;
+    const items = container.children;
+    if (items.length < heroImages.length * 2) return;
+
+    const firstItem = items[0] as HTMLElement;
+    const set2FirstItem = items[heroImages.length] as HTMLElement;
+    const jumpDistance = set2FirstItem.offsetLeft - firstItem.offsetLeft;
+    const maxScroll = container.scrollWidth - container.clientWidth;
+
+    // If we reach the very beginning, jump to the middle set
+    if (container.scrollLeft <= 5) {
+      isAutoScrolling.current = true;
+      container.style.scrollBehavior = "auto";
+      container.scrollLeft += jumpDistance;
+      
+      requestAnimationFrame(() => {
+        isAutoScrolling.current = false;
+      });
+    } 
+    // If we reach the end, jump back to the middle set
+    else if (container.scrollLeft >= maxScroll - 5) {
+      isAutoScrolling.current = true;
+      container.style.scrollBehavior = "auto";
+      container.scrollLeft -= jumpDistance;
+      
+      requestAnimationFrame(() => {
+        isAutoScrolling.current = false;
+      });
+    }
+  }, []);
 
   const scroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
-    const scrollAmount = scrollRef.current.clientWidth * 0.8;
-    scrollRef.current.scrollBy({
-      left: direction === "left" ? -scrollAmount : scrollAmount,
-      behavior: "smooth",
-    });
+    const container = scrollRef.current;
+    
+    // Calculate the width of one card + gap to scroll exactly one item at a time
+    const items = container.children;
+    if (items.length > 1) {
+      const firstItem = items[0] as HTMLElement;
+      const secondItem = items[1] as HTMLElement;
+      const itemWidth = secondItem.offsetLeft - firstItem.offsetLeft;
+      
+      container.scrollBy({
+        left: direction === "left" ? -itemWidth : itemWidth,
+        behavior: "smooth"
+      });
+    } else {
+      const scrollAmount = container.clientWidth * 0.8;
+      container.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
   };
 
   return (
@@ -87,10 +167,13 @@ export default function AboutHeroSection() {
         <div className="w-full -mx-4 sm:-mx-6 lg:-mx-8 relative">
           <div
             ref={scrollRef}
+            onScroll={handleScroll}
             className="flex overflow-x-auto gap-4 sm:gap-5 lg:gap-7 pb-6 scrollbar-hide snap-x snap-mandatory"
           >
-            {heroImages.map((img, index) => {
-              const isBlue = index === 1 || index === 3 || index === 5;
+            {displayImages.map((img, index) => {
+              // The original colors are based on the original 6 items: indices 1, 3, 5 are blue
+              const originalIndex = index % heroImages.length;
+              const isBlue = originalIndex === 1 || originalIndex === 3 || originalIndex === 5;
 
               return (
                 <div
@@ -114,11 +197,11 @@ export default function AboutHeroSection() {
 
                   {/* Info Card */}
                   <div
-                    className="relative z-10 flex flex-row justify-center items-center translate-y-[-20px]" // moved slightly up
+                    className="relative z-10 flex flex-row justify-center items-center translate-y-[-20px]"
                     style={{
                       width: "100%",
                       minHeight: "44px",
-                      padding: "10px 8px", // slight increase for breathing space
+                      padding: "10px 8px",
                       background: isBlue ? "#042BFD" : "#FFFFFF",
                     }}
                   >

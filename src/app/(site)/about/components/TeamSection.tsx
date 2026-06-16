@@ -6,7 +6,7 @@ export default function TeamSection() {
   return (
     <div className="w-full bg-gradient-to-b from-white via-[#E2E7FF] to-white">
       {/* First Section - Takes full viewport with navbar consideration */}
-      <section className="px-4 sm:px-6 md:px-12 lg:px-20 xl:px-[108px] py-12 md:py-14 lg:py-16 flex flex-col">
+      <section className="px-4 sm:px-6 md:px-12 lg:px-20 xl:px-[108px] pt-12 md:pt-14 lg:pt-16 pb-0 md:pb-2 lg:pb-4 flex flex-col">
         <div className="max-w-[1224px] mx-auto w-full flex flex-col h-full">
           {/* Header and Button */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end w-full mb-6 lg:mb-12 gap-4 md:gap-6">
@@ -30,11 +30,11 @@ export default function TeamSection() {
           </div>
 
           {/* First Row of Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-[18.44px] flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-[18.44px] gap-y-3 lg:gap-y-[10px] flex-1">
             {[1, 2, 3].map((index) => (
               <div
                 key={index}
-                className="relative w-full max-w-[395.706px] h-[380px] sm:h-[420px] lg:h-[501.123px] rounded-[15.734px] overflow-hidden shadow-[0_12.587px_25.174px_-9.44px_rgba(31,30,130,0.1)] transition-all duration-500 ease-in-out cursor-pointer group mx-auto"
+                className="relative w-full h-[380px] sm:h-[420px] lg:h-[501.123px] rounded-[15.734px] overflow-hidden shadow-[0_12.587px_25.174px_-9.44px_rgba(31,30,130,0.1)] transition-all duration-500 ease-in-out cursor-pointer group"
               >
                 {/* Background Image with gradient overlay - always visible */}
                 <div
@@ -109,13 +109,13 @@ export default function TeamSection() {
       </section>
 
       {/* Second Section - Second Row of Cards */}
-      <section className="px-4 sm:px-6 md:px-12 lg:px-20 xl:px-[108px] pb-12 md:pb-14 lg:pb-16 pt-6 flex items-center">
+      <section className="px-4 sm:px-6 md:px-12 lg:px-20 xl:px-[108px] pb-12 md:pb-14 lg:pb-16 pt-0 flex items-center">
         <div className="max-w-[1224px] mx-auto w-full">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-[18.44px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-[18.44px] gap-y-3 lg:gap-y-[10px]">
             {[4, 5, 6].map((index) => (
               <div
                 key={index}
-                className="relative w-full max-w-[395.706px] h-[380px] sm:h-[420px] lg:h-[501.123px] rounded-[15.734px] overflow-hidden shadow-[0_12.587px_25.174px_-9.44px_rgba(31,30,130,0.1)] transition-all duration-500 ease-in-out cursor-pointer group mx-auto"
+                className="relative w-full h-[380px] sm:h-[420px] lg:h-[501.123px] rounded-[15.734px] overflow-hidden shadow-[0_12.587px_25.174px_-9.44px_rgba(31,30,130,0.1)] transition-all duration-500 ease-in-out cursor-pointer group"
               >
                 {/* Background Image with gradient overlay - always visible */}
                 <div

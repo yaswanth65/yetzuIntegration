@@ -12,10 +12,10 @@ export default function MissionVisionSection() {
             Mission & Vision
           </h2>
 
-          {/* Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+          {/* Content Layout */}
+          <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 lg:items-center">
             {/* Left Image */}
-            <div className="w-full h-[300px] sm:h-[380px] lg:h-[455px] rounded-[20px] overflow-hidden shadow-[0_16px_32px_-12px_rgba(31,30,130,0.1)]">
+            <div className="w-full h-[300px] sm:h-[380px] lg:h-[455px] rounded-[20px] overflow-hidden shadow-[0_16px_32px_-12px_rgba(31,30,130,0.1)] bg-white relative">
               <Image
                 src="/images/Hero Section.png"
                 alt="Mission left"
@@ -26,9 +26,9 @@ export default function MissionVisionSection() {
             </div>
 
             {/* Middle Cards */}
-            <div className="flex flex-col h-[300px] sm:h-[380px] lg:h-[455px] gap-6">
+            <div className="flex flex-col gap-6 w-full" style={{ marginBottom: '24px' }}>
               {/* Mission Card */}
-              <div className="flex-1 flex flex-col justify-center items-center p-8 pb-6 bg-[#E6EAFF] rounded-[20px] shadow-[0_16px_32px_-12px_rgba(31,30,130,0.1)]">
+              <div className="flex flex-col justify-center items-center p-8 pb-6 bg-[#E6EAFF] rounded-[20px] shadow-[0_16px_32px_-12px_rgba(31,30,130,0.1)]">
                 <div className="flex gap-6 w-full">
                   <div className="w-[52px] h-[52px] flex items-center justify-center flex-shrink-0 bg-white rounded-full">
                     <svg
@@ -75,7 +75,7 @@ export default function MissionVisionSection() {
               </div>
 
               {/* Vision Card */}
-              <div className="flex-1 flex flex-col justify-center items-center p-8 pb-6 bg-[#E6EAFF] rounded-[20px] shadow-[0_16px_32px_-12px_rgba(31,30,130,0.1)]">
+              <div className="flex flex-col justify-center items-center p-8 pb-6 bg-[#E6EAFF] rounded-[20px] shadow-[0_16px_32px_-12px_rgba(31,30,130,0.1)]">
                 <div className="flex gap-6 w-full">
                   <div className="w-[52px] h-[52px] flex items-center justify-center flex-shrink-0 bg-white rounded-full">
                     <svg
@@ -118,13 +118,24 @@ export default function MissionVisionSection() {
             </div>
 
             {/* Right Image */}
-            <div className="w-full h-[300px] sm:h-[380px] lg:h-[455px] rounded-[20px] overflow-hidden shadow-[0_16px_32px_-12px_rgba(31,30,130,0.1)]">
+            <div 
+              className="w-full sm:h-[380px] lg:h-[455px] rounded-[20px] shadow-[0_16px_32px_-12px_rgba(31,30,130,0.1)] relative"
+              style={{ 
+                height: '300px', 
+                backgroundColor: '#ffffff', 
+                overflow: 'hidden', 
+                display: 'block', 
+                marginTop: '16px',
+                zIndex: 20 
+              }}
+            >
               <Image
                 src="/images/Hero Section.png"
                 alt="Mission right"
                 width={400}
                 height={455}
                 className="w-full h-full object-cover"
+                style={{ objectFit: 'cover', width: '100%', height: '100%' }}
               />
             </div>
           </div>
