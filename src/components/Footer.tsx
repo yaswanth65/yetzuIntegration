@@ -89,7 +89,7 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Bottom Section: Subscribe & Social Icons */}
+          {/* Bottom Section: Subscribe  Social Icons */}
           <div className="flex flex-col md:flex-row justify-between items-center md:items-end gap-6 w-full pt-6 border-t border-gray-200/50">
             {/* Subscribe */}
             <div className="flex flex-col items-start gap-3 w-full max-w-[497px]">
