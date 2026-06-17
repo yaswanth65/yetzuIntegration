@@ -63,14 +63,13 @@ export default function Footer() {
             </div>
 
             {/* Links Row */}
-            <div className="flex flex-row flex-wrap justify-between items-start w-full lg:w-[561px]">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8 w-full lg:w-[561px]">
               {footerLinks.map((section, index) => (
                 <div
                   key={index}
-                  className="flex flex-col items-start p-2 gap-2"
-                  style={{ width: index === 0 ? '150px' : index === 1 ? '143px' : '204px' }}
+                  className="flex flex-col items-start gap-2"
                 >
-                  <h4 className="text-[#404040] text-[20px] font-semibold leading-[27px] tracking-[-0.06em] w-full text-right">
+                  <h4 className="text-[#404040] text-[20px] font-semibold leading-[27px] tracking-[-0.06em] w-full text-left">
                     {section.title}
                   </h4>
                   <div className="flex flex-col items-start gap-2 w-full">
@@ -78,7 +77,7 @@ export default function Footer() {
                       <Link
                         key={i}
                         href={link.route}
-                        className="block text-[#404040] hover:text-gray-900 w-full text-right text-[14px] leading-[21px] tracking-[-0.03em] transition"
+                        className="block text-[#404040] hover:text-gray-900 w-full text-left text-[14px] leading-[21px] tracking-[-0.03em] transition"
                       >
                         {link.label}
                       </Link>
@@ -89,7 +88,7 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Bottom Section: Subscribe & Social Icons */}
+          {/* Bottom Section: Subscribe  Social Icons */}
           <div className="flex flex-col md:flex-row justify-between items-center md:items-end gap-6 w-full pt-6 border-t border-gray-200/50">
             {/* Subscribe */}
             <div className="flex flex-col items-start gap-3 w-full max-w-[497px]">

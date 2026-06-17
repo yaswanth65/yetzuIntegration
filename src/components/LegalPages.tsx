@@ -5,7 +5,7 @@ const LegalPages = ({ data }: { data: LegalPageType }) => (
   <div className="w-full px-4 sm:px-6 md:px-12 lg:px-20 xl:px-[108px]">
   <div className="max-w-[1224px] mx-auto flex flex-col lg:flex-row justify-between gap-10 lg:gap-30 my-10">
     <aside className="lg:w-[20%] lg:sticky lg:top-20 self-start">
-      <h1 className="text-5xl font-semibold leading-tight text-[#021165]">
+      <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold leading-tight text-[#021165]">
         {data.title}
       </h1>
       <p className="mt-2 text-sm">Effective Date:</p>
@@ -13,7 +13,7 @@ const LegalPages = ({ data }: { data: LegalPageType }) => (
     </aside>
 
     <main className="lg:w-[50%]">
-      <p className="text-base text-gray-700 leading-relaxed">
+      <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
         {data.introduction}
       </p>
 
@@ -23,21 +23,21 @@ const LegalPages = ({ data }: { data: LegalPageType }) => (
             key={sectionIndex}
             className={sectionIndex > 0 ? "mt-12" : ""}
           >
-            <h2 className="text-4xl font-semibold text-gray-900">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-900">
               {section.section}
             </h2>
             {section.description && (
-              <p className="mt-6 text-base text-gray-700 leading-relaxed">
+              <p className="mt-6 text-sm sm:text-base text-gray-700 leading-relaxed">
                 {section.description}
               </p>
             )}
             <div className="mt-6 space-y-8">
               {section.items.map((item, itemIndex) => (
                 <article key={itemIndex}>
-                  <h3 className="text-2xl font-semibold text-gray-900">
+                  <h3 className="text-xl sm:text-2xl font-semibold text-gray-900">
                     {String.fromCharCode(97 + itemIndex)}. {item.title}
                   </h3>
-                  <p className="mt-2 text-base text-gray-700 leading-relaxed">
+                  <p className="mt-2 text-sm sm:text-base text-gray-700 leading-relaxed">
                     {item.body}
                   </p>
                 </article>

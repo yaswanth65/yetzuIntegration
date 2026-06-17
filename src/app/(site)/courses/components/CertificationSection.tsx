@@ -28,9 +28,9 @@ export default function CertificationSection() {
   ];
 
   return (
-    <section className="relative px-4 sm:px-6 md:px-12 lg:px-20 xl:px-[108px]">
+    <section className="relative px-4 sm:px-6 md:px-12 lg:px-20 xl:px-[108px] py-12 md:py-14 lg:py-16 overflow-hidden">
       <div className="absolute inset-0 bg-[linear-gradient(180deg,#FFFFFF_0%,#E2E7FF_50.01%,#FFFFFF_100%)] z-0"></div>
-      <div className="max-w-[1224px] mx-auto py-10 relative">
+      <div className="max-w-[1224px] mx-auto relative">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end w-full mb-16 gap-4 md:gap-6">
           <h2 className="font-inter font-medium text-[26px] sm:text-[32px] md:text-[40px] lg:text-[46px] leading-[100%] tracking-[-0.06em] text-[#021165] max-w-full md:max-w-[658px] capitalize">
             Get certified by Yetzu

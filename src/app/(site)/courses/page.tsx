@@ -75,8 +75,8 @@ export default function CoursesPage() {
         <main className="min-h-screen bg-white pb-20">
             <CoursesHero />
 
-            <section className="relative bg-[#F7F8FC]">
-                <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 lg:px-16 pb-16 md:pb-24">
+            <section className="relative bg-[#F7F8FC] px-4 sm:px-6 md:px-12 lg:px-20 xl:px-[108px]">
+                <div className="w-full max-w-[1224px] mx-auto pb-16 md:pb-24">
 
                     <CourseFilters
                         search={search}

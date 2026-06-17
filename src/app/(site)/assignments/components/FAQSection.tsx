@@ -51,10 +51,10 @@ export default function FAQSection() {
       <div className="max-w-[1224px] w-full grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20">
         <div className="flex flex-col justify-between space-y-8">
           <div>
-            <SubHeading text="FAQ" />
+            <SubHeading text="FAQ" className="text-[28px] md:text-[46px]" />
             <Paragraph
               text="Know answers to all of your questions"
-              className="mx-0"
+              className="mx-0 font-normal text-[15px] md:text-[18px] leading-[100%] tracking-[-0.03em]"
             />
           </div>
 

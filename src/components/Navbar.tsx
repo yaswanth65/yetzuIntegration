@@ -21,6 +21,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import useSession from "@/hooks/useSession";
 import { useLogoutMutation } from "@/lib/queries/identityService/useIdentityService";
@@ -28,9 +29,11 @@ import Button from "./ui/Button";
 import { useCart } from "@/providers/CartProvider";
 import { StudentAPI, asArray } from "@/lib/api";
 import { getTimeAgo } from "@/lib/utils/dateUtils";
-import { usePathname } from "next/navigation";
 
 const Navbar = () => {
+  const pathname = usePathname() || "";
+  const isContactPage = pathname === "/contact-us";
+
   const { user } = useSession();
   const contextName = user?.name || "";
   const contextEmail = user?.email || "";
@@ -61,7 +64,6 @@ const Navbar = () => {
 
   const name = studentProfile?.name || contextName;
   const email = studentProfile?.email || contextEmail;
-  const pathname = usePathname() || "";
   const { mutateAsync: logout } = useLogoutMutation();
   const { cartCount } = useCart();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -191,7 +193,9 @@ const Navbar = () => {
   return (
     <>
       {/* Top Navbar */}
-      <nav className="w-full bg-white shadow-md fixed top-0 left-0 z-50">
+      <nav className={`w-full fixed top-0 left-0 z-50 transition-colors duration-200 ${
+        isContactPage ? "bg-[#164CFF] shadow-none" : "bg-white shadow-md"
+      }`}>
         <div className="max-w-[1224px] mx-auto flex justify-between items-center px-4 sm:px-6 md:px-12 lg:px-20 xl:px-[108px] h-[68px]">
           {/* Left: Logo */}
           <div className="flex items-center space-x-2">
@@ -201,24 +205,32 @@ const Navbar = () => {
                 alt="Yetzu Logo"
                 width={120}
                 height={40}
-                className="object-contain"
+                className={`object-contain transition-all duration-200 ${
+                  isContactPage ? "brightness-0 invert" : ""
+                }`}
               />
             </Link>
           </div>
 
-            {/* Center: Navigation Links (Desktop) */}
-            <div className="hidden lg:flex items-center space-x-8 text-gray-800">
-              {navigationLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`font-medium transition-colors duration-200 ${
-                    isNavActive(link.href) ? "text-[#042BFD]" : "hover:text-[#2563eb]"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
+          {/* Center: Navigation Links (Desktop) */}
+          <div className={`hidden lg:flex items-center space-x-8 ${
+            isContactPage ? "text-white/90" : "text-gray-800"
+          }`}>
+            {navigationLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`font-medium transition-colors duration-200 ${
+                  isNavActive(link.href)
+                    ? "text-[#042BFD]"
+                    : isContactPage
+                      ? "hover:text-white"
+                      : "hover:text-[#2563eb]"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
 
           {/* Right: User Actions */}
@@ -226,7 +238,9 @@ const Navbar = () => {
             {/* Shopping Cart */}
             <Link
               href="/cart"
-              className="relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 flex items-center justify-center text-gray-700"
+              className={`relative p-2 rounded-full transition-colors duration-200 flex items-center justify-center ${
+                isContactPage ? "text-white hover:bg-white/10" : "text-gray-700 hover:bg-gray-100"
+              }`}
             >
               <ShoppingCart size={20} />
               {cartCount > 0 && (
@@ -241,11 +255,13 @@ const Navbar = () => {
               <div className="hidden lg:block relative" ref={notifRef}>
                 <button
                   onClick={() => setIsNotifOpen(!isNotifOpen)}
-                  className={`p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 relative ${
-                    isNotifOpen ? "bg-gray-100" : ""
+                  className={`p-2 rounded-full transition-colors duration-200 relative ${
+                    isNotifOpen ? (isContactPage ? "bg-white/10" : "bg-gray-100") : ""
+                  } ${
+                    isContactPage ? "hover:bg-white/10" : "hover:bg-gray-100"
                   }`}
                 >
-                  <Bell size={20} className="text-gray-700" />
+                  <Bell size={20} className={isContactPage ? "text-white" : "text-gray-700"} />
                   {unreadCount > 0 && (
                     <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border border-white"></span>
                   )}
@@ -326,8 +342,12 @@ const Navbar = () => {
                 )}
               </div>
             ) : name ? (
-              <button className="hidden lg:flex relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200">
-                <Bell size={20} className="text-gray-700" />
+              <button
+                className={`hidden lg:flex relative p-2 rounded-full transition-colors duration-200 ${
+                  isContactPage ? "hover:bg-white/10 text-white" : "hover:bg-gray-100 text-gray-700"
+                }`}
+              >
+                <Bell size={20} className={isContactPage ? "text-white" : "text-gray-700"} />
                 {hasUnreadNotifications && (
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
                 )}
@@ -339,16 +359,18 @@ const Navbar = () => {
               <div className="hidden lg:block relative" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-2 p-1.5 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                  className={`flex items-center gap-2 p-1.5 rounded-full transition-colors duration-200 ${
+                    isContactPage ? "hover:bg-white/10" : "hover:bg-gray-100"
+                  }`}
                 >
                   <div className="w-9 h-9 bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] rounded-full flex items-center justify-center text-white font-semibold text-sm">
                     {name.charAt(0).toUpperCase()}
                   </div>
                   <ChevronDown
                     size={16}
-                    className={`text-gray-600 transition-transform duration-300 ${
+                    className={`transition-transform duration-300 ${
                       isUserMenuOpen ? "rotate-180" : ""
-                    }`}
+                    } ${isContactPage ? "text-white" : "text-gray-600"}`}
                   />
                 </button>
 
@@ -393,7 +415,12 @@ const Navbar = () => {
               </div>
             ) : (
               <Link href="/login" className="hidden lg:block">
-                <Button variant="primary" className="!w-fit !h-[38px] px-6">
+                <Button
+                  variant={isContactPage ? "outline" : "primary"}
+                  className={`!w-fit !h-[38px] px-6 ${
+                    isContactPage ? "!bg-white !text-[#164CFF] hover:!bg-blue-50 !border-white" : ""
+                  }`}
+                >
                   Log In
                 </Button>
               </Link>
@@ -402,10 +429,12 @@ const Navbar = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+              className={`lg:hidden p-2 rounded-lg transition-colors duration-200 ${
+                isContactPage ? "hover:bg-white/10" : "hover:bg-gray-100"
+              }`}
               aria-label="Open menu"
             >
-              <Menu size={24} className="text-gray-700" />
+              <Menu size={24} className={isContactPage ? "text-white" : "text-gray-700"} />
             </button>
           </div>
         </div>
